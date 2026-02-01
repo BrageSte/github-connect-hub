@@ -1,143 +1,112 @@
 
-# Plan: Lagre ordrer i databasen ved gratis checkout
+# Plan: E-postbekreftelse og Testing av Gratis Bestilling
 
-## Problem
-Når brukeren bestiller med TESTMEG promokoden (100% rabatt), lagres ordren kun i `sessionStorage` for å vise på suksess-siden. Ordren blir **aldri sendt til databasen**, så den vises ikke i admin-panelet.
-
-I tillegg tillater de nåværende RLS-policies kun admins å opprette ordrer, noe som blokkerer vanlige kunder fra å fullføre bestillinger.
+## Oversikt
+Jeg vil nå implementere e-postbekreftelse til kunder og teste hele bestillingsflyten med TESTMEG-koden.
 
 ---
 
-## Løsning
+## Del 1: Legge til Resend API-nøkkel
 
-### Del 1: Oppdatere RLS-policy for ordrer
+API-nøkkelen du oppga (`re_CkJKD9NF_L3LnHRNYJBJ1Hznh9GornGm7`) vil bli lagt til som en hemmelighet i prosjektet.
 
-**Database-migrering:**
+---
 
-Legge til en policy som tillater alle (anon og authenticated) å opprette ordrer:
+## Del 2: Opprette Edge Function for E-post
 
-```sql
-CREATE POLICY "Anyone can create orders"
-  ON public.orders
-  FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+Ny fil: `supabase/functions/send-order-confirmation/index.ts`
+
+Funksjonen vil:
+1. Motta ordre-ID og kundedata
+2. Generere en HTML-e-post med ordredetaljer
+3. Sende e-post via Resend til kunden
+
+E-posten inkluderer:
+- Ordrenummer
+- Produktliste med priser
+- Leveringsmetode og adresse
+- Totalpris inkl. evt. rabatt
+
+---
+
+## Del 3: Oppdatere Checkout.tsx
+
+Etter vellykket ordre-opprettelse:
+1. Kalle edge-funksjonen for å sende e-postbekreftelse
+2. Ikke blokkere navigasjon hvis e-post feiler (kun logge feilen)
+
+---
+
+## Del 4: Konfigurere Edge Function
+
+Oppdatere `supabase/config.toml` med:
+```toml
+[functions.send-order-confirmation]
+verify_jwt = false
 ```
 
-Dette er trygt fordi:
-- Ordrer er betalingsbekreftelser, ikke sensitiv data
-- Alle brukere (innlogget eller ikke) skal kunne bestille
-- Admin-only SELECT/UPDATE-policies forblir uendret
-
 ---
 
-### Del 2: Opprette funksjon for å lagre ordre
+## Del 5: Teste Bestillingsflyten
 
-**Ny fil:** `src/lib/orderService.ts`
-
-Funksjon som konverterer cart-data til database-format og inserter i Supabase:
-
-```typescript
-export async function createOrder(orderData: CreateOrderParams): Promise<string>
-```
-
-Funksjonen:
-1. Mapper `CartItem[]` til `line_items` og `config_snapshot` JSON
-2. Beregner `subtotal_amount`, `shipping_amount`, `total_amount` i øre (integer)
-3. Setter `status: 'new'` for gratis ordrer (promokode)
-4. Kaller `supabase.from('orders').insert()` 
-5. Returnerer ordre-ID
-
----
-
-### Del 3: Oppdatere Checkout.tsx
-
-**Endringer i handleCheckout:**
-
-Når `discountedTotal === 0`:
-1. Kall `createOrder()` med alle skjemadata
-2. Ved suksess: lagre forenklet ordre-info i sessionStorage for suksess-siden
-3. Naviger til `/checkout/success`
-
----
-
-### Del 4: Oppdatere CheckoutSuccess.tsx
-
-Håndtere at ordren nå kommer fra databasen:
-- Fortsatt hente ordre-info fra sessionStorage for visning
-- Ingen endring i visningslogikk
+Etter implementasjon vil jeg:
+1. Gå til konfigurator og velge et produkt
+2. Gå til handlekurv
+3. Fylle ut kontaktinfo og adresse
+4. Legge inn TESTMEG promokoden
+5. Fullføre bestilling
+6. Verifisere at ordren lagres i databasen
+7. Sjekke at e-postbekreftelse sendes
 
 ---
 
 ## Tekniske detaljer
 
-### Database-feltene som må fylles:
-
-| Felt | Kilde |
-|------|-------|
-| `customer_name` | Skjema-input |
-| `customer_email` | Skjema-input |
-| `customer_phone` | Skjema-input (valgfritt) |
-| `delivery_method` | CartContext |
-| `shipping_address` | Skjema-input (JSON) |
-| `pickup_location` | Fra delivery_method |
-| `line_items` | Mappet fra CartItem[] |
-| `config_snapshot` | Mappet fra CartItem[].product.config |
-| `subtotal_amount` | Sum av produktpriser × 100 (øre) |
-| `shipping_amount` | Fraktkostnad × 100 (øre) |
-| `total_amount` | 0 (gratis ordre) |
-| `status` | 'new' |
-| `stripe_checkout_session_id` | 'free_order_' + timestamp |
-
-### Mapping av CartItem til line_items:
+### Edge Function Struktur:
 
 ```typescript
-const lineItems = items.map(item => ({
-  name: item.product.name,
-  quantity: item.quantity,
-  price: item.product.price * 100, // øre
-  productId: item.product.id
-}))
-```
-
-### Mapping til config_snapshot:
-
-```typescript
-const configSnapshot = {
-  version: 1,
-  items: items.map(item => ({
-    productId: item.product.id,
-    type: item.product.isDigital ? 'file' : 'printed',
-    blockVariant: item.product.config?.blockVariant,
-    widths: item.product.config?.widths,
-    heights: item.product.config?.heights,
-    depth: item.product.config?.depth,
-    totalWidth: item.product.config?.totalWidth,
-    quantity: item.quantity,
-    unitPrice: item.product.price * 100
-  }))
+interface OrderConfirmationRequest {
+  orderId: string
+  customerEmail: string
+  customerName: string
+  items: Array<{ name: string; quantity: number; price: number }>
+  deliveryMethod: string
+  pickupLocation?: string
+  shippingAddress?: {
+    line1: string
+    line2?: string
+    postalCode: string
+    city: string
+  }
+  subtotal: number
+  shipping: number
+  promoDiscount?: number
+  total: number
 }
 ```
 
+### E-post Avsender:
+
+**Viktig:** Resend krever et verifisert domene for å sende e-post. Uten verifisert domene kan vi bruke `onboarding@resend.dev` som testavsender, men e-post vil bare bli sendt til kontoadministratorens e-post.
+
+For produksjon anbefales det å verifisere domenet `bsclimbing.no` på https://resend.com/domains.
+
 ---
 
-## Filer som endres
+## Filer som opprettes/endres
 
 | Fil | Endring |
 |-----|---------|
-| Database-migrering | Ny INSERT-policy for ordrer |
-| `src/lib/orderService.ts` | Ny fil med `createOrder()` funksjon |
-| `src/pages/Checkout.tsx` | Kalle `createOrder()` ved gratis checkout |
+| (Secret) RESEND_API_KEY | Legges til i prosjektet |
+| `supabase/config.toml` | Konfigurere edge function |
+| `supabase/functions/send-order-confirmation/index.ts` | Ny edge function |
+| `src/pages/Checkout.tsx` | Kalle edge function etter ordre-opprettelse |
 
 ---
 
-## Brukerflyt etter endring
+## Forventet Resultat
 
-1. Bruker fyller ut skjema med navn, e-post, adresse
-2. Bruker legger inn promokode TESTMEG
-3. Total blir 0 kr
-4. Bruker klikker "Fullfør bestilling"
-5. **NY:** Ordre opprettes i databasen med status "new"
-6. Ordre-info lagres i sessionStorage for suksess-visning
-7. Bruker navigeres til suksess-siden
-8. **NY:** Admin ser ordren i admin-panelet
+1. Når en kunde fullfører en bestilling (gratis eller betalt), sendes en ordrebekreftelse på e-post
+2. E-posten inneholder alle relevante ordredetaljer
+3. Admin ser ordren i dashbordet med fullstendig data
+4. Kunden får umiddelbar bekreftelse på kjøpet
