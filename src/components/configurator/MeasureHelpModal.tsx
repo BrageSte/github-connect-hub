@@ -15,7 +15,7 @@ interface MeasureHelpModalProps {
 export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-card border-border">
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto bg-card border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">Slik måler du fingrene</DialogTitle>
           <DialogDescription className="text-muted-foreground">

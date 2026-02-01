@@ -221,7 +221,7 @@ export default function CrimpConfigurator() {
                   <span className="text-foreground text-sm flex-1">Lille → Ring</span>
                   <input
                     type="number"
-                    min="0"
+                    min="-15"
                     max="15"
                     value={heightDiffs.lilleToRing}
                     onChange={(e) => setHeightDiffs(prev => ({...prev, lilleToRing: Number(e.target.value)}))}
@@ -234,7 +234,7 @@ export default function CrimpConfigurator() {
                   <span className="text-foreground text-sm flex-1">Ring → Lang</span>
                   <input
                     type="number"
-                    min="0"
+                    min="-15"
                     max="15"
                     value={heightDiffs.ringToLang}
                     onChange={(e) => setHeightDiffs(prev => ({...prev, ringToLang: Number(e.target.value)}))}
@@ -247,7 +247,7 @@ export default function CrimpConfigurator() {
                   <span className="text-foreground text-sm flex-1">Lang → Peke</span>
                   <input
                     type="number"
-                    min="0"
+                    min="-15"
                     max="15"
                     value={heightDiffs.langToPeke}
                     onChange={(e) => setHeightDiffs(prev => ({...prev, langToPeke: Number(e.target.value)}))}

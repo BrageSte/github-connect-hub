@@ -1,7 +1,6 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Text, Line } from '@react-three/drei'
+import { OrbitControls, Text } from '@react-three/drei'
 import { useMemo } from 'react'
-import * as THREE from 'three'
 
 interface DynamicBlockPreviewProps {
   widths: {
@@ -28,15 +27,13 @@ const FINGER_COLORS = {
 
 const FINGER_ORDER = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'] as const
 
-// Component for block with fillet
-function FilletBlock({
+function FingerBlock({
   width,
   height,
   depth,
   position,
   color,
-  label,
-  showDepthLabel
+  label
 }: {
   width: number
   height: number
@@ -44,55 +41,22 @@ function FilletBlock({
   position: [number, number, number]
   color: string
   label: string
-  showDepthLabel?: boolean
 }) {
+  // Scale down for visualization (mm to scene units)
   const scale = 0.04
   const w = width * scale
   const h = height * scale
   const d = depth * scale
-  const filletSize = 8 * scale // 8mm fillet
-
-  // Create custom geometry with fillet (chamfer on front top edge)
-  const geometry = useMemo(() => {
-    const shape = new THREE.Shape()
-
-    // Create side profile with fillet
-    // Start from bottom front
-    shape.moveTo(0, 0)
-    // Go to top front (before fillet)
-    shape.lineTo(0, h - filletSize)
-    // Fillet diagonal from front to back
-    shape.lineTo(filletSize, h)
-    // Go to back top
-    shape.lineTo(d, h)
-    // Go to back bottom
-    shape.lineTo(d, 0)
-    // Close shape
-    shape.lineTo(0, 0)
-
-    const extrudeSettings = {
-      steps: 1,
-      depth: w,
-      bevelEnabled: false,
-    }
-
-    const geo = new THREE.ExtrudeGeometry(shape, extrudeSettings)
-    // Rotate and center the geometry
-    geo.rotateY(Math.PI / 2)
-    geo.translate(-w / 2, 0, -d / 2)
-
-    return geo
-  }, [w, h, d, filletSize])
 
   return (
     <group position={position}>
-      <mesh castShadow receiveShadow geometry={geometry}>
+      <mesh castShadow receiveShadow position={[0, h / 2, 0]}>
+        <boxGeometry args={[w, h, d]} />
         <meshStandardMaterial color={color} roughness={0.4} metalness={0.1} />
       </mesh>
-
       {/* Height label on front */}
       <Text
-        position={[0, (h - filletSize) / 2, d / 2 + 0.1]}
+        position={[0, h / 2, d / 2 + 0.1]}
         fontSize={0.15}
         color="#ffffff"
         anchorX="center"
@@ -100,7 +64,6 @@ function FilletBlock({
       >
         {height}mm
       </Text>
-
       {/* Finger name below */}
       <Text
         position={[0, -0.2, 0]}
@@ -111,82 +74,6 @@ function FilletBlock({
       >
         {label}
       </Text>
-
-      {/* 20mm edge marker on the side - shows the flat part after fillet */}
-      <Line
-        points={[
-          [-w / 2 - 0.05, h - filletSize, d / 2],
-          [-w / 2 - 0.05, 0, d / 2]
-        ]}
-        color="#60a5fa"
-        lineWidth={2}
-      />
-      <Text
-        position={[-w / 2 - 0.15, (h - filletSize) / 2, d / 2]}
-        fontSize={0.1}
-        color="#60a5fa"
-        anchorX="right"
-        anchorY="middle"
-        rotation={[0, 0, 0]}
-      >
-        {(height - 8).toFixed(0)}mm
-      </Text>
-
-      {/* Fillet indicator line (8mm diagonal) */}
-      <Line
-        points={[
-          [-w / 2 - 0.05, h - filletSize, d / 2],
-          [-w / 2 - 0.05, h, d / 2 - filletSize]
-        ]}
-        color="#a855f7"
-        lineWidth={2}
-        dashed
-        dashSize={0.03}
-        gapSize={0.02}
-      />
-
-      {/* Show depth label on the middle block */}
-      {showDepthLabel && (
-        <>
-          {/* Depth measurement line along the side */}
-          <Line
-            points={[
-              [w / 2 + 0.05, 0.02, d / 2],
-              [w / 2 + 0.05, 0.02, -d / 2]
-            ]}
-            color="#10b981"
-            lineWidth={2}
-          />
-          {/* Depth label */}
-          <Text
-            position={[w / 2 + 0.2, 0.02, 0]}
-            fontSize={0.14}
-            color="#10b981"
-            anchorX="left"
-            anchorY="middle"
-            rotation={[0, 0, 0]}
-          >
-            {depth}mm
-          </Text>
-          {/* End markers */}
-          <Line
-            points={[
-              [w / 2 + 0.02, 0.02, d / 2],
-              [w / 2 + 0.08, 0.02, d / 2]
-            ]}
-            color="#10b981"
-            lineWidth={2}
-          />
-          <Line
-            points={[
-              [w / 2 + 0.02, 0.02, -d / 2],
-              [w / 2 + 0.08, 0.02, -d / 2]
-            ]}
-            color="#10b981"
-            lineWidth={2}
-          />
-        </>
-      )}
     </group>
   )
 }
@@ -194,7 +81,7 @@ function FilletBlock({
 function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
   const fingerPositions = useMemo(() => {
     const scale = 0.04
-    const gap = 0.08
+    const gap = 0.08 // Gap between fingers
     const positions: [number, number, number][] = []
 
     let currentX = 0
@@ -209,6 +96,7 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
       positions.push([currentX, 0, 0])
     })
 
+    // Center the group
     const totalWidth = currentX + (widths.pekefinger * scale) / 2
     const offset = totalWidth / 2
     return positions.map(([x, y, z]) => [x - offset, y, z] as [number, number, number])
@@ -228,9 +116,9 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
         <meshStandardMaterial color="#1a1a2e" roughness={0.8} />
       </mesh>
 
-      {/* Finger blocks with fillet */}
+      {/* Finger blocks */}
       {FINGER_ORDER.map((finger, i) => (
-        <FilletBlock
+        <FingerBlock
           key={finger}
           width={widths[finger]}
           height={heights[finger]}
@@ -238,29 +126,8 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
           position={fingerPositions[i]}
           color={FINGER_COLORS[finger]}
           label={fingerLabels[i]}
-          showDepthLabel={i === 2} // Show depth on langfinger (middle-ish)
         />
       ))}
-
-      {/* Legend */}
-      <group position={[0, -0.3, 1.2]}>
-        <Text
-          position={[-0.8, 0, 0]}
-          fontSize={0.1}
-          color="#a855f7"
-          anchorX="left"
-        >
-          ── 8mm filet
-        </Text>
-        <Text
-          position={[0.3, 0, 0]}
-          fontSize={0.1}
-          color="#60a5fa"
-          anchorX="left"
-        >
-          │ kant etter filet
-        </Text>
-      </group>
 
       <OrbitControls
         enablePan={false}
