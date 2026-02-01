@@ -1,0 +1,80 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/integrations/supabase/client'
+import { OrderRow, OrderStatus } from '@/types/admin'
+
+export function useOrders(statusFilter?: OrderStatus) {
+  return useQuery({
+    queryKey: ['orders', statusFilter],
+    queryFn: async () => {
+      let query = supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (statusFilter) {
+        query = query.eq('status', statusFilter)
+      }
+
+      const { data, error } = await query
+
+      if (error) throw error
+      return data as OrderRow[]
+    }
+  })
+}
+
+export function useOrder(orderId: string | undefined) {
+  return useQuery({
+    queryKey: ['order', orderId],
+    queryFn: async () => {
+      if (!orderId) return null
+
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', orderId)
+        .single()
+
+      if (error) throw error
+      return data as OrderRow
+    },
+    enabled: !!orderId
+  })
+}
+
+export function useUpdateOrderStatus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ orderId, status }: { orderId: string; status: OrderStatus }) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .eq('id', orderId)
+
+      if (error) throw error
+    },
+    onSuccess: (_, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] })
+    }
+  })
+}
+
+export function useUpdateOrderNotes() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ orderId, notes }: { orderId: string; notes: string }) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ internal_notes: notes })
+        .eq('id', orderId)
+
+      if (error) throw error
+    },
+    onSuccess: (_, { orderId }) => {
+      queryClient.invalidateQueries({ queryKey: ['order', orderId] })
+    }
+  })
+}
