@@ -31,9 +31,12 @@ export default function CartItem({ item }: CartItemProps) {
               </p>
             )}
             {product.config && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {product.config.totalWidth.toFixed(1)}mm × {product.config.depth}mm
-              </p>
+              <div className="text-xs text-muted-foreground mt-0.5 space-y-0.5">
+                <p>Bredde: {product.config.totalWidth.toFixed(1)}mm × Dybde: {product.config.depth}mm</p>
+                <p className="text-[10px] opacity-75">
+                  Fingre: {product.config.widths.pekefinger}-{product.config.widths.langfinger}-{product.config.widths.ringfinger}-{product.config.widths.lillefinger}mm
+                </p>
+              </div>
             )}
           </div>
           <button
