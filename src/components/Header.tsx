@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, ShoppingBag } from 'lucide-react'
+import { useCart } from '@/contexts/CartContext'
+import CartDrawer from '@/components/cart/CartDrawer'
 
 export default function Header() {
+  const { itemCount, setIsCartOpen } = useCart()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -57,16 +60,44 @@ export default function Header() {
             >
               Konfigurer
             </Link>
+            
+            {/* Cart button */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Åpne handlekurv"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                  {itemCount > 9 ? '9+' : itemCount}
+                </span>
+              )}
+            </button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden p-2 text-muted-foreground hover:text-foreground"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile: Cart + Menu */}
+          <div className="md:hidden flex items-center gap-2">
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Åpne handlekurv"
+            >
+              <ShoppingBag className="w-5 h-5" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs font-bold rounded-full flex items-center justify-center">
+                  {itemCount > 9 ? '9+' : itemCount}
+                </span>
+              )}
+            </button>
+            <button 
+              className="p-2 text-muted-foreground hover:text-foreground"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </nav>
 
         {/* Mobile Menu */}
@@ -96,6 +127,9 @@ export default function Header() {
           </div>
         )}
       </div>
+      
+      {/* Cart Drawer */}
+      <CartDrawer />
     </header>
   )
 }
