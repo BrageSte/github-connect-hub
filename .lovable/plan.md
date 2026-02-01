@@ -1,104 +1,83 @@
 
-# Plan: 3D STL-visning med blokktype-valg
+
+# Plan: Forbedret konfigurator med dobbel 3D-visning og hjelpeguide
 
 ## Oversikt
 
-Legger til interaktiv 3D-visning av de to blokkvariantene (shortedge og longedge) i konfiguratoren, med prisforskjell og produktvalg.
+Denne planen legger til en dynamisk 3D-visualisering av fingermålene, beholder STL-visningen for blokkvalg, fjerner "Mål mellom leddene"-seksjonen og erstatter den med en utvidbar hjelpeguide.
 
-## Hva jeg vil gjøre
+## Endringer
 
-### 1. Kopiere STL-filer til prosjektet
-Plasserer begge STL-filene i `public/models/`:
-- `public/models/blokk_shortedge.stl` (kompakt variant)
-- `public/models/blokk_longedge.stl` (lang kant variant)
+### 1. Fjerne MeasureGuide-seksjonen
+Fjerner hele kortet "Mål mellom leddene" fra venstre kolonne.
 
-### 2. Installere 3D-biblioteker
-Legger til følgende pakker:
-- `three` - 3D rendering engine
-- `@react-three/fiber@^8.18` - React wrapper for Three.js
-- `@react-three/drei@^9.122.0` - Hjelpeverktøy og komponenter
+### 2. Legge til hjelpeguide-lenke
+Legger til en klikkbar lenke/knapp under høydeforskjell-seksjonen:
+- Tekst: "Problemer med å måle fingrene? Trykk her så hjelper vi deg"
+- Åpner en modal eller collapsible seksjon med steg-for-steg guide
+- Inkluderer MeasureGuide SVG-illustrasjonen
 
-### 3. Opprette 3D STL-visningskomponent
-Ny fil: `src/components/configurator/StlViewer.tsx`
-- Laster inn STL-filer dynamisk basert på valgt blokktype
-- Interaktiv rotasjon med mus/touch
-- Profesjonell belysning
-- Loading-indikator mens modellen lastes
+### 3. Opprette ny DynamicBlockPreview-komponent
+En 3D-komponent som visualiserer de faktiske fingermålene i sanntid:
+- Viser 4 fingerspor med riktig bredde og høyde basert på input
+- Oppdateres live når brukeren endrer verdier
+- Lignende stil som bs-climbing-flat sin Preview3D
+- Viser dimensjoner på hver finger-blokk
 
-### 4. Legge til blokktype-valg i konfiguratoren
-Oppdaterer `CrimpConfigurator.tsx` med:
-- Nytt state for valgt blokktype (`shortedge` | `longedge`)
-- Visuelt valg mellom de to variantene med prisvisning:
-  - **Short Edge**: 449 kr - kompakt og portabel
-  - **Long Edge**: 549 kr - ekstra flate for stabilitet
-- Erstatter SVG-preview med 3D-visning
-- Oppdaterer prislogikk basert på valg
-
-### 5. Oppdatere bestillingsmodal
-Endrer `OrderModal.tsx` til:
-- Vise valgt blokktype i bestillingen
-- Korrekt pris basert på shortedge (449) eller longedge (549)
-- Inkludere blokktype i e-post-ordren
-
-## Brukerflyt
-
+### 4. Oppdatere konfigurator-layout
+Ny struktur:
 ```text
-┌─────────────────────────────────────────────────────────┐
-│  KONFIGURATOR                                           │
-├─────────────────────────────────────────────────────────┤
-│  1. Velg blokktype                                      │
-│     ┌─────────────────┐  ┌─────────────────┐            │
-│     │   SHORT EDGE    │  │   LONG EDGE     │            │
-│     │     449,-       │  │     549,-       │            │
-│     │   (kompakt)     │  │   (ekstra flate)│            │
-│     └─────────────────┘  └─────────────────┘            │
-│                                                         │
-│  2. 3D Forhåndsvisning                                  │
-│     ┌─────────────────────────────────────────┐         │
-│     │                                         │         │
-│     │    [Interaktiv 3D-modell av valgt       │         │
-│     │     blokktype - kan roteres med mus]    │         │
-│     │                                         │         │
-│     └─────────────────────────────────────────┘         │
-│                                                         │
-│  3. Konfigurer fingermål (eksisterende)                 │
-│     ...                                                 │
-│                                                         │
-│  4. Bestill                                             │
-│     [Bestill - pris vises basert på valgt blokk]        │
-└─────────────────────────────────────────────────────────┘
+VENSTRE KOLONNE:
+├── Velg blokktype (shortedge/longedge)
+├── 3D Forhåndsvisning (STL av valgt variant)
+└── Dine mål (dynamisk 3D med fingermål)
+
+HØYRE KOLONNE:
+├── Fingerbredde (mm)
+├── Høydeforskjell (mm)
+│   └── "Trenger du hjelp?" (klikkbar)
+├── Dybde
+├── Bestill
+└── Sammendrag
 ```
 
-## Prisstruktur
+## Teknisk implementering
 
-| Variant | Pris | Beskrivelse |
-|---------|------|-------------|
-| Short Edge | 449 kr | Kompakt blokk, lett å ta med |
-| Long Edge | 549 kr | Lang kant gir ekstra flate og stabilitet |
-
-## Tekniske detaljer
-
-**STL Loader oppsett:**
+### Ny komponent: DynamicBlockPreview.tsx
 ```typescript
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-
-// Loader hook som bruker STLLoader til å parse filen
-// og returnerer geometri som kan brukes i mesh
+// Tar imot widths, calculatedHeights, depth
+// Genererer 4 3D-bokser som representerer fingrene
+// Bruker Three.js boxGeometry med dynamiske dimensjoner
+// Live-oppdatering når props endres
 ```
 
-**3D Scene oppsett:**
-- OrbitControls for rotasjon/zoom
-- Ambient + directional lighting
-- MeshStandardMaterial med metallisk finish
-- Responsiv canvas som fyller container
+### Ny komponent: MeasureHelpModal.tsx
+```typescript
+// Modal/dialog som åpnes når bruker trenger hjelp
+// Inneholder steg-for-steg guide med illustrasjoner
+// Bruker eksisterende MeasureGuide SVG
+```
 
-## Filer som endres
+### Endringer i CrimpConfigurator.tsx
+- Fjerner import av MeasureGuide
+- Legger til import av DynamicBlockPreview
+- Legger til import av MeasureHelpModal
+- Legger til state for modal-visning
+- Oppdaterer layout for å vise begge 3D-visninger
 
-| Fil | Endring |
-|-----|---------|
-| `public/models/blokk_shortedge.stl` | Ny fil (kopi) |
-| `public/models/blokk_longedge.stl` | Ny fil (kopi) |
-| `src/components/configurator/StlViewer.tsx` | Ny komponent |
-| `src/components/configurator/CrimpConfigurator.tsx` | Legger til blokkvalg + 3D |
-| `src/components/configurator/OrderModal.tsx` | Oppdatert pris/info |
-| `src/types/index.ts` | Ny type for blokkvariant |
+## Brukeropplevelse
+
+1. **Velg blokktype** - Bruker ser STL-modell av short/long edge
+2. **Se dine mål** - Bruker ser en dynamisk 3D-modell som viser de faktiske dimensjonene de har valgt
+3. **Juster verdier** - Høyre kolonne med inputs oppdaterer 3D-visningen i sanntid
+4. **Trenger hjelp?** - Diskret lenke åpner detaljert måleveiledning
+
+## Filer som endres/opprettes
+
+| Fil | Handling |
+|-----|----------|
+| `src/components/configurator/DynamicBlockPreview.tsx` | **Ny** - 3D-visning av fingermål |
+| `src/components/configurator/MeasureHelpModal.tsx` | **Ny** - Hjelpeguide modal |
+| `src/components/configurator/CrimpConfigurator.tsx` | **Endres** - Ny layout |
+| `src/components/configurator/MeasureGuide.tsx` | **Beholdes** - Brukes i modal |
+
