@@ -1,5 +1,5 @@
-import { Suspense, useRef, useState, useEffect } from 'react'
-import { Canvas, useFrame, useLoader } from '@react-three/fiber'
+import { Suspense, useRef, useState, useMemo } from 'react'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { OrbitControls, PerspectiveCamera, Center } from '@react-three/drei'
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
 import * as THREE from 'three'
@@ -8,58 +8,60 @@ import { Skeleton } from '@/components/ui/skeleton'
 export type BlockVariant = 'shortedge' | 'longedge'
 
 interface StlModelProps {
-  variant: BlockVariant
+  url: string
 }
 
-function StlModel({ variant }: StlModelProps) {
+function StlModel({ url }: StlModelProps) {
   const meshRef = useRef<THREE.Mesh>(null)
-  const modelPath = variant === 'shortedge' 
-    ? '/models/blokk_shortedge.stl' 
-    : '/models/blokk_longedge.stl'
+  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null)
   
-  const geometry = useLoader(STLLoader, modelPath)
-  
-  // Auto-rotate gently
-  useFrame((state) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.15
-    }
-  })
-
-  // Center and scale the geometry
-  useEffect(() => {
-    if (geometry) {
-      geometry.center()
-      geometry.computeBoundingBox()
-      const box = geometry.boundingBox
+  // Load STL manually to have more control
+  useMemo(() => {
+    const loader = new STLLoader()
+    loader.load(url, (geo) => {
+      // Center the geometry
+      geo.center()
+      
+      // Compute bounding box and scale
+      geo.computeBoundingBox()
+      const box = geo.boundingBox
       if (box) {
         const size = new THREE.Vector3()
         box.getSize(size)
         const maxDim = Math.max(size.x, size.y, size.z)
-        const scale = 2 / maxDim
-        geometry.scale(scale, scale, scale)
+        if (maxDim > 0) {
+          const scale = 2.5 / maxDim
+          geo.scale(scale, scale, scale)
+        }
       }
+      
+      setGeometry(geo)
+    })
+  }, [url])
+  
+  // Auto-rotate gently
+  useFrame((state) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.3
     }
-  }, [geometry])
+  })
 
-  return (
-    <Center>
-      <mesh ref={meshRef} geometry={geometry} castShadow receiveShadow>
-        <meshStandardMaterial 
-          color="#4a5568"
-          roughness={0.3}
-          metalness={0.2}
-        />
+  if (!geometry) {
+    return (
+      <mesh>
+        <boxGeometry args={[0.5, 0.5, 0.5]} />
+        <meshStandardMaterial color="#374151" wireframe />
       </mesh>
-    </Center>
-  )
-}
+    )
+  }
 
-function LoadingFallback() {
   return (
-    <mesh>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial color="#374151" wireframe />
+    <mesh ref={meshRef} geometry={geometry} castShadow receiveShadow>
+      <meshStandardMaterial 
+        color="#6b7280"
+        roughness={0.4}
+        metalness={0.1}
+      />
     </mesh>
   )
 }
@@ -69,49 +71,36 @@ interface StlViewerProps {
 }
 
 export default function StlViewer({ variant }: StlViewerProps) {
-  const [isLoading, setIsLoading] = useState(true)
+  const modelUrl = variant === 'shortedge' 
+    ? '/models/blokk_shortedge.stl' 
+    : '/models/blokk_longedge.stl'
 
   return (
-    <div className="relative w-full aspect-square bg-gradient-to-br from-muted/50 to-muted rounded-xl overflow-hidden">
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <Skeleton className="w-32 h-32 rounded-full" />
-        </div>
-      )}
-      
-      <Canvas 
-        shadows
-        onCreated={() => setIsLoading(false)}
-        className={isLoading ? 'opacity-0' : 'opacity-100 transition-opacity duration-300'}
-      >
-        <PerspectiveCamera makeDefault position={[3, 2, 3]} fov={40} />
+    <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 rounded-xl overflow-hidden">
+      <Canvas shadows>
+        <PerspectiveCamera makeDefault position={[4, 3, 4]} fov={35} />
         <OrbitControls 
           enablePan={false}
-          minDistance={2}
-          maxDistance={6}
+          minDistance={3}
+          maxDistance={8}
           autoRotate={false}
         />
         
         {/* Lighting */}
-        <ambientLight intensity={0.5} />
+        <ambientLight intensity={0.6} />
         <directionalLight 
-          position={[5, 5, 5]} 
-          intensity={1} 
+          position={[5, 8, 5]} 
+          intensity={1.2} 
           castShadow
-          shadow-mapSize-width={1024}
-          shadow-mapSize-height={1024}
         />
-        <directionalLight position={[-3, 3, -3]} intensity={0.4} />
-        <pointLight position={[0, -3, 0]} intensity={0.2} />
+        <directionalLight position={[-3, 4, -3]} intensity={0.5} />
         
-        <Suspense fallback={<LoadingFallback />}>
-          <StlModel variant={variant} />
-        </Suspense>
+        <StlModel url={modelUrl} key={modelUrl} />
         
-        {/* Ground plane for shadow */}
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.2, 0]} receiveShadow>
-          <planeGeometry args={[10, 10]} />
-          <shadowMaterial opacity={0.15} />
+        {/* Ground plane */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -1.5, 0]} receiveShadow>
+          <planeGeometry args={[15, 15]} />
+          <meshStandardMaterial color="#1f2937" />
         </mesh>
       </Canvas>
       
