@@ -89,25 +89,6 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
               <p className="text-sm text-muted-foreground">
                 Du legger inn hvor mye <strong className="text-foreground">neste finger er høyere</strong> enn den forrige:
               </p>
-              
-              {/* Trappetrinn-forklaring */}
-              <div className="bg-surface-light border border-border rounded-lg p-3 space-y-2">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-2">
-                  Tenk "trappetrinn" – fyll inn høyden på hvert trinn:
-                </p>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">A</span>
-                  <span className="text-muted-foreground">Lille → Ring</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">B</span>
-                  <span className="text-muted-foreground">Ring → Lang</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="w-5 h-5 bg-red-600 rounded text-white text-xs flex items-center justify-center font-bold">C</span>
-                  <span className="text-muted-foreground">Lang → Peke (går ned = minus)</span>
-                </div>
-              </div>
             </div>
           </div>
 
