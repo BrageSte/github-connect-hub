@@ -116,21 +116,6 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
             <MeasureGuide />
           </div>
 
-          {/* Legend */}
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-3">
-              <span className="w-6 h-6 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">A</span>
-              <span className="text-muted-foreground">Høydeforskjell: Lille → Ring (pluss)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="w-6 h-6 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">B</span>
-              <span className="text-muted-foreground">Høydeforskjell: Ring → Lang (pluss)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="w-6 h-6 bg-red-600 rounded text-white text-xs flex items-center justify-center font-bold">C</span>
-              <span className="text-muted-foreground">Høydeforskjell: Lang → Peke (minus)</span>
-            </div>
-          </div>
 
           {/* 3) Dybde */}
           <div className="space-y-3">
