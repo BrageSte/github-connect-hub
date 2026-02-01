@@ -1,155 +1,92 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, ChevronDown } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 export default function ProductHero() {
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-grid opacity-50" />
-      <div className="absolute inset-0 bg-radial-gradient" />
-      
-      {/* Gradient orb */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-background to-surface">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px]" />
+      </div>
 
-      <div className="container-custom relative z-10 pt-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* Text content */}
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-32">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          {/* Product Visual - Left side, large and prominent */}
           <motion.div 
-            className="text-center lg:text-left"
+            className="relative order-2 lg:order-1"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <div className="relative aspect-square max-w-md mx-auto">
+              {/* Product image placeholder - styled like real product photography */}
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+                {/* Crimp block visualization */}
+                <div className="absolute inset-0 flex items-end justify-center pb-8">
+                  <div className="flex items-end gap-1">
+                    {[
+                      { h: '45%', w: 'w-12' },
+                      { h: '55%', w: 'w-12' },
+                      { h: '65%', w: 'w-12' },
+                      { h: '50%', w: 'w-12' },
+                    ].map((block, i) => (
+                      <div
+                        key={i}
+                        className={`${block.w} bg-gradient-to-t from-slate-600 to-slate-500 rounded-t-sm`}
+                        style={{ height: block.h }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Base */}
+                <div className="absolute bottom-0 inset-x-0 h-6 bg-slate-600" />
+                
+                {/* Subtle reflection */}
+                <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/5 to-transparent" />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Text content - Right side */}
+          <motion.div 
+            className="text-center lg:text-left order-1 lg:order-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            {/* Badge */}
-            <motion.div 
-              className="inline-flex items-center gap-2 px-4 py-2 bg-surface border border-border rounded-full mb-6"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <span className="w-2 h-2 bg-valid rounded-full animate-pulse" />
-              <span className="text-sm text-muted-foreground">Nå tilgjengelig</span>
-            </motion.div>
-
-            {/* Main headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
-              Design din egen crimp
-              <span className="block gradient-text">
-                – millimeter for millimeter
-              </span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6 text-foreground">
+              CUSTOM CRIMP BLOCK
             </h1>
-
-            {/* Subheading */}
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8">
-              Velg mål. Se preview. Print selv.
-              <span className="block mt-2 text-base">
-                Custom crimp block fra BS Climbing – fordi standardmål ikke passer alle.
-              </span>
+            
+            <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto lg:mx-0">
+              Skreddersydd for dine fingre. Optimal stimulering og personlig ergonomi.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link to="/configure" className="btn-primary text-base px-8 py-4">
-                Konfigurer Stepper
-                <ArrowRight size={18} />
-              </Link>
-              <button 
-                onClick={() => scrollToSection('hvordan')} 
-                className="btn-secondary text-base px-8 py-4"
-              >
-                Hvordan funker det?
-              </button>
-            </div>
+            <Link 
+              to="/configure" 
+              className="inline-flex items-center justify-center px-8 py-4 bg-foreground text-background font-medium hover:bg-foreground/90 transition-colors"
+            >
+              KONFIGURER NÅ
+            </Link>
 
-            {/* Trust indicators */}
-            <div className="flex flex-wrap gap-6 justify-center lg:justify-start mt-10 pt-10 border-t border-border">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">±0.3mm</div>
-                <div className="text-sm text-muted-foreground">Toleranse</div>
+            {/* Minimal specs */}
+            <div className="flex gap-12 justify-center lg:justify-start mt-12 text-sm">
+              <div>
+                <div className="font-mono text-foreground">±0.3mm</div>
+                <div className="text-muted-foreground">Toleranse</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">4</div>
-                <div className="text-sm text-muted-foreground">Grep per blokk</div>
+              <div>
+                <div className="font-mono text-foreground">FDM</div>
+                <div className="text-muted-foreground">Print-klar</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold">STL</div>
-                <div className="text-sm text-muted-foreground">Ferdig fil</div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Product visual placeholder */}
-          <motion.div 
-            className="relative"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-          >
-            <div className="relative aspect-square max-w-lg mx-auto">
-              {/* Glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-2xl" />
-              
-              {/* Product card */}
-              <div className="relative bg-surface border border-border rounded-3xl p-8 h-full flex items-center justify-center">
-                {/* 3D Placeholder visualization */}
-                <div className="relative w-full aspect-[4/3]">
-                  {/* Base board visualization */}
-                  <div className="absolute inset-x-4 bottom-8 h-4 bg-border rounded-lg" />
-                  
-                  {/* Grip blocks */}
-                  <div className="absolute inset-x-4 bottom-12 flex justify-between items-end px-4">
-                    <div className="w-12 bg-gradient-to-t from-primary/60 to-primary rounded-t-lg" style={{ height: '120px' }} />
-                    <div className="w-12 bg-gradient-to-t from-primary/60 to-primary rounded-t-lg" style={{ height: '100px' }} />
-                    <div className="w-12 bg-gradient-to-t from-primary/60 to-primary rounded-t-lg" style={{ height: '80px' }} />
-                    <div className="w-12 bg-gradient-to-t from-primary/60 to-primary rounded-t-lg" style={{ height: '60px' }} />
-                  </div>
-
-                  {/* Labels */}
-                  <div className="absolute top-4 left-4 text-xs text-muted-foreground font-mono">
-                    PREVIEW
-                  </div>
-                  
-                  {/* Measurement lines */}
-                  <div className="absolute right-4 bottom-12 top-8 flex flex-col justify-between items-center">
-                    <div className="h-full w-px bg-border-light relative">
-                      <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-px bg-primary" />
-                      <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-px bg-primary" />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground mt-2 font-mono">6-35mm</span>
-                  </div>
-                </div>
-
-                {/* Corner accent */}
-                <div className="absolute top-4 right-4 w-16 h-16 border-t-2 border-r-2 border-primary/30 rounded-tr-2xl" />
-                <div className="absolute bottom-4 left-4 w-16 h-16 border-b-2 border-l-2 border-primary/30 rounded-bl-2xl" />
+              <div>
+                <div className="font-mono text-foreground">4 grep</div>
+                <div className="text-muted-foreground">Per blokk</div>
               </div>
             </div>
           </motion.div>
         </div>
-
-        {/* Scroll indicator */}
-        <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-        >
-          <button 
-            onClick={() => scrollToSection('hvorfor')}
-            className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
-          >
-            <span className="text-xs uppercase tracking-wider">Scroll</span>
-            <ChevronDown size={20} className="animate-bounce" />
-          </button>
-        </motion.div>
       </div>
     </section>
   )
