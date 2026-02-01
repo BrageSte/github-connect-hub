@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react'
 import MeasureGuide from './MeasureGuide'
 import CrimpPreview from './CrimpPreview'
 import OrderModal from './OrderModal'
+import StlViewer, { type BlockVariant } from './StlViewer'
+import BlockSelector, { BLOCK_OPTIONS } from './BlockSelector'
 
 const FINGER_NAMES = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'] as const
 type FingerName = typeof FINGER_NAMES[number]
@@ -20,6 +22,8 @@ interface HeightDiffs {
 }
 
 export default function CrimpConfigurator() {
+  const [blockVariant, setBlockVariant] = useState<BlockVariant>('shortedge')
+  
   const [widths, setWidths] = useState<Widths>({
     lillefinger: 21,
     ringfinger: 20,
@@ -56,6 +60,8 @@ export default function CrimpConfigurator() {
     const fingerWidths = Object.values(widths).reduce((sum, w) => sum + w, 0)
     return fingerWidths + 16
   }, [widths])
+
+  const currentPrice = BLOCK_OPTIONS.find(o => o.variant === blockVariant)?.price ?? 449
 
   const generateOrder = (type: 'file' | 'printed') => {
     setOrderType(type)
@@ -98,6 +104,22 @@ export default function CrimpConfigurator() {
     <div className="grid lg:grid-cols-2 gap-8">
       {/* LEFT COLUMN - Inputs */}
       <div className="space-y-6">
+        {/* Block type selector */}
+        <div className="bg-card border border-border rounded-2xl p-6">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+            Velg blokktype
+          </h2>
+          <BlockSelector selected={blockVariant} onChange={setBlockVariant} />
+        </div>
+
+        {/* 3D Preview */}
+        <div className="bg-card border border-border rounded-2xl p-6">
+          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+            3D Forhåndsvisning
+          </h2>
+          <StlViewer variant={blockVariant} />
+        </div>
+
         {/* Measure guide */}
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
@@ -110,7 +132,10 @@ export default function CrimpConfigurator() {
             Mål i mm fra ledd til ledd
           </p>
         </div>
-        
+      </div>
+
+      {/* RIGHT COLUMN - Configuration and actions */}
+      <div className="space-y-6">
         {/* Finger widths */}
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
@@ -186,24 +211,6 @@ export default function CrimpConfigurator() {
             Lillefinger: fast 10mm (utgangspunkt)
           </p>
         </div>
-      </div>
-
-      {/* RIGHT COLUMN - Preview and actions */}
-      <div className="space-y-6">
-        {/* 3D Preview */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Forhåndsvisning
-          </h2>
-          <div className="bg-gradient-to-br from-slate-200 to-slate-300 rounded-xl p-6 flex items-center justify-center min-h-[280px]">
-            <CrimpPreview 
-              widths={widths} 
-              calculatedHeights={calculatedHeights} 
-              depth={depth}
-              totalWidth={totalWidth}
-            />
-          </div>
-        </div>
         
         {/* Depth selector */}
         <div className="bg-card border border-border rounded-2xl p-6">
@@ -245,13 +252,16 @@ export default function CrimpConfigurator() {
               className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-valid/50 text-center group"
             >
               <div className="text-foreground font-medium mb-1">Ferdig printet</div>
-              <div className="text-2xl font-bold text-valid">449,-</div>
+              <div className="text-2xl font-bold text-valid">{currentPrice},-</div>
             </button>
           </div>
         </div>
 
-        {/* Total width display */}
+        {/* Summary */}
         <div className="text-center py-4 border border-border rounded-xl bg-surface">
+          <div className="text-muted-foreground text-sm mb-1">
+            Valgt: <span className="text-foreground font-medium">{blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}</span>
+          </div>
           <span className="text-muted-foreground text-sm">Beregnet totalbredde: </span>
           <span className="text-foreground font-mono font-semibold">{totalWidth.toFixed(1)}mm</span>
         </div>
@@ -261,6 +271,7 @@ export default function CrimpConfigurator() {
       {showOrderForm && orderType && (
         <OrderModal
           orderType={orderType}
+          blockVariant={blockVariant}
           widths={widths}
           calculatedHeights={calculatedHeights}
           depth={depth}

@@ -1,8 +1,11 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
+import type { BlockVariant } from './StlViewer'
+import { BLOCK_OPTIONS } from './BlockSelector'
 
 interface OrderModalProps {
   orderType: 'file' | 'printed'
+  blockVariant: BlockVariant
   widths: {
     lillefinger: number
     ringfinger: number
@@ -23,6 +26,7 @@ interface OrderModalProps {
 
 export default function OrderModal({
   orderType,
+  blockVariant,
   widths,
   calculatedHeights,
   depth,
@@ -34,8 +38,12 @@ export default function OrderModal({
   const [customerEmail, setCustomerEmail] = useState('')
   const [quantity, setQuantity] = useState(1)
 
-  const price = orderType === 'file' ? 199 : 449
-  const productName = orderType === 'file' ? '3D-fil (STL)' : 'Ferdig printet blokk'
+  const blockOption = BLOCK_OPTIONS.find(o => o.variant === blockVariant)
+  const blockName = blockOption?.name ?? 'Short Edge'
+  const blockPrice = blockOption?.price ?? 449
+  
+  const price = orderType === 'file' ? 199 : blockPrice
+  const productName = orderType === 'file' ? '3D-fil (STL)' : `Ferdig printet - ${blockName}`
 
   const submitOrder = () => {
     const subject = encodeURIComponent(`Bestilling: Custom Crimp Blokk - ${productName}`)
@@ -47,6 +55,7 @@ Kunde: ${customerName}
 E-post: ${customerEmail}
 
 Produkt: ${productName}
+Blokktype: ${blockName}
 Antall: ${quantity}
 Pris per stk: ${price} kr
 Totalpris: ${price * quantity} kr
@@ -82,9 +91,16 @@ Sendt fra Crimp Block Configurator
           </button>
         </div>
         
-        <div className="bg-surface-light rounded-xl p-4 mb-6 flex items-center justify-between">
-          <span className="text-muted-foreground">{productName}</span>
-          <span className="text-2xl font-bold text-foreground">{price},-</span>
+        <div className="bg-surface-light rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-muted-foreground">{productName}</span>
+            <span className="text-2xl font-bold text-foreground">{price},-</span>
+          </div>
+          {orderType === 'printed' && (
+            <div className="text-sm text-muted-foreground">
+              Blokktype: <span className="text-foreground">{blockName}</span>
+            </div>
+          )}
         </div>
         
         <div className="space-y-4">
