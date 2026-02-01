@@ -310,22 +310,18 @@ export default function CrimpConfigurator() {
 
         {/* Summary */}
         <div className="bg-surface-light rounded-xl p-4 mb-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground block">Blokktype</span>
               <span className="text-foreground font-medium">{blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground block">Totalbredde</span>
-              <span className="text-foreground font-mono font-medium">{totalWidth.toFixed(1)}mm</span>
             </div>
             <div>
               <span className="text-muted-foreground block">Dybde</span>
               <span className="text-foreground font-mono font-medium">{depth}mm</span>
             </div>
             <div>
-              <span className="text-muted-foreground block">Maks høyde</span>
-              <span className="text-foreground font-mono font-medium">{Math.max(...Object.values(calculatedHeights))}mm</span>
+              <span className="text-muted-foreground block">Farge</span>
+              <span className="text-foreground font-medium">Svart</span>
             </div>
           </div>
         </div>
