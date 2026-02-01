@@ -1,7 +1,7 @@
 // Mock Stripe Checkout for development
 // Will be replaced with real Stripe integration later
 
-import { CartItem, Order, DeliveryMethod, generateOrderId, getShippingCost, PICKUP_LOCATIONS } from '@/types/shop'
+import { CartItem, Order, DeliveryMethod, ShippingAddress, generateOrderId, getShippingCost, PICKUP_LOCATIONS } from '@/types/shop'
 
 interface MockCheckoutSession {
   id: string
@@ -11,7 +11,12 @@ interface MockCheckoutSession {
 interface CreateCheckoutParams {
   items: CartItem[]
   email?: string
+  customerName?: string
+  customerPhone?: string
+  shippingAddress?: ShippingAddress
   deliveryMethod?: DeliveryMethod
+  promoCode?: string
+  promoDiscount?: number
   successUrl?: string
   cancelUrl?: string
 }
@@ -20,7 +25,16 @@ interface CreateCheckoutParams {
 export async function createMockCheckoutSession(
   params: CreateCheckoutParams
 ): Promise<MockCheckoutSession> {
-  const { items, email, deliveryMethod = 'shipping' } = params
+  const { 
+    items, 
+    email, 
+    customerName,
+    customerPhone,
+    shippingAddress,
+    deliveryMethod = 'shipping',
+    promoCode,
+    promoDiscount = 0
+  } = params
   
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500))
@@ -31,15 +45,20 @@ export async function createMockCheckoutSession(
   // Store order data in sessionStorage for the success page
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
   const shipping = getShippingCost(items, deliveryMethod)
-  const total = subtotal + shipping
+  const total = subtotal + shipping - promoDiscount
   
   const order: Order = {
     orderId: generateOrderId(),
     items,
     subtotal,
     shipping,
-    total,
+    total: Math.max(0, total),
     email,
+    customerName,
+    customerPhone,
+    shippingAddress,
+    promoCode,
+    promoDiscount,
     deliveryMethod,
     createdAt: new Date().toISOString(),
     status: 'paid'

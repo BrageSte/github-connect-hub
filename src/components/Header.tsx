@@ -17,11 +17,7 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
+  const closeMobileMenu = () => {
     setIsMobileMenuOpen(false)
   }
 
@@ -42,18 +38,18 @@ export default function Header() {
 
           {/* Desktop Navigation - Minimal */}
           <div className="hidden md:flex items-center gap-8">
-            <button 
-              onClick={() => scrollToSection('how-it-works')}
+            <Link 
+              to="/#how-it-works"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Hvordan
-            </button>
-            <button 
-              onClick={() => scrollToSection('faq')}
+            </Link>
+            <Link 
+              to="/#faq"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               FAQ
-            </button>
+            </Link>
             <Link 
               to="/configure" 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
@@ -104,18 +100,20 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden py-6 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
-              <button 
-                onClick={() => scrollToSection('how-it-works')}
-                className="text-muted-foreground hover:text-foreground transition-colors py-2 text-left"
+              <Link 
+                to="/#how-it-works"
+                onClick={closeMobileMenu}
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
               >
                 Hvordan
-              </button>
-              <button 
-                onClick={() => scrollToSection('faq')}
-                className="text-muted-foreground hover:text-foreground transition-colors py-2 text-left"
+              </Link>
+              <Link 
+                to="/#faq"
+                onClick={closeMobileMenu}
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
               >
                 FAQ
-              </button>
+              </Link>
               <Link 
                 to="/configure" 
                 className="text-foreground font-medium py-2"
