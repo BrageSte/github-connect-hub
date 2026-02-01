@@ -7,6 +7,7 @@ export interface Product {
   price: number // in NOK (øre for Stripe later)
   variant?: string
   image?: string
+  isDigital?: boolean // true for STL files
   // Custom block configuration
   config?: BlockConfig
 }
@@ -34,6 +35,30 @@ export interface CartItem {
   quantity: number
 }
 
+export type DeliveryMethod = 'shipping' | 'pickup-gneis' | 'pickup-oslo'
+
+export interface PickupLocation {
+  id: DeliveryMethod
+  name: string
+  address: string
+  description?: string
+}
+
+export const PICKUP_LOCATIONS: PickupLocation[] = [
+  {
+    id: 'pickup-gneis',
+    name: 'Gneis Lilleaker',
+    address: 'Lilleakerveien 31, 0283 Oslo',
+    description: 'Hent i resepsjonen'
+  },
+  {
+    id: 'pickup-oslo',
+    name: 'Oslo Klatresenter',
+    address: 'Sigurd Hoels vei 2, 0655 Oslo',
+    description: 'Hent i proshopen'
+  }
+]
+
 export interface Order {
   orderId: string
   items: CartItem[]
@@ -41,11 +66,28 @@ export interface Order {
   shipping: number
   total: number
   email?: string
+  deliveryMethod?: DeliveryMethod
   createdAt: string
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
 }
 
 export const SHIPPING_COST = 79 // Fast frakt i Norge
+
+// Check if cart contains only digital products
+export function isDigitalOnlyCart(items: CartItem[]): boolean {
+  return items.every(item => item.product.isDigital === true)
+}
+
+// Get shipping cost based on delivery method and cart contents
+export function getShippingCost(items: CartItem[], deliveryMethod: DeliveryMethod): number {
+  if (isDigitalOnlyCart(items)) {
+    return 0 // Digital products = no shipping
+  }
+  if (deliveryMethod === 'pickup-gneis' || deliveryMethod === 'pickup-oslo') {
+    return 0 // Pickup = free
+  }
+  return SHIPPING_COST
+}
 
 export function generateProductId(config: BlockConfig, orderType: 'file' | 'printed'): string {
   const { blockVariant, widths, depth } = config

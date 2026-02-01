@@ -1,7 +1,7 @@
 // Mock Stripe Checkout for development
 // Will be replaced with real Stripe integration later
 
-import { CartItem, Order, generateOrderId } from '@/types/shop'
+import { CartItem, Order, DeliveryMethod, generateOrderId, getShippingCost, PICKUP_LOCATIONS } from '@/types/shop'
 
 interface MockCheckoutSession {
   id: string
@@ -11,6 +11,7 @@ interface MockCheckoutSession {
 interface CreateCheckoutParams {
   items: CartItem[]
   email?: string
+  deliveryMethod?: DeliveryMethod
   successUrl?: string
   cancelUrl?: string
 }
@@ -19,7 +20,7 @@ interface CreateCheckoutParams {
 export async function createMockCheckoutSession(
   params: CreateCheckoutParams
 ): Promise<MockCheckoutSession> {
-  const { items, email } = params
+  const { items, email, deliveryMethod = 'shipping' } = params
   
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500))
@@ -29,7 +30,7 @@ export async function createMockCheckoutSession(
   
   // Store order data in sessionStorage for the success page
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
-  const shipping = 79
+  const shipping = getShippingCost(items, deliveryMethod)
   const total = subtotal + shipping
   
   const order: Order = {
@@ -39,6 +40,7 @@ export async function createMockCheckoutSession(
     shipping,
     total,
     email,
+    deliveryMethod,
     createdAt: new Date().toISOString(),
     status: 'paid'
   }
@@ -80,4 +82,11 @@ export function getPendingOrder(): Order | null {
 // Clear the pending order
 export function clearPendingOrder(): void {
   sessionStorage.removeItem('bs-climbing-pending-order')
+}
+
+// Get delivery method label
+export function getDeliveryMethodLabel(method: DeliveryMethod): string {
+  if (method === 'shipping') return 'Hjemlevering'
+  const pickup = PICKUP_LOCATIONS.find(l => l.id === method)
+  return pickup ? `Henting: ${pickup.name}` : 'Levering'
 }

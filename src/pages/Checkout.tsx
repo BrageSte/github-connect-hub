@@ -1,20 +1,20 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { ArrowLeft, CreditCard, Loader2, Truck, MapPin, Mail } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CartSummary from '@/components/cart/CartSummary'
 import { useCart } from '@/contexts/CartContext'
 import { redirectToMockCheckout } from '@/lib/stripe-mock'
 import { useToast } from '@/hooks/use-toast'
+import { PICKUP_LOCATIONS, DeliveryMethod } from '@/types/shop'
 
 export default function Checkout() {
-  const { items, itemCount, total } = useCart()
+  const { items, itemCount, total, deliveryMethod, setDeliveryMethod, isDigitalOnly } = useCart()
   const [email, setEmail] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'vipps' | 'card'>('vipps')
   const { toast } = useToast()
-  const navigate = useNavigate()
 
   const handleCheckout = async () => {
     if (!email) {
@@ -32,6 +32,7 @@ export default function Checkout() {
       await redirectToMockCheckout({
         items,
         email,
+        deliveryMethod,
         successUrl: `${window.location.origin}/checkout/success`,
         cancelUrl: `${window.location.origin}/checkout/cancel`
       })
@@ -102,10 +103,101 @@ export default function Checkout() {
                     required
                   />
                   <p className="text-xs text-muted-foreground mt-2">
-                    Du får ordrebekreftelse og oppdateringer på denne adressen.
+                    {isDigitalOnly 
+                      ? 'STL-filen sendes til denne e-postadressen.'
+                      : 'Du får ordrebekreftelse og oppdateringer på denne adressen.'
+                    }
                   </p>
                 </div>
               </div>
+
+              {/* Delivery method - Only show for physical products */}
+              {!isDigitalOnly && (
+                <div className="bg-card border border-border rounded-2xl p-6">
+                  <h2 className="text-lg font-semibold mb-4">Leveringsmetode</h2>
+                  <div className="space-y-3">
+                    {/* Shipping option */}
+                    <button
+                      onClick={() => setDeliveryMethod('shipping')}
+                      className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
+                        deliveryMethod === 'shipping'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="w-12 h-12 bg-surface-light rounded-xl flex items-center justify-center">
+                        <Truck className="w-6 h-6 text-primary" />
+                      </div>
+                      <div className="text-left flex-1">
+                        <div className="font-medium text-foreground">Hjemlevering</div>
+                        <div className="text-sm text-muted-foreground">Sendes med Posten/Bring (3-5 dager)</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-medium text-foreground">79,- kr</span>
+                      </div>
+                      {deliveryMethod === 'shipping' && (
+                        <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Pickup options */}
+                    {PICKUP_LOCATIONS.map(location => (
+                      <button
+                        key={location.id}
+                        onClick={() => setDeliveryMethod(location.id)}
+                        className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
+                          deliveryMethod === location.id
+                            ? 'border-primary bg-primary/10'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        <div className="w-12 h-12 bg-surface-light rounded-xl flex items-center justify-center">
+                          <MapPin className="w-6 h-6 text-valid" />
+                        </div>
+                        <div className="text-left flex-1">
+                          <div className="font-medium text-foreground">{location.name}</div>
+                          <div className="text-sm text-muted-foreground">{location.address}</div>
+                          {location.description && (
+                            <div className="text-xs text-muted-foreground mt-0.5">{location.description}</div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium text-valid">Gratis</span>
+                        </div>
+                        {deliveryMethod === location.id && (
+                          <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Digital delivery notice */}
+              {isDigitalOnly && (
+                <div className="bg-card border border-border rounded-2xl p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                      <Mail className="w-6 h-6 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold mb-1">Digital levering</h2>
+                      <p className="text-sm text-muted-foreground">
+                        STL-filen(e) sendes direkte til e-postadressen din etter fullført betaling. 
+                        Ingen frakt – ingen ventetid!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Payment method */}
               <div className="bg-card border border-border rounded-2xl p-6">
@@ -168,7 +260,7 @@ export default function Checkout() {
                   {items.map(item => (
                     <div key={item.product.id} className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-surface-light rounded-lg flex items-center justify-center shrink-0">
-                        <span className="text-xl">🧗</span>
+                        <span className="text-xl">{item.product.isDigital ? '📄' : '🧗'}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-medium text-foreground text-sm truncate">
@@ -176,6 +268,7 @@ export default function Checkout() {
                         </div>
                         <div className="text-xs text-muted-foreground">
                           Antall: {item.quantity}
+                          {item.product.isDigital && ' • Digital levering'}
                         </div>
                       </div>
                       <div className="text-sm font-medium text-foreground">
