@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react'
-import MeasureGuide from './MeasureGuide'
-import CrimpPreview from './CrimpPreview'
 import OrderModal from './OrderModal'
 import StlViewer, { type BlockVariant } from './StlViewer'
 import BlockSelector, { BLOCK_OPTIONS } from './BlockSelector'
+import DynamicBlockPreview from './DynamicBlockPreview'
+import MeasureHelpModal from './MeasureHelpModal'
+import { HelpCircle } from 'lucide-react'
 
 const FINGER_NAMES = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'] as const
 type FingerName = typeof FINGER_NAMES[number]
@@ -55,6 +56,7 @@ export default function CrimpConfigurator() {
   const [showOrderForm, setShowOrderForm] = useState(false)
   const [orderType, setOrderType] = useState<'file' | 'printed' | null>(null)
   const [orderSent, setOrderSent] = useState(false)
+  const [showMeasureHelp, setShowMeasureHelp] = useState(false)
 
   const totalWidth = useMemo(() => {
     const fingerWidths = Object.values(widths).reduce((sum, w) => sum + w, 0)
@@ -112,7 +114,7 @@ export default function CrimpConfigurator() {
           <BlockSelector selected={blockVariant} onChange={setBlockVariant} />
         </div>
 
-        {/* 3D Preview */}
+        {/* 3D Preview - STL Model */}
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
             3D Forhåndsvisning
@@ -120,16 +122,18 @@ export default function CrimpConfigurator() {
           <StlViewer variant={blockVariant} />
         </div>
 
-        {/* Measure guide */}
+        {/* Dynamic 3D Preview - User measurements */}
         <div className="bg-card border border-border rounded-2xl p-6">
           <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Mål mellom leddene
+            Dine mål
           </h2>
-          <div className="bg-surface-light rounded-xl p-4">
-            <MeasureGuide />
-          </div>
+          <DynamicBlockPreview 
+            widths={widths} 
+            heights={calculatedHeights} 
+            depth={depth} 
+          />
           <p className="text-xs text-muted-foreground text-center mt-3">
-            Mål i mm fra ledd til ledd
+            Visualisering av dine valgte mål
           </p>
         </div>
       </div>
@@ -210,6 +214,15 @@ export default function CrimpConfigurator() {
           <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
             Lillefinger: fast 10mm (utgangspunkt)
           </p>
+          
+          {/* Help link */}
+          <button
+            onClick={() => setShowMeasureHelp(true)}
+            className="mt-4 flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors w-full justify-center"
+          >
+            <HelpCircle className="w-4 h-4" />
+            Problemer med å måle? Trykk her for hjelp
+          </button>
         </div>
         
         {/* Depth selector */}
@@ -280,6 +293,12 @@ export default function CrimpConfigurator() {
           onComplete={handleOrderComplete}
         />
       )}
+
+      {/* Measure Help Modal */}
+      <MeasureHelpModal 
+        open={showMeasureHelp} 
+        onOpenChange={setShowMeasureHelp} 
+      />
     </div>
   )
 }
