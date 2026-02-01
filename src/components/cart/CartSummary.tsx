@@ -1,11 +1,18 @@
 import { useCart } from '@/contexts/CartContext'
-import { SHIPPING_COST } from '@/types/shop'
+import { PICKUP_LOCATIONS } from '@/types/shop'
 
 export default function CartSummary() {
-  const { subtotal, shipping, total, itemCount } = useCart()
+  const { subtotal, shipping, total, itemCount, deliveryMethod, isDigitalOnly } = useCart()
 
   if (itemCount === 0) {
     return null
+  }
+
+  const getDeliveryLabel = () => {
+    if (isDigitalOnly) return 'Digital levering'
+    if (deliveryMethod === 'shipping') return 'Hjemlevering'
+    const pickup = PICKUP_LOCATIONS.find(l => l.id === deliveryMethod)
+    return pickup ? `Henting: ${pickup.name}` : 'Levering'
   }
 
   return (
@@ -16,15 +23,17 @@ export default function CartSummary() {
       </div>
       
       <div className="flex justify-between text-sm">
-        <span className="text-muted-foreground">Frakt</span>
-        <span className="text-foreground">
+        <span className="text-muted-foreground">{getDeliveryLabel()}</span>
+        <span className={shipping === 0 ? 'text-valid font-medium' : 'text-foreground'}>
           {shipping > 0 ? `${shipping},- kr` : 'Gratis'}
         </span>
       </div>
       
-      <p className="text-xs text-muted-foreground">
-        Fast frakt {SHIPPING_COST},- kr til hele Norge
-      </p>
+      {!isDigitalOnly && deliveryMethod === 'shipping' && (
+        <p className="text-xs text-muted-foreground">
+          Hent gratis på Gneis Lilleaker eller Oslo Klatresenter
+        </p>
+      )}
       
       <div className="flex justify-between text-base font-semibold pt-2 border-t border-border">
         <span className="text-foreground">Totalt</span>

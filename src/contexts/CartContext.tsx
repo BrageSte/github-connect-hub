@@ -1,7 +1,7 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
-import { CartItem, Product, SHIPPING_COST } from '@/types/shop'
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react'
+import { CartItem, Product, DeliveryMethod, getShippingCost, isDigitalOnlyCart } from '@/types/shop'
 
 interface CartContextType {
   items: CartItem[]
@@ -9,6 +9,9 @@ interface CartContextType {
   subtotal: number
   shipping: number
   total: number
+  deliveryMethod: DeliveryMethod
+  setDeliveryMethod: (method: DeliveryMethod) => void
+  isDigitalOnly: boolean
   addToCart: (product: Product, quantity?: number) => void
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
@@ -25,6 +28,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('shipping')
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -57,7 +61,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   
   const subtotal = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
   
-  const shipping = items.length > 0 ? SHIPPING_COST : 0
+  const isDigitalOnly = useMemo(() => isDigitalOnlyCart(items), [items])
+  
+  const shipping = useMemo(() => {
+    if (items.length === 0) return 0
+    return getShippingCost(items, deliveryMethod)
+  }, [items, deliveryMethod])
   
   const total = subtotal + shipping
 
@@ -96,6 +105,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([])
+    setDeliveryMethod('shipping')
   }, [])
 
   return (
@@ -106,6 +116,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         subtotal,
         shipping,
         total,
+        deliveryMethod,
+        setDeliveryMethod,
+        isDigitalOnly,
         addToCart,
         removeFromCart,
         updateQuantity,

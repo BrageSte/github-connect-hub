@@ -91,6 +91,7 @@ export default function CrimpConfigurator() {
       description: `Tilpasset crimp block: ${totalWidth.toFixed(1)}mm bred × ${depth}mm dyp`,
       price: type === 'file' ? filePrice : currentPrice,
       variant: blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge',
+      isDigital: type === 'file',
       config
     }
     
