@@ -1,349 +1,167 @@
 
-
-# Plan: Order Intake + Production Queue System
+# Plan: Promokode + Komplett bestillingsskjema + Navigasjonsfiks
 
 ## Oversikt
+Denne planen legger til promokode-funksjonalitet i utsjekken, utvider bestillingsskjemaet med fullstendige kundedetaljer og leveringsadresse, og fikser navigasjonslenker som ikke fungerer på andre sider enn forsiden.
 
-Bygger et komplett ordrehåndteringssystem med Supabase som database, Edge Functions for Stripe-integrasjon, og et admin-panel for manuell produksjon. Systemet er designet for manuell drift nå, men med arkitektur klar for full automatisering senere.
+---
 
-## Arkitektur
+## Del 1: Navigasjonsfiks i Header
 
-```text
-┌─────────────────────────────────────────────────────────────────────┐
-│                           FRONTEND                                   │
-├─────────────────────────────────────────────────────────────────────┤
-│  Konfigurator → Handlekurv → Checkout → Stripe Checkout → Success  │
-└─────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        SUPABASE EDGE FUNCTIONS                       │
-├─────────────────────────────────────────────────────────────────────┤
-│  /create-checkout-session     │  /stripe-webhook                    │
-│  - Lagrer config_snapshot     │  - Verifiserer Stripe signatur      │
-│  - Oppretter Stripe Session   │  - Oppretter/oppdaterer ordre       │
-│  - Returnerer checkout URL    │  - Sender admin e-post via Resend   │
-│                               │  - Logger alle events               │
-└─────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                        SUPABASE DATABASE                            │
-├─────────────────────────────────────────────────────────────────────┤
-│  orders            │  order_events       │  files                  │
-│  - config_snapshot │  - event log        │  - STEP/preview files   │
-│  - shipping_address│  - idempotency      │  - linked to orders     │
-│  - status workflow │  - debugging        │  - future use           │
-└─────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                          ADMIN PANEL                                │
-├─────────────────────────────────────────────────────────────────────┤
-│  /admin             │  /admin/orders/:id                           │
-│  - Ordreliste       │  - Ordredetaljer                             │
-│  - Filtrer på status│  - Kopier parametre                          │
-│  - Søk              │  - Endre status                              │
-│                     │  - Interne notater                           │
-└─────────────────────────────────────────────────────────────────────┘
+### Problem
+"Hvordan" og "FAQ" knappene bruker `scrollToSection()` som kun fungerer på forsiden. Når brukeren er på `/configure` eller `/checkout` finnes ikke disse seksjonene på siden.
+
+### Løsning
+Endre fra `scrollToSection()` til vanlige lenker med hash (`/#how-it-works` og `/#faq`). React Router vil navigere til forsiden, og nettleseren vil automatisk scrolle til riktig seksjon.
+
+**Fil:** `src/components/Header.tsx`
+
+Endringer:
+- Erstatte `<button onClick={() => scrollToSection('how-it-works')}>` med `<Link to="/#how-it-works">`
+- Erstatte `<button onClick={() => scrollToSection('faq')}>` med `<Link to="/#faq">`
+- Gjøre samme endring for mobilmenyen
+
+---
+
+## Del 2: Promokode-funksjonalitet
+
+### Nye typer
+**Fil:** `src/types/shop.ts`
+
 ```
-
-## Del 1: Datamodell (SQL-migrasjoner)
-
-### Tabell: `orders`
-
-| Kolonne | Type | Beskrivelse |
-|---------|------|-------------|
-| `id` | uuid | Primary key |
-| `created_at` | timestamptz | Opprettet |
-| `updated_at` | timestamptz | Sist endret |
-| `status` | text | `new`, `manual_review`, `in_production`, `ready_to_print`, `printing`, `shipped`, `done`, `error` |
-| `config_version` | int | Versjonsnummer for fremtidig kompatibilitet |
-| `stripe_checkout_session_id` | text | Unik, for idempotency |
-| `stripe_payment_intent_id` | text | For referanse |
-| `customer_name` | text | Kundens navn |
-| `customer_email` | text | Kundens e-post |
-| `customer_phone` | text | Telefon (valgfritt) |
-| `delivery_method` | text | `shipping`, `pickup-gneis`, `pickup-oslo`, `digital` |
-| `shipping_address` | jsonb | Adresse fra Stripe |
-| `pickup_location` | text | Hentested-ID |
-| `delivery_notes` | text | Leveringsnotater |
-| `config_snapshot` | jsonb | Alle produktkonfigurasjoner |
-| `line_items` | jsonb | Produktlinjer med pris |
-| `subtotal_amount` | int | I øre |
-| `shipping_amount` | int | I øre |
-| `total_amount` | int | I øre |
-| `currency` | text | NOK |
-| `internal_notes` | text | Admin-notater |
-| `error_message` | text | Feilmeldinger |
-
-### Tabell: `order_events`
-
-| Kolonne | Type | Beskrivelse |
-|---------|------|-------------|
-| `id` | uuid | Primary key |
-| `order_id` | uuid | FK → orders |
-| `created_at` | timestamptz | Tidspunkt |
-| `event_type` | text | F.eks. `stripe.checkout.session.completed` |
-| `payload` | jsonb | Full event-data |
-
-### Tabell: `files` (for fremtidig bruk)
-
-| Kolonne | Type | Beskrivelse |
-|---------|------|-------------|
-| `id` | uuid | Primary key |
-| `order_id` | uuid | FK → orders |
-| `created_at` | timestamptz | Opprettet |
-| `file_type` | text | `step`, `stl`, `preview`, `other` |
-| `storage_path` | text | Supabase Storage path |
-| `original_filename` | text | Originalt filnavn |
-
-### RLS Policies
-
-- `orders`: Kun lesing for authenticated admin-bruker
-- `order_events`: Kun lesing for authenticated admin
-- `files`: Kun lesing for authenticated admin
-
-## Del 2: Edge Functions
-
-### 1. `create-checkout-session`
-
-**Formål:** Oppretter Stripe Checkout Session med all konfig-data
-
-**Input:**
-```json
-{
-  "items": [
-    {
-      "product": { "id": "...", "name": "...", "price": 449, "config": {...} },
-      "quantity": 1
-    }
-  ],
-  "email": "kunde@example.com",
-  "deliveryMethod": "shipping"
+ShippingAddress {
+  line1: string
+  line2?: string
+  postalCode: string
+  city: string
 }
 ```
 
-**Flyt:**
-1. Validér input
-2. Beregn totaler (subtotal, frakt, total)
-3. Bygg `config_snapshot` fra alle items
-4. Opprett Stripe Checkout Session med:
-   - Line items (produkt + frakt)
-   - `metadata`: `config_snapshot` (JSON-string)
-   - `success_url` og `cancel_url`
-5. Returner `{ url: session.url }`
+Utvide Order-interface med:
+- `customerName: string`
+- `customerPhone?: string`
+- `shippingAddress?: ShippingAddress`
+- `promoCode?: string`
 
-### 2. `stripe-webhook`
+### CartContext utvidelser
+**Fil:** `src/contexts/CartContext.tsx`
 
-**Formål:** Håndterer Stripe-events og oppretter ordrer
+Legge til:
+- `promoCode` state og `setPromoCode` funksjon
+- `applyPromoCode(code: string)` - validerer og setter aktiv kode
+- `promoDiscount` - beregnet rabattbeløp
+- `discountedTotal` - total etter rabatt
+- `clearPromoCode()` - nullstill promokode
 
-**Events som håndteres:**
-- `checkout.session.completed`
+Gyldige promokoder (hardkodet for testing):
+- `TESTMEG` = 100% rabatt
 
-**Flyt:**
-1. Verifiser Stripe-signatur
-2. Parse event
-3. Sjekk idempotency: Finnes ordre med `stripe_checkout_session_id`?
-   - Ja: Logg event, returner 200
-   - Nei: Opprett ordre
-4. Lagre event i `order_events`
-5. Send admin e-post via Resend med:
-   - Ordre-ID og lenke til admin-panel
-   - Kundeinfo (navn, e-post, telefon)
-   - Leveringsadresse/hentested
-   - Produktkonfigurasjon (formatert)
-6. Returner 200
+---
 
-### Secrets som kreves
+## Del 3: Utvidet Checkout-skjema
 
-| Variabel | Beskrivelse |
-|----------|-------------|
-| `STRIPE_SECRET_KEY` | Stripe API-nøkkel |
-| `STRIPE_WEBHOOK_SECRET` | Webhook-signering |
-| `RESEND_API_KEY` | For admin-e-post |
-| `ADMIN_EMAIL` | Din e-postadresse |
+**Fil:** `src/pages/Checkout.tsx`
 
-## Del 3: Frontend-oppdateringer
+### Nye felter i skjemaet
 
-### Checkout-flyt
+**Kontaktinfo-seksjon:**
+- Navn (påkrevd)
+- Telefon (valgfritt)  
+- E-post (allerede eksisterer)
 
-Erstatter `stripe-mock.ts` med ekte Stripe-kall:
+**Leveringsadresse-seksjon** (vises kun for hjemlevering):
+- Gateadresse (påkrevd)
+- Postnummer (påkrevd)
+- Poststed (påkrevd)
 
-1. **Checkout.tsx**: Kaller `supabase.functions.invoke('create-checkout-session')`
-2. Stripe håndterer betaling
-3. **CheckoutSuccess.tsx**: Viser ordrebekreftelse (henter fra URL-params)
+**Promokode-seksjon:**
+- Input-felt for kode
+- "Bruk kode" knapp
+- Visuell feedback: grønn tekst "TESTMEG (-100%)" når gyldig
 
-### Nye typer
+### Flyt for gratis bestilling
+Når `discountedTotal === 0`:
+- Hopp over Stripe-betaling
+- Opprett ordre direkte i databasen
+- Naviger til suksess-side
 
-Utvider `src/types/shop.ts` med:
-- `OrderStatus` enum
-- `OrderEvent` interface
-- `ConfigSnapshot` interface
+---
 
-## Del 4: Admin-panel
+## Del 4: Oppdatert handlekurvsammendrag
 
-### `/admin` (Ordreliste)
+**Fil:** `src/components/cart/CartSummary.tsx`
 
-- Tabell med alle ordrer
-- Kolonner: Ordre-ID, Dato, Kunde, Status, Total
-- Filtrering på status
-- Sortering (nyeste først)
-- Klikk på rad → Ordredetaljer
+- Vise rabattlinje når promokode er aktiv
+- Vise opprinnelig pris gjennomstreket
+- Vise ny pris etter rabatt
 
-### `/admin/orders/:id` (Ordredetaljer)
+---
 
-**Seksjon: Kundeinformasjon**
-- Navn, e-post, telefon
-- Leveringsmetode + adresse/hentested
+## Del 5: Oppdatert mock-checkout
 
-**Seksjon: Produktkonfigurasjon**
-- Blokktype (Short/Long Edge)
-- Fingerbredder (formatert tabell)
-- Høyder
-- Dybde
-- Total bredde
-- **Kopier parametre**-knapp (genererer tekstblokk)
+**Fil:** `src/lib/stripe-mock.ts`
 
-**Seksjon: Ordrestatus**
-- Status-dropdown med alle statuser
-- Lagre-knapp
-- Interne notater (textarea)
+Utvide `CreateCheckoutParams` med nye felter:
+- customerName
+- customerPhone
+- shippingAddress
+- promoCode
 
-**Seksjon: Filer** (forberedes, ikke implementeres fullt)
-- Placeholder for fremtidig STEP-opplasting
+Oppdatere ordre-opprettelse til å inkludere alle data.
 
-### Admin-autentisering
+---
 
-For MVP: Enkel passord-beskyttelse eller Supabase Auth med admin-rolle.
+## Brukerflyt (komplett)
 
-## Del 5: E-postvarsling
+1. Bruker fyller inn konfigurasjon og legger i handlekurv
+2. Går til checkout
+3. Fyller inn navn og e-post
+4. Velger leveringsmetode (henting eller hjemlevering)
+5. Hvis hjemlevering: fyller inn adresse
+6. Legger inn promokode "TESTMEG"
+7. Ser at total blir 0 kr
+8. Klikker "Fullfør bestilling"
+9. Ordre opprettes i databasen (uten betaling)
+10. Går til suksess-side
 
-### Admin-notifikasjon (ved ny ordre)
+---
 
-**Fra:** BS Climbing <noreply@bsclimbing.no>
-**Til:** ADMIN_EMAIL
-**Emne:** 🧗 Ny ordre #{orderId}
-
-**Innhold:**
-```
-NY ORDRE MOTTATT
-
-Ordre: #BS-ABC123
-Tidspunkt: 2026-02-01 14:30
-
-KUNDE
-Navn: Ola Nordmann
-E-post: ola@example.com
-Telefon: +47 123 45 678
-
-LEVERING
-Metode: Hjemlevering
-Adresse:
-  Storgata 1
-  0123 Oslo
-  Norge
-
-PRODUKTER
-1x Stepper Short Edge (449,-)
-   Bredder: 21 | 20 | 21 | 22 mm
-   Høyder: 10 | 15 | 20 | 17 mm
-   Dybde: 20 mm
-   Total: 100.0 mm
-
-Subtotal: 449,-
-Frakt: 79,-
-TOTALT: 528,-
-
-[Se ordre i admin-panel]
-https://bsclimbing.lovable.app/admin/orders/abc123
-```
-
-## Implementeringsrekkefølge
-
-| Steg | Beskrivelse |
-|------|-------------|
-| 1 | Aktivere Supabase (koble til Cloud) |
-| 2 | Opprette database-tabeller (migrasjoner) |
-| 3 | Sette opp secrets (Stripe, Resend) |
-| 4 | Lage Edge Function: `create-checkout-session` |
-| 5 | Lage Edge Function: `stripe-webhook` |
-| 6 | Oppdatere frontend Checkout-flyt |
-| 7 | Bygge Admin-panel (liste + detaljer) |
-| 8 | Konfigurere Stripe webhook endpoint |
-| 9 | Teste fullstendig flyt |
-
-## Filendringer
-
-### Nye filer
-
-| Fil | Beskrivelse |
-|-----|-------------|
-| `supabase/functions/create-checkout-session/index.ts` | Stripe checkout |
-| `supabase/functions/stripe-webhook/index.ts` | Webhook handler |
-| `src/pages/admin/AdminLayout.tsx` | Admin wrapper |
-| `src/pages/admin/OrderList.tsx` | Ordreliste |
-| `src/pages/admin/OrderDetails.tsx` | Ordredetaljer |
-| `src/pages/admin/AdminLogin.tsx` | Enkel innlogging |
-| `src/types/admin.ts` | Admin-typer |
-| `src/lib/supabase.ts` | Supabase client |
-| `src/hooks/useOrders.ts` | React Query hooks |
-
-### Endrede filer
+## Filer som endres
 
 | Fil | Endring |
 |-----|---------|
-| `src/App.tsx` | Legge til admin-routes |
-| `src/pages/Checkout.tsx` | Bruke ekte Stripe |
-| `src/pages/CheckoutSuccess.tsx` | Hente ordre fra DB |
-| `src/types/shop.ts` | Utvide med OrderStatus etc. |
+| `src/components/Header.tsx` | Fiks navigasjonslenker til forsiden |
+| `src/types/shop.ts` | Nye typer for adresse og utvidet Order |
+| `src/contexts/CartContext.tsx` | Promokode-logikk |
+| `src/pages/Checkout.tsx` | Utvidet skjema + promokode-felt |
+| `src/components/cart/CartSummary.tsx` | Vis rabatt |
+| `src/lib/stripe-mock.ts` | Håndter nye felter i ordreopprettelse |
+
+---
 
 ## Tekniske detaljer
 
-### Idempotency
-
-Webhook-handleren bruker `stripe_checkout_session_id` som unik nøkkel:
-- Sjekker om ordre eksisterer før opprettelse
-- Logger alle events i `order_events` uansett
-- Returnerer alltid 200 for å unngå Stripe retries
-
-### Config Snapshot Format
-
-```json
-{
-  "version": 1,
-  "items": [
-    {
-      "productId": "printed-shortedge-21-20-21-22-20-...",
-      "type": "printed",
-      "blockVariant": "shortedge",
-      "widths": {
-        "lillefinger": 21,
-        "ringfinger": 20,
-        "langfinger": 21,
-        "pekefinger": 22
-      },
-      "heights": {
-        "lillefinger": 10,
-        "ringfinger": 15,
-        "langfinger": 20,
-        "pekefinger": 17
-      },
-      "depth": 20,
-      "totalWidth": 100.0,
-      "quantity": 1,
-      "unitPrice": 449
-    }
-  ]
+### Promokode-validering
+```typescript
+const PROMO_CODES: Record<string, { type: 'percent' | 'fixed', value: number }> = {
+  'TESTMEG': { type: 'percent', value: 100 }
 }
 ```
 
-## Fremtidig utvidelse (ikke nå)
+### Gratis-bestilling logikk
+```typescript
+if (discountedTotal === 0) {
+  // Opprett ordre direkte uten Stripe
+  await createFreeOrder(orderData)
+  navigate('/checkout/success')
+} else {
+  // Vanlig Stripe-flyt
+  await createStripeCheckout(orderData)
+}
+```
 
-Arkitekturen støtter:
-- STEP-generering via CAD-API
-- Automatisk filopplasting til `files`-tabell
-- Print queue-integrasjon
-- Frakt-API (Bring/Posten)
-- Kunde-e-post ved statusendringer
-
+### Validering
+- Navn: påkrevd, minst 2 tegn
+- E-post: påkrevd, gyldig format
+- Telefon: valgfritt, ingen validering
+- Adressefelt: påkrevd kun når leveringsmetode er "shipping"
