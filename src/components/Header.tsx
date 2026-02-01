@@ -30,40 +30,32 @@ export default function Header() {
           : 'bg-transparent'
       }`}
     >
-      <div className="container-custom">
-        <nav className="flex items-center justify-between h-16 md:h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center font-bold text-primary-foreground text-sm">
-              BS
-            </div>
-            <span className="font-bold text-lg tracking-tight group-hover:text-primary transition-colors">
-              Stepper
-            </span>
+      <div className="max-w-7xl mx-auto px-6">
+        <nav className="flex items-center justify-between h-16">
+          {/* Logo - Clean text only like Hand of God */}
+          <Link to="/" className="font-semibold text-lg tracking-wide text-foreground hover:text-primary transition-colors">
+            BS CLIMBING
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Minimal */}
           <div className="hidden md:flex items-center gap-8">
             <button 
-              onClick={() => scrollToSection('hvorfor')}
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+              onClick={() => scrollToSection('how-it-works')}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Hvorfor custom?
-            </button>
-            <button 
-              onClick={() => scrollToSection('hvordan')}
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-            >
-              Slik funker det
+              Hvordan
             </button>
             <button 
               onClick={() => scrollToSection('faq')}
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               FAQ
             </button>
-            <Link to="/configure" className="btn-primary text-sm">
-              Konfigurer Stepper
+            <Link 
+              to="/configure" 
+              className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+            >
+              Konfigurer
             </Link>
           </div>
 
@@ -79,19 +71,13 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-border animate-fade-in">
+          <div className="md:hidden py-6 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
               <button 
-                onClick={() => scrollToSection('hvorfor')}
+                onClick={() => scrollToSection('how-it-works')}
                 className="text-muted-foreground hover:text-foreground transition-colors py-2 text-left"
               >
-                Hvorfor custom?
-              </button>
-              <button 
-                onClick={() => scrollToSection('hvordan')}
-                className="text-muted-foreground hover:text-foreground transition-colors py-2 text-left"
-              >
-                Slik funker det
+                Hvordan
               </button>
               <button 
                 onClick={() => scrollToSection('faq')}
@@ -101,10 +87,10 @@ export default function Header() {
               </button>
               <Link 
                 to="/configure" 
-                className="btn-primary text-center mt-2"
+                className="text-foreground font-medium py-2"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Konfigurer Stepper
+                Konfigurer
               </Link>
             </div>
           </div>
