@@ -9,6 +9,7 @@ import { redirectToMockCheckout } from '@/lib/stripe-mock'
 import { createOrder } from '@/lib/orderService'
 import { useToast } from '@/hooks/use-toast'
 import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress } from '@/types/shop'
+import { supabase } from '@/integrations/supabase/client'
 
 export default function Checkout() {
   const navigate = useNavigate()
@@ -121,6 +122,9 @@ export default function Checkout() {
       : undefined
 
     try {
+      const subtotalAmount = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+      const shippingAmount = isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? 79 : 0)
+      
       // If total is 0 (100% discount), skip payment and save order directly to database
       if (discountedTotal === 0) {
         const orderId = await createOrder({
@@ -132,17 +136,50 @@ export default function Checkout() {
           shippingAddress,
           promoCode: promoCode || undefined,
           promoDiscount,
-          subtotal: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
-          shipping: isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? 79 : 0),
+          subtotal: subtotalAmount,
+          shipping: shippingAmount,
           discountedTotal: 0
+        })
+
+        // Send order confirmation email (non-blocking)
+        const pickupLocation = deliveryMethod.startsWith('pickup-') 
+          ? PICKUP_LOCATIONS.find(loc => loc.id === deliveryMethod)?.name 
+          : undefined
+
+        supabase.functions.invoke('send-order-confirmation', {
+          body: {
+            orderId,
+            customerEmail: email.trim(),
+            customerName: customerName.trim(),
+            items: items.map(item => ({
+              name: item.product.name,
+              quantity: item.quantity,
+              price: item.product.price
+            })),
+            deliveryMethod,
+            pickupLocation,
+            shippingAddress,
+            subtotal: subtotalAmount,
+            shipping: shippingAmount,
+            promoDiscount,
+            total: 0
+          }
+        }).then(result => {
+          if (result.error) {
+            console.error('Failed to send order confirmation email:', result.error)
+          } else {
+            console.log('Order confirmation email sent successfully')
+          }
+        }).catch(err => {
+          console.error('Error sending order confirmation email:', err)
         })
 
         // Store simplified order info for success page
         const order = {
           orderId,
           items,
-          subtotal: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
-          shipping: isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? 79 : 0),
+          subtotal: subtotalAmount,
+          shipping: shippingAmount,
           total: 0,
           email: email.trim(),
           customerName: customerName.trim(),
