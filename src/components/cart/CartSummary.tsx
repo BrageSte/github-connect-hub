@@ -2,7 +2,17 @@ import { useCart } from '@/contexts/CartContext'
 import { PICKUP_LOCATIONS } from '@/types/shop'
 
 export default function CartSummary() {
-  const { subtotal, shipping, total, itemCount, deliveryMethod, isDigitalOnly } = useCart()
+  const { 
+    subtotal, 
+    shipping, 
+    total, 
+    itemCount, 
+    deliveryMethod, 
+    isDigitalOnly,
+    promoCode,
+    promoDiscount,
+    discountedTotal
+  } = useCart()
 
   if (itemCount === 0) {
     return null
@@ -34,10 +44,25 @@ export default function CartSummary() {
           Hent gratis på Gneis Lilleaker eller Oslo Klatresenter
         </p>
       )}
+
+      {/* Promo code discount */}
+      {promoCode && promoDiscount > 0 && (
+        <div className="flex justify-between text-sm">
+          <span className="text-valid font-medium">
+            {promoCode} (-{Math.round(promoDiscount / total * 100)}%)
+          </span>
+          <span className="text-valid font-medium">-{promoDiscount},- kr</span>
+        </div>
+      )}
       
       <div className="flex justify-between text-base font-semibold pt-2 border-t border-border">
         <span className="text-foreground">Totalt</span>
-        <span className="text-primary">{total},- kr</span>
+        <div className="text-right">
+          {promoDiscount > 0 && (
+            <span className="text-muted-foreground line-through text-sm mr-2">{total},- kr</span>
+          )}
+          <span className="text-primary">{discountedTotal},- kr</span>
+        </div>
       </div>
     </div>
   )

@@ -59,6 +59,13 @@ export const PICKUP_LOCATIONS: PickupLocation[] = [
   }
 ]
 
+export interface ShippingAddress {
+  line1: string
+  line2?: string
+  postalCode: string
+  city: string
+}
+
 export interface Order {
   orderId: string
   items: CartItem[]
@@ -66,6 +73,11 @@ export interface Order {
   shipping: number
   total: number
   email?: string
+  customerName?: string
+  customerPhone?: string
+  shippingAddress?: ShippingAddress
+  promoCode?: string
+  promoDiscount?: number
   deliveryMethod?: DeliveryMethod
   createdAt: string
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'

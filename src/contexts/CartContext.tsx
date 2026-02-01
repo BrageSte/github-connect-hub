@@ -3,6 +3,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react'
 import { CartItem, Product, DeliveryMethod, getShippingCost, isDigitalOnlyCart } from '@/types/shop'
 
+// Hardcoded promo codes for testing
+const PROMO_CODES: Record<string, { type: 'percent' | 'fixed', value: number }> = {
+  'TESTMEG': { type: 'percent', value: 100 }
+}
+
 interface CartContextType {
   items: CartItem[]
   itemCount: number
@@ -18,6 +23,12 @@ interface CartContextType {
   clearCart: () => void
   isCartOpen: boolean
   setIsCartOpen: (open: boolean) => void
+  // Promo code functionality
+  promoCode: string | null
+  promoDiscount: number
+  discountedTotal: number
+  applyPromoCode: (code: string) => boolean
+  clearPromoCode: () => void
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -29,6 +40,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('shipping')
+  const [promoCode, setPromoCode] = useState<string | null>(null)
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -70,6 +82,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
   
   const total = subtotal + shipping
 
+  // Calculate promo discount
+  const promoDiscount = useMemo(() => {
+    if (!promoCode) return 0
+    const promo = PROMO_CODES[promoCode.toUpperCase()]
+    if (!promo) return 0
+    
+    if (promo.type === 'percent') {
+      return Math.round(total * (promo.value / 100))
+    } else {
+      return Math.min(promo.value, total)
+    }
+  }, [promoCode, total])
+
+  const discountedTotal = Math.max(0, total - promoDiscount)
+
+  const applyPromoCode = useCallback((code: string): boolean => {
+    const normalizedCode = code.toUpperCase().trim()
+    if (PROMO_CODES[normalizedCode]) {
+      setPromoCode(normalizedCode)
+      return true
+    }
+    return false
+  }, [])
+
+  const clearPromoCode = useCallback(() => {
+    setPromoCode(null)
+  }, [])
+
   const addToCart = useCallback((product: Product, quantity = 1) => {
     setItems(prev => {
       const existing = prev.find(item => item.product.id === product.id)
@@ -106,6 +146,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => {
     setItems([])
     setDeliveryMethod('shipping')
+    setPromoCode(null)
   }, [])
 
   return (
@@ -125,6 +166,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         isCartOpen,
         setIsCartOpen,
+        promoCode,
+        promoDiscount,
+        discountedTotal,
+        applyPromoCode,
+        clearPromoCode,
       }}
     >
       {children}

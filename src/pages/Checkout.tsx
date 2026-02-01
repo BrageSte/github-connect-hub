@@ -1,38 +1,161 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowLeft, CreditCard, Loader2, Truck, MapPin, Mail } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { ArrowLeft, CreditCard, Loader2, Truck, MapPin, Mail, Tag, Check, X } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CartSummary from '@/components/cart/CartSummary'
 import { useCart } from '@/contexts/CartContext'
 import { redirectToMockCheckout } from '@/lib/stripe-mock'
 import { useToast } from '@/hooks/use-toast'
-import { PICKUP_LOCATIONS, DeliveryMethod } from '@/types/shop'
+import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress } from '@/types/shop'
 
 export default function Checkout() {
-  const { items, itemCount, total, deliveryMethod, setDeliveryMethod, isDigitalOnly } = useCart()
+  const navigate = useNavigate()
+  const { 
+    items, 
+    itemCount, 
+    discountedTotal,
+    deliveryMethod, 
+    setDeliveryMethod, 
+    isDigitalOnly,
+    promoCode,
+    promoDiscount,
+    applyPromoCode,
+    clearPromoCode,
+    clearCart
+  } = useCart()
+  
+  // Form state
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [promoInput, setPromoInput] = useState('')
+  const [promoError, setPromoError] = useState('')
+  
+  // Shipping address state
+  const [addressLine1, setAddressLine1] = useState('')
+  const [addressLine2, setAddressLine2] = useState('')
+  const [postalCode, setPostalCode] = useState('')
+  const [city, setCity] = useState('')
+  
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'vipps' | 'card'>('vipps')
   const { toast } = useToast()
 
-  const handleCheckout = async () => {
-    if (!email) {
+  const needsShippingAddress = deliveryMethod === 'shipping' && !isDigitalOnly
+
+  const handleApplyPromoCode = () => {
+    setPromoError('')
+    if (!promoInput.trim()) return
+    
+    const success = applyPromoCode(promoInput.trim())
+    if (!success) {
+      setPromoError('Ugyldig promokode')
+    } else {
+      setPromoInput('')
+    }
+  }
+
+  const validateForm = (): boolean => {
+    if (!customerName.trim() || customerName.trim().length < 2) {
       toast({
-        title: 'E-post påkrevd',
-        description: 'Vennligst oppgi e-postadressen din for å motta ordrebekreftelse.',
+        title: 'Navn påkrevd',
+        description: 'Vennligst oppgi fullt navn (minst 2 tegn).',
         variant: 'destructive'
       })
-      return
+      return false
     }
+
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({
+        title: 'E-post påkrevd',
+        description: 'Vennligst oppgi en gyldig e-postadresse.',
+        variant: 'destructive'
+      })
+      return false
+    }
+
+    if (needsShippingAddress) {
+      if (!addressLine1.trim()) {
+        toast({
+          title: 'Adresse påkrevd',
+          description: 'Vennligst oppgi gateadresse for hjemlevering.',
+          variant: 'destructive'
+        })
+        return false
+      }
+      if (!postalCode.trim() || !/^\d{4}$/.test(postalCode.trim())) {
+        toast({
+          title: 'Postnummer påkrevd',
+          description: 'Vennligst oppgi et gyldig norsk postnummer (4 siffer).',
+          variant: 'destructive'
+        })
+        return false
+      }
+      if (!city.trim()) {
+        toast({
+          title: 'Poststed påkrevd',
+          description: 'Vennligst oppgi poststed.',
+          variant: 'destructive'
+        })
+        return false
+      }
+    }
+
+    return true
+  }
+
+  const handleCheckout = async () => {
+    if (!validateForm()) return
 
     setIsProcessing(true)
 
+    const shippingAddress: ShippingAddress | undefined = needsShippingAddress 
+      ? {
+          line1: addressLine1.trim(),
+          line2: addressLine2.trim() || undefined,
+          postalCode: postalCode.trim(),
+          city: city.trim()
+        }
+      : undefined
+
     try {
+      // If total is 0 (100% discount), skip payment and go directly to success
+      if (discountedTotal === 0) {
+        // Store order data directly in sessionStorage
+        const order = {
+          orderId: `BS-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+          items,
+          subtotal: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+          shipping: isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? 79 : 0),
+          total: 0,
+          email: email.trim(),
+          customerName: customerName.trim(),
+          customerPhone: customerPhone.trim() || undefined,
+          shippingAddress,
+          promoCode,
+          promoDiscount,
+          deliveryMethod,
+          createdAt: new Date().toISOString(),
+          status: 'paid' as const
+        }
+        
+        sessionStorage.setItem('bs-climbing-pending-order', JSON.stringify(order))
+        
+        // Navigate to success page
+        navigate('/checkout/success?session_id=free_order')
+        return
+      }
+
       await redirectToMockCheckout({
         items,
-        email,
+        email: email.trim(),
+        customerName: customerName.trim(),
+        customerPhone: customerPhone.trim() || undefined,
+        shippingAddress,
         deliveryMethod,
+        promoCode: promoCode || undefined,
+        promoDiscount,
         successUrl: `${window.location.origin}/checkout/success`,
         cancelUrl: `${window.location.origin}/checkout/cancel`
       })
@@ -89,25 +212,56 @@ export default function Checkout() {
               {/* Contact info */}
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-lg font-semibold mb-4">Kontaktinformasjon</h2>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                    E-post
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="din@epost.no"
-                    className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {isDigitalOnly 
-                      ? 'STL-filen sendes til denne e-postadressen.'
-                      : 'Du får ordrebekreftelse og oppdateringer på denne adressen.'
-                    }
-                  </p>
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="customerName" className="block text-sm font-medium text-foreground mb-2">
+                      Fullt navn *
+                    </label>
+                    <input
+                      type="text"
+                      id="customerName"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Ola Nordmann"
+                      className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                      E-post *
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="din@epost.no"
+                      className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {isDigitalOnly 
+                        ? 'STL-filen sendes til denne e-postadressen.'
+                        : 'Du får ordrebekreftelse og oppdateringer på denne adressen.'
+                      }
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="customerPhone" className="block text-sm font-medium text-foreground mb-2">
+                      Telefon <span className="text-muted-foreground">(valgfritt)</span>
+                    </label>
+                    <input
+                      type="tel"
+                      id="customerPhone"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value)}
+                      placeholder="+47 123 45 678"
+                      className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -181,6 +335,76 @@ export default function Checkout() {
                 </div>
               )}
 
+              {/* Shipping address - Only show for home delivery */}
+              {needsShippingAddress && (
+                <div className="bg-card border border-border rounded-2xl p-6">
+                  <h2 className="text-lg font-semibold mb-4">Leveringsadresse</h2>
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="addressLine1" className="block text-sm font-medium text-foreground mb-2">
+                        Gateadresse *
+                      </label>
+                      <input
+                        type="text"
+                        id="addressLine1"
+                        value={addressLine1}
+                        onChange={(e) => setAddressLine1(e.target.value)}
+                        placeholder="Storgata 1"
+                        className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                        required
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="addressLine2" className="block text-sm font-medium text-foreground mb-2">
+                        Adresselinje 2 <span className="text-muted-foreground">(valgfritt)</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="addressLine2"
+                        value={addressLine2}
+                        onChange={(e) => setAddressLine2(e.target.value)}
+                        placeholder="Leilighet, etasje, etc."
+                        className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="postalCode" className="block text-sm font-medium text-foreground mb-2">
+                          Postnummer *
+                        </label>
+                        <input
+                          type="text"
+                          id="postalCode"
+                          value={postalCode}
+                          onChange={(e) => setPostalCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                          placeholder="0123"
+                          maxLength={4}
+                          className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                          required
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="city" className="block text-sm font-medium text-foreground mb-2">
+                          Poststed *
+                        </label>
+                        <input
+                          type="text"
+                          id="city"
+                          value={city}
+                          onChange={(e) => setCity(e.target.value)}
+                          placeholder="Oslo"
+                          className="w-full px-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Digital delivery notice */}
               {isDigitalOnly && (
                 <div className="bg-card border border-border rounded-2xl p-6">
@@ -199,59 +423,108 @@ export default function Checkout() {
                 </div>
               )}
 
-              {/* Payment method */}
+              {/* Promo code */}
               <div className="bg-card border border-border rounded-2xl p-6">
-                <h2 className="text-lg font-semibold mb-4">Betalingsmetode</h2>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => setPaymentMethod('vipps')}
-                    className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
-                      paymentMethod === 'vipps'
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="w-12 h-12 bg-[#FF5B24] rounded-xl flex items-center justify-center text-white font-bold text-lg">
-                      V
+                <h2 className="text-lg font-semibold mb-4">Promokode</h2>
+                {promoCode ? (
+                  <div className="flex items-center justify-between p-3 bg-valid/10 border border-valid/30 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-5 h-5 text-valid" />
+                      <span className="font-medium text-valid">{promoCode}</span>
+                      <span className="text-sm text-muted-foreground">(-{Math.round(promoDiscount / (promoDiscount + discountedTotal) * 100)}%)</span>
                     </div>
-                    <div className="text-left">
-                      <div className="font-medium text-foreground">Vipps</div>
-                      <div className="text-sm text-muted-foreground">Betal enkelt med Vipps</div>
+                    <button
+                      onClick={clearPromoCode}
+                      className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                      aria-label="Fjern promokode"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <div className="flex-1 relative">
+                      <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                      <input
+                        type="text"
+                        value={promoInput}
+                        onChange={(e) => {
+                          setPromoInput(e.target.value.toUpperCase())
+                          setPromoError('')
+                        }}
+                        onKeyDown={(e) => e.key === 'Enter' && handleApplyPromoCode()}
+                        placeholder="Skriv inn kode"
+                        className="w-full pl-10 pr-4 py-3 bg-surface-light border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                      />
                     </div>
-                    {paymentMethod === 'vipps' && (
-                      <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => setPaymentMethod('card')}
-                    className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
-                      paymentMethod === 'card'
-                        ? 'border-primary bg-primary/10'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="w-12 h-12 bg-surface-light rounded-xl flex items-center justify-center">
-                      <CreditCard className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-medium text-foreground">Kort</div>
-                      <div className="text-sm text-muted-foreground">Visa, Mastercard, etc.</div>
-                    </div>
-                    {paymentMethod === 'card' && (
-                      <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                </div>
+                    <button
+                      onClick={handleApplyPromoCode}
+                      className="px-6 py-3 bg-surface-light border border-border rounded-lg font-medium text-foreground hover:border-primary hover:bg-primary/5 transition-colors"
+                    >
+                      Bruk
+                    </button>
+                  </div>
+                )}
+                {promoError && (
+                  <p className="text-sm text-destructive mt-2">{promoError}</p>
+                )}
               </div>
+
+              {/* Payment method - Only show if not free */}
+              {discountedTotal > 0 && (
+                <div className="bg-card border border-border rounded-2xl p-6">
+                  <h2 className="text-lg font-semibold mb-4">Betalingsmetode</h2>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => setPaymentMethod('vipps')}
+                      className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
+                        paymentMethod === 'vipps'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="w-12 h-12 bg-[#FF5B24] rounded-xl flex items-center justify-center text-white font-bold text-lg">
+                        V
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-foreground">Vipps</div>
+                        <div className="text-sm text-muted-foreground">Betal enkelt med Vipps</div>
+                      </div>
+                      {paymentMethod === 'vipps' && (
+                        <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => setPaymentMethod('card')}
+                      className={`w-full p-4 rounded-xl border transition-all flex items-center gap-4 ${
+                        paymentMethod === 'card'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="w-12 h-12 bg-surface-light rounded-xl flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-muted-foreground" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-medium text-foreground">Kort</div>
+                        <div className="text-sm text-muted-foreground">Visa, Mastercard, etc.</div>
+                      </div>
+                      {paymentMethod === 'card' && (
+                        <div className="ml-auto w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Order items preview */}
               <div className="bg-card border border-border rounded-2xl p-6">
@@ -288,7 +561,7 @@ export default function Checkout() {
                 
                 <button
                   onClick={handleCheckout}
-                  disabled={isProcessing || !email}
+                  disabled={isProcessing || !email || !customerName}
                   className="btn-primary w-full justify-center mt-6 disabled:opacity-50"
                 >
                   {isProcessing ? (
@@ -296,10 +569,12 @@ export default function Checkout() {
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Behandler...
                     </>
+                  ) : discountedTotal === 0 ? (
+                    'Fullfør bestilling (Gratis)'
                   ) : (
                     <>
                       {paymentMethod === 'vipps' ? 'Betal med Vipps' : 'Betal med kort'}
-                      <span className="ml-1">{total},- kr</span>
+                      <span className="ml-1">{discountedTotal},- kr</span>
                     </>
                   )}
                 </button>
