@@ -39,7 +39,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('shipping')
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>(null)
   const [promoCode, setPromoCode] = useState<string | null>(null)
 
   // Load cart from localStorage on mount
@@ -52,8 +52,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
           setItems(parsed)
         }
       }
-    } catch (e) {
-      console.error('Failed to load cart from localStorage:', e)
+    } catch {
+      // Ignore localStorage errors
     }
     setIsHydrated(true)
   }, [])
@@ -63,8 +63,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (isHydrated) {
       try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
-      } catch (e) {
-        console.error('Failed to save cart to localStorage:', e)
+      } catch {
+        // Ignore localStorage errors
       }
     }
   }, [items, isHydrated])
@@ -145,7 +145,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => {
     setItems([])
-    setDeliveryMethod('shipping')
+    setDeliveryMethod(null)
     setPromoCode(null)
   }, [])
 

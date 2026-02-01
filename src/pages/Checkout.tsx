@@ -77,6 +77,16 @@ export default function Checkout() {
       return false
     }
 
+    // Require delivery method for physical products
+    if (!isDigitalOnly && !deliveryMethod) {
+      toast({
+        title: 'Leveringsmetode påkrevd',
+        description: 'Vennligst velg en leveringsmetode.',
+        variant: 'destructive'
+      })
+      return false
+    }
+
     if (needsShippingAddress) {
       if (!addressLine1.trim()) {
         toast({
@@ -132,7 +142,7 @@ export default function Checkout() {
           customerName: customerName.trim(),
           customerEmail: email.trim(),
           customerPhone: customerPhone.trim() || undefined,
-          deliveryMethod,
+          deliveryMethod: deliveryMethod || 'shipping', // Default for digital products
           shippingAddress,
           promoCode: promoCode || undefined,
           promoDiscount,
@@ -164,14 +174,8 @@ export default function Checkout() {
             promoDiscount,
             total: 0
           }
-        }).then(result => {
-          if (result.error) {
-            console.error('Failed to send order confirmation email:', result.error)
-          } else {
-            console.log('Order confirmation email sent successfully')
-          }
-        }).catch(err => {
-          console.error('Error sending order confirmation email:', err)
+        }).catch(() => {
+          // Email sending is non-blocking, errors are logged server-side
         })
 
         // Store simplified order info for success page
@@ -206,14 +210,13 @@ export default function Checkout() {
         customerName: customerName.trim(),
         customerPhone: customerPhone.trim() || undefined,
         shippingAddress,
-        deliveryMethod,
+        deliveryMethod: deliveryMethod || 'shipping', // Default for digital products
         promoCode: promoCode || undefined,
         promoDiscount,
         successUrl: `${window.location.origin}/checkout/success`,
         cancelUrl: `${window.location.origin}/checkout/cancel`
       })
-    } catch (error) {
-      console.error('Checkout error:', error)
+    } catch {
       toast({
         title: 'Betalingsfeil',
         description: 'Noe gikk galt. Vennligst prøv igjen.',
@@ -614,7 +617,7 @@ export default function Checkout() {
                 
                 <button
                   onClick={handleCheckout}
-                  disabled={isProcessing || !email || !customerName}
+                  disabled={isProcessing || !email || !customerName || (!isDigitalOnly && !deliveryMethod)}
                   className="btn-primary w-full justify-center mt-6 disabled:opacity-50"
                 >
                   {isProcessing ? (

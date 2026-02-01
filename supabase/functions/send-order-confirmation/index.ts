@@ -156,8 +156,8 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
 
     <!-- Footer -->
     <div style="text-align: center; margin-top: 40px; color: #666666; font-size: 12px;">
-      <p style="margin: 0 0 8px 0;">Har du spørsmål? Kontakt oss på hello@bsclimbing.no</p>
-      <p style="margin: 0;">© 2025 BS Climbing. Alle rettigheter reservert.</p>
+      <p style="margin: 0 0 8px 0;">Har du spørsmål? Kontakt oss på hei@bsclimbing.no</p>
+      <p style="margin: 0;">© ${new Date().getFullYear()} BS Climbing. Alle rettigheter reservert.</p>
     </div>
   </div>
 </body>

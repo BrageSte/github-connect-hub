@@ -80,9 +80,9 @@ export async function createOrder(params: CreateOrderParams): Promise<string> {
       shipping_address: shippingAddressJson,
       line_items: lineItems,
       config_snapshot: configSnapshot,
-      subtotal_amount: subtotal * 100, // Convert to øre
-      shipping_amount: shipping * 100, // Convert to øre
-      total_amount: discountedTotal * 100, // Convert to øre (will be 0 for free orders)
+      subtotal_amount: subtotal * 100,
+      shipping_amount: shipping * 100,
+      total_amount: discountedTotal * 100,
       status: 'new',
       stripe_checkout_session_id: `free_order_${Date.now()}`
     })
@@ -90,8 +90,13 @@ export async function createOrder(params: CreateOrderParams): Promise<string> {
     .single()
 
   if (error) {
-    console.error('Error creating order:', error)
-    throw new Error(`Kunne ikke opprette ordre: ${error.message}`)
+    console.error('Error creating order:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    })
+    throw new Error(`Kunne ikke opprette ordre: ${error.message} (${error.code})`)
   }
 
   return data.id
