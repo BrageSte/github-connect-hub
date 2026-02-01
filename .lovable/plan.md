@@ -1,83 +1,167 @@
 
-
-# Plan: Forbedret konfigurator med dobbel 3D-visning og hjelpeguide
+# Plan: Nettbutikk med handlekurv og mock Stripe
 
 ## Oversikt
 
-Denne planen legger til en dynamisk 3D-visualisering av fingermålene, beholder STL-visningen for blokkvalg, fjerner "Mål mellom leddene"-seksjonen og erstatter den med en utvidbar hjelpeguide.
+Omgjør BS Climbing til en komplett nettbutikk med handlekurv, checkout-flyt og dummy Stripe-integrasjon. Backend (Edge Functions, database, webhooks) implementeres senere.
 
-## Endringer
+## Arkitektur
 
-### 1. Fjerne MeasureGuide-seksjonen
-Fjerner hele kortet "Mål mellom leddene" fra venstre kolonne.
-
-### 2. Legge til hjelpeguide-lenke
-Legger til en klikkbar lenke/knapp under høydeforskjell-seksjonen:
-- Tekst: "Problemer med å måle fingrene? Trykk her så hjelper vi deg"
-- Åpner en modal eller collapsible seksjon med steg-for-steg guide
-- Inkluderer MeasureGuide SVG-illustrasjonen
-
-### 3. Opprette ny DynamicBlockPreview-komponent
-En 3D-komponent som visualiserer de faktiske fingermålene i sanntid:
-- Viser 4 fingerspor med riktig bredde og høyde basert på input
-- Oppdateres live når brukeren endrer verdier
-- Lignende stil som bs-climbing-flat sin Preview3D
-- Viser dimensjoner på hver finger-blokk
-
-### 4. Oppdatere konfigurator-layout
-Ny struktur:
 ```text
-VENSTRE KOLONNE:
-├── Velg blokktype (shortedge/longedge)
-├── 3D Forhåndsvisning (STL av valgt variant)
-└── Dine mål (dynamisk 3D med fingermål)
-
-HØYRE KOLONNE:
-├── Fingerbredde (mm)
-├── Høydeforskjell (mm)
-│   └── "Trenger du hjelp?" (klikkbar)
-├── Dybde
-├── Bestill
-└── Sammendrag
+src/
+├── contexts/
+│   └── CartContext.tsx          # Global cart state + localStorage
+├── types/
+│   └── shop.ts                  # Product, CartItem, Order types
+├── components/
+│   ├── cart/
+│   │   ├── CartDrawer.tsx       # Slide-over handlekurv
+│   │   ├── CartItem.tsx         # Enkelt produkt i kurv
+│   │   └── CartSummary.tsx      # Subtotal, frakt, total
+│   └── Header.tsx               # Oppdatert med cart-ikon + badge
+├── pages/
+│   ├── Cart.tsx                 # Full-page cart (fallback)
+│   ├── Checkout.tsx             # Mock checkout
+│   ├── CheckoutSuccess.tsx      # "Takk for bestilling"
+│   ├── CheckoutCancel.tsx       # "Avbrutt"
+│   ├── Shipping.tsx             # Frakt-info
+│   ├── Returns.tsx              # Retur-policy
+│   ├── Privacy.tsx              # Personvern
+│   └── Contact.tsx              # Kontakt
+└── lib/
+    └── stripe-mock.ts           # Mock Stripe checkout
 ```
+
+## Del 1: Types og datamodeller
+
+### Nye typer i `src/types/shop.ts`
+
+| Type | Beskrivelse |
+|------|-------------|
+| `Product` | id, name, price, description, variant, image |
+| `CartItem` | product + quantity |
+| `Order` | orderId, items, total, email, timestamp, status |
+| `ShippingInfo` | Fraktkostnad (79 kr fast) |
+
+## Del 2: Cart Context
+
+### `CartContext.tsx`
+- Global state for handlekurv
+- Funksjoner: `addToCart`, `removeFromCart`, `updateQuantity`, `clearCart`
+- Kalkulerer: subtotal, shipping (79 kr), total
+- Persister til localStorage ved hver endring
+- Laster fra localStorage ved app-start
+
+## Del 3: UI-komponenter
+
+### Header oppdatering
+- Legg til handlekurv-ikon med badge (antall varer)
+- Klikk åpner CartDrawer
+
+### CartDrawer
+- Slide-over fra høyre (Sheet-komponent)
+- Viser alle varer med bilde, navn, pris
+- +/- knapper for å endre antall
+- Fjern-knapp per vare
+- Subtotal, fraktlinje (79 kr), total
+- "Gå til kassen" knapp
+- "Fortsett å handle" lenke
+
+### CartItem komponent
+- Produktbilde, navn, variant
+- Pris per stk
+- Quantity selector
+- Fjern-knapp
+- Linjepris
+
+## Del 4: Produktintegrasjon
+
+### Konfiguratorens "Legg i handlekurv"
+- Erstatter mailto-flyten med `addToCart()`
+- Produktdata: blokktype, mål, pris
+- Genererer unik produkt-ID basert på konfigurasjon
+- Toast-melding: "Lagt til i handlekurven"
+
+## Del 5: Checkout-flyt (mock)
+
+### Checkout-side
+- Viser ordresammendrag
+- E-post input (for ordre)
+- "Betal med Vipps (via Stripe)" - primær CTA
+- "Betal med kort" - sekundær
+- Ved klikk: simulerer redirect til Stripe (2 sek delay), deretter success
+
+### Mock Stripe-funksjon
+```typescript
+// Simulerer Stripe Checkout Session
+async function createMockCheckoutSession(items: CartItem[]) {
+  // Returnerer mock session URL
+  return { url: '/checkout/success?mock=true' }
+}
+```
+
+### Success-side (`/checkout/success`)
+- "Takk for bestillingen!"
+- Ordresammendrag (lagret i sessionStorage)
+- Ordrenummer (generert)
+- Tømmer handlekurven
+- "Fortsett å handle" knapp
+
+### Cancel-side (`/checkout/cancel`)
+- "Betalingen ble avbrutt"
+- Handlekurven er fortsatt intakt
+- "Tilbake til handlekurven" knapp
+
+## Del 6: Info-sider
+
+### Nye sider
+| Side | Innhold |
+|------|---------|
+| `/shipping` | Fast frakt 79 kr, leveringstid 3-5 dager |
+| `/returns` | 14 dagers åpent kjøp, returadresse |
+| `/privacy` | Personvernerklæring |
+| `/contact` | Kontaktinfo, e-post |
+
+### Footer oppdatering
+- Lenker til alle info-sider
+- Organisert i kolonner
+
+## Del 7: Feilhåndtering
+
+- Tom handlekurv: "Handlekurven din er tom" + CTA
+- Nettverksfeil: Toast med retry
+- Stripe-feil: Redirect til cancel-side med feilmelding
 
 ## Teknisk implementering
 
-### Ny komponent: DynamicBlockPreview.tsx
-```typescript
-// Tar imot widths, calculatedHeights, depth
-// Genererer 4 3D-bokser som representerer fingrene
-// Bruker Three.js boxGeometry med dynamiske dimensjoner
-// Live-oppdatering når props endres
-```
-
-### Ny komponent: MeasureHelpModal.tsx
-```typescript
-// Modal/dialog som åpnes når bruker trenger hjelp
-// Inneholder steg-for-steg guide med illustrasjoner
-// Bruker eksisterende MeasureGuide SVG
-```
-
-### Endringer i CrimpConfigurator.tsx
-- Fjerner import av MeasureGuide
-- Legger til import av DynamicBlockPreview
-- Legger til import av MeasureHelpModal
-- Legger til state for modal-visning
-- Oppdaterer layout for å vise begge 3D-visninger
-
-## Brukeropplevelse
-
-1. **Velg blokktype** - Bruker ser STL-modell av short/long edge
-2. **Se dine mål** - Bruker ser en dynamisk 3D-modell som viser de faktiske dimensjonene de har valgt
-3. **Juster verdier** - Høyre kolonne med inputs oppdaterer 3D-visningen i sanntid
-4. **Trenger hjelp?** - Diskret lenke åpner detaljert måleveiledning
-
-## Filer som endres/opprettes
+### Fil-liste
 
 | Fil | Handling |
 |-----|----------|
-| `src/components/configurator/DynamicBlockPreview.tsx` | **Ny** - 3D-visning av fingermål |
-| `src/components/configurator/MeasureHelpModal.tsx` | **Ny** - Hjelpeguide modal |
-| `src/components/configurator/CrimpConfigurator.tsx` | **Endres** - Ny layout |
-| `src/components/configurator/MeasureGuide.tsx` | **Beholdes** - Brukes i modal |
+| `src/types/shop.ts` | **Ny** |
+| `src/contexts/CartContext.tsx` | **Ny** |
+| `src/components/cart/CartDrawer.tsx` | **Ny** |
+| `src/components/cart/CartItem.tsx` | **Ny** |
+| `src/components/cart/CartSummary.tsx` | **Ny** |
+| `src/pages/Cart.tsx` | **Ny** |
+| `src/pages/Checkout.tsx` | **Ny** |
+| `src/pages/CheckoutSuccess.tsx` | **Ny** |
+| `src/pages/CheckoutCancel.tsx` | **Ny** |
+| `src/pages/Shipping.tsx` | **Ny** |
+| `src/pages/Returns.tsx` | **Ny** |
+| `src/pages/Privacy.tsx` | **Ny** |
+| `src/pages/Contact.tsx` | **Ny** |
+| `src/lib/stripe-mock.ts` | **Ny** |
+| `src/components/Header.tsx` | **Endres** - Cart-ikon |
+| `src/components/Footer.tsx` | **Endres** - Lenker |
+| `src/components/configurator/CrimpConfigurator.tsx` | **Endres** - addToCart |
+| `src/App.tsx` | **Endres** - Routes + CartProvider |
 
+### localStorage nøkkel
+- `bs-climbing-cart`: JSON array med CartItem[]
+
+### Senere (backend)
+- Supabase Edge Function: `/api/create-checkout-session`
+- Stripe webhook: `/api/stripe-webhook`
+- Supabase tabell: `orders`
+- Resend integrasjon for e-post
