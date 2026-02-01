@@ -4,7 +4,10 @@ import StlViewer, { type BlockVariant } from './StlViewer'
 import BlockSelector, { BLOCK_OPTIONS } from './BlockSelector'
 import DynamicBlockPreview from './DynamicBlockPreview'
 import MeasureHelpModal from './MeasureHelpModal'
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle, ShoppingBag, Download } from 'lucide-react'
+import { useCart } from '@/contexts/CartContext'
+import { Product, generateProductId, BlockConfig } from '@/types/shop'
+import { useToast } from '@/hooks/use-toast'
 
 const FINGER_NAMES = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'] as const
 type FingerName = typeof FINGER_NAMES[number]
@@ -23,6 +26,8 @@ interface HeightDiffs {
 }
 
 export default function CrimpConfigurator() {
+  const { addToCart } = useCart()
+  const { toast } = useToast()
   const [blockVariant, setBlockVariant] = useState<BlockVariant>('shortedge')
   
   const [widths, setWidths] = useState<Widths>({
@@ -64,6 +69,38 @@ export default function CrimpConfigurator() {
   }, [widths])
 
   const currentPrice = BLOCK_OPTIONS.find(o => o.variant === blockVariant)?.price ?? 449
+  const filePrice = 199
+
+  const createBlockConfig = (): BlockConfig => ({
+    blockVariant,
+    widths,
+    heights: calculatedHeights,
+    depth,
+    totalWidth
+  })
+
+  const handleAddToCart = (type: 'file' | 'printed') => {
+    const config = createBlockConfig()
+    const productId = generateProductId(config, type)
+    
+    const product: Product = {
+      id: productId,
+      name: type === 'file' 
+        ? `Stepper STL-fil (${blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'})`
+        : `Stepper ${blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}`,
+      description: `Tilpasset crimp block: ${totalWidth.toFixed(1)}mm bred × ${depth}mm dyp`,
+      price: type === 'file' ? filePrice : currentPrice,
+      variant: blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge',
+      config
+    }
+    
+    addToCart(product, 1)
+    
+    toast({
+      title: 'Lagt i handlekurven!',
+      description: product.name,
+    })
+  }
 
   const generateOrder = (type: 'file' | 'printed') => {
     setOrderType(type)
@@ -295,17 +332,19 @@ export default function CrimpConfigurator() {
         {/* Order buttons */}
         <div className="grid sm:grid-cols-2 gap-4">
           <button
-            onClick={() => generateOrder('file')}
+            onClick={() => handleAddToCart('file')}
             className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-primary/50 hover:shadow-glow text-center group"
           >
+            <Download className="w-6 h-6 mx-auto mb-2 text-primary" />
             <div className="text-foreground font-medium mb-1">3D-fil (STL)</div>
-            <div className="text-2xl font-bold text-primary">199,-</div>
+            <div className="text-2xl font-bold text-primary">{filePrice},-</div>
             <p className="text-xs text-muted-foreground mt-2">Print selv eller hos en leverandør</p>
           </button>
           <button
-            onClick={() => generateOrder('printed')}
+            onClick={() => handleAddToCart('printed')}
             className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-valid/50 text-center group"
           >
+            <ShoppingBag className="w-6 h-6 mx-auto mb-2 text-valid" />
             <div className="text-foreground font-medium mb-1">Ferdig printet</div>
             <div className="text-2xl font-bold text-valid">{currentPrice},-</div>
             <p className="text-xs text-muted-foreground mt-2">Levert til deg, klar til bruk</p>
