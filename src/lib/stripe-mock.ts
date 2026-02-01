@@ -92,8 +92,8 @@ export function getPendingOrder(): Order | null {
     if (stored) {
       return JSON.parse(stored)
     }
-  } catch (e) {
-    console.error('Failed to retrieve pending order:', e)
+  } catch {
+    // Ignore sessionStorage errors
   }
   return null
 }

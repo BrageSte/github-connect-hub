@@ -35,7 +35,7 @@ export interface CartItem {
   quantity: number
 }
 
-export type DeliveryMethod = 'shipping' | 'pickup-gneis' | 'pickup-oslo'
+export type DeliveryMethod = 'shipping' | 'pickup-gneis' | 'pickup-oslo' | null
 
 export interface PickupLocation {
   id: DeliveryMethod
@@ -94,6 +94,9 @@ export function isDigitalOnlyCart(items: CartItem[]): boolean {
 export function getShippingCost(items: CartItem[], deliveryMethod: DeliveryMethod): number {
   if (isDigitalOnlyCart(items)) {
     return 0 // Digital products = no shipping
+  }
+  if (!deliveryMethod) {
+    return 0 // No delivery method selected yet
   }
   if (deliveryMethod === 'pickup-gneis' || deliveryMethod === 'pickup-oslo') {
     return 0 // Pickup = free
