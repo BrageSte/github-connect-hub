@@ -8,6 +8,7 @@ import { HelpCircle, ShoppingBag, Download } from 'lucide-react'
 import { useCart } from '@/contexts/CartContext'
 import { Product, generateProductId, BlockConfig } from '@/types/shop'
 import { useToast } from '@/hooks/use-toast'
+import { NumberStepper } from '@/components/ui/number-stepper'
 
 const FINGER_NAMES = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'] as const
 type FingerName = typeof FINGER_NAMES[number]
@@ -196,13 +197,12 @@ export default function CrimpConfigurator() {
                   return (
                     <div key={finger} className="text-center">
                       <label className="text-xs text-muted-foreground block mb-2">{label}</label>
-                      <input
-                        type="number"
-                        min="15"
-                        max="30"
+                      <NumberStepper
                         value={widths[finger]}
-                        onChange={(e) => setWidths(prev => ({...prev, [finger]: Number(e.target.value)}))}
-                        className="w-full px-3 py-3 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                        onChange={(val) => setWidths(prev => ({...prev, [finger]: val}))}
+                        min={15}
+                        max={30}
+                        size="sm"
                       />
                     </div>
                   )
@@ -219,39 +219,39 @@ export default function CrimpConfigurator() {
                 <div className="flex items-center gap-4">
                   <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">A</span>
                   <span className="text-foreground text-sm flex-1">Lille → Ring</span>
-                  <input
-                    type="number"
-                    min="-15"
-                    max="15"
+                  <NumberStepper
                     value={heightDiffs.lilleToRing}
-                    onChange={(e) => setHeightDiffs(prev => ({...prev, lilleToRing: Number(e.target.value)}))}
-                    className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none transition-colors"
+                    onChange={(val) => setHeightDiffs(prev => ({...prev, lilleToRing: val}))}
+                    min={-15}
+                    max={15}
+                    size="sm"
+                    className="w-28"
                   />
                   <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.ringfinger}mm</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">B</span>
                   <span className="text-foreground text-sm flex-1">Ring → Lang</span>
-                  <input
-                    type="number"
-                    min="-15"
-                    max="15"
+                  <NumberStepper
                     value={heightDiffs.ringToLang}
-                    onChange={(e) => setHeightDiffs(prev => ({...prev, ringToLang: Number(e.target.value)}))}
-                    className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none transition-colors"
+                    onChange={(val) => setHeightDiffs(prev => ({...prev, ringToLang: val}))}
+                    min={-15}
+                    max={15}
+                    size="sm"
+                    className="w-28"
                   />
                   <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.langfinger}mm</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="w-7 h-7 bg-red-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">C</span>
                   <span className="text-foreground text-sm flex-1">Lang → Peke</span>
-                  <input
-                    type="number"
-                    min="-15"
-                    max="15"
+                  <NumberStepper
                     value={heightDiffs.langToPeke}
-                    onChange={(e) => setHeightDiffs(prev => ({...prev, langToPeke: Number(e.target.value)}))}
-                    className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-red-500 focus:outline-none transition-colors"
+                    onChange={(val) => setHeightDiffs(prev => ({...prev, langToPeke: val}))}
+                    min={-15}
+                    max={15}
+                    size="sm"
+                    className="w-28"
                   />
                   <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.pekefinger}mm</span>
                 </div>
