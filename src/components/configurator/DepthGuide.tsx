@@ -21,17 +21,17 @@ export default function DepthGuide() {
         </div>
 
         {/* 20mm - Midt (anbefalt) */}
-        <div className="text-center flex flex-col relative">
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-valid/20 text-valid text-[10px] font-medium rounded-full">
-            Anbefalt
-          </div>
-          <div className="relative mx-auto w-full max-w-[60px] h-16 flex flex-col justify-end mt-4">
+        <div className="text-center flex flex-col">
+          <div className="relative mx-auto w-full max-w-[60px] h-16 flex flex-col justify-end">
             <div className="h-10 bg-gradient-to-b from-valid/60 to-valid/80 rounded-t-sm" />
             <div className="h-1 bg-foreground/20 rounded-b-sm" />
           </div>
           <span className="text-sm font-mono font-semibold text-foreground mt-2">20mm</span>
           <p className="text-xs text-muted-foreground mt-1">Midt</p>
           <p className="text-xs text-valid">Allround</p>
+          <span className="inline-block mx-auto mt-1 px-2 py-0.5 bg-valid/20 text-valid text-[10px] font-medium rounded-full">
+            Anbefalt
+          </span>
         </div>
 
         {/* 25mm - Dyp */}
