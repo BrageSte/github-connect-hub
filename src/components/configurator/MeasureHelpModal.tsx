@@ -6,6 +6,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import MeasureGuide from './MeasureGuide'
+import DepthGuide from './DepthGuide'
+import { Lightbulb, Ruler, ArrowUpDown, ArrowRight } from 'lucide-react'
 
 interface MeasureHelpModalProps {
   open: boolean
@@ -24,26 +26,89 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Step 1 */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">1</span>
-              <h3 className="font-medium text-foreground">Fingerbredde</h3>
+          {/* Tips før du måler - fremhevet øverst */}
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Lightbulb className="w-5 h-5 text-amber-500" />
+              <h4 className="font-semibold text-amber-500 text-sm uppercase tracking-wide">
+                Tips før du måler
+              </h4>
             </div>
-            <p className="text-sm text-muted-foreground ml-10">
-              Mål bredden på hver finger mellom leddene, der fingeren er bredest. Bruk en linjal eller skyvelær.
-            </p>
+            <ul className="text-sm text-foreground space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="text-amber-500 mt-0.5">•</span>
+                <span>Bruk <strong>skyvelære</strong> for best presisjon.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-500 mt-0.5">•</span>
+                <span>Klem fingeren lett ned mot en kant (bordkant eller en vanlig crimp) når du måler. Fingerputen utvider seg litt under trykk – det er den bredden du vil ha.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-amber-500 mt-0.5">•</span>
+                <span>Litt ekstra margin er <strong>bedre enn for tight</strong>.</span>
+              </li>
+            </ul>
           </div>
 
-          {/* Step 2 */}
-          <div className="space-y-2">
+          {/* 1) Fingerbredde */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">1</span>
+              <Ruler className="w-4 h-4 text-primary" />
+              <h3 className="font-medium text-foreground">Fingerbredde (mm)</h3>
+            </div>
+            <div className="ml-10 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Mål bredden på fingeren ytterst på fingerputen (der fingeren treffer kanten).
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Legg til <strong className="text-foreground">2 mm totalt</strong> (1 mm på hver side) for litt margin.
+              </p>
+              
+              {/* Eksempel-boks */}
+              <div className="bg-surface-light border border-border rounded-lg p-3 flex items-center justify-center gap-3">
+                <span className="text-sm text-muted-foreground">Eksempel:</span>
+                <span className="font-mono text-foreground font-medium">18 mm</span>
+                <ArrowRight className="w-4 h-4 text-primary" />
+                <span className="font-mono text-primary font-bold">20 mm</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2) Høydeforskjell */}
+          <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">2</span>
-              <h3 className="font-medium text-foreground">Høydeforskjell</h3>
+              <ArrowUpDown className="w-4 h-4 text-primary" />
+              <h3 className="font-medium text-foreground">Høydeforskjell (mm)</h3>
             </div>
-            <p className="text-sm text-muted-foreground ml-10">
-              Legg hånden flatt på et bord. Mål forskjellen i høyde mellom toppen av hvert ledd som vist i illustrasjonen under.
-            </p>
+            <div className="ml-10 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Lillefinger</strong> er alltid utgangspunktet (fast baseline på 10mm).
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Du legger inn hvor mye <strong className="text-foreground">neste finger er høyere</strong> enn den forrige:
+              </p>
+              
+              {/* Trappetrinn-forklaring */}
+              <div className="bg-surface-light border border-border rounded-lg p-3 space-y-2">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-2">
+                  Tenk "trappetrinn" – fyll inn høyden på hvert trinn:
+                </p>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">A</span>
+                  <span className="text-muted-foreground">Lille → Ring</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">B</span>
+                  <span className="text-muted-foreground">Ring → Lang</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="w-5 h-5 bg-red-600 rounded text-white text-xs flex items-center justify-center font-bold">C</span>
+                  <span className="text-muted-foreground">Lang → Peke (går ned = minus)</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Illustration */}
@@ -67,14 +132,26 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
             </div>
           </div>
 
-          {/* Tips */}
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-4">
-            <h4 className="font-medium text-foreground text-sm mb-2">💡 Tips</h4>
-            <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Mål flere ganger for å være sikker</li>
-              <li>• Bruk skyvelær for mest nøyaktige mål</li>
-              <li>• Lillefinger har fast høyde på 10mm som utgangspunkt</li>
-            </ul>
+          {/* 3) Dybde */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">3</span>
+              <h3 className="font-medium text-foreground">Dybde</h3>
+            </div>
+            <div className="ml-10 space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Dette styrer hvor mye "hud" som får plass på kanten:
+              </p>
+              
+              {/* Dybdeguide visuell */}
+              <div className="bg-surface-light border border-border rounded-lg p-4">
+                <DepthGuide />
+              </div>
+
+              <p className="text-sm text-muted-foreground">
+                <strong className="text-foreground">Usikker?</strong> Velg 20 mm – det passer de fleste.
+              </p>
+            </div>
           </div>
         </div>
       </DialogContent>
