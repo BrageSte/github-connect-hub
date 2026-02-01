@@ -90,8 +90,13 @@ export async function createOrder(params: CreateOrderParams): Promise<string> {
     .single()
 
   if (error) {
-    console.error('Error creating order:', error)
-    throw new Error(`Kunne ikke opprette ordre: ${error.message}`)
+    console.error('Error creating order:', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    })
+    throw new Error(`Kunne ikke opprette ordre: ${error.message} (${error.code})`)
   }
 
   return data.id
