@@ -14,16 +14,194 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      files: {
+        Row: {
+          created_at: string
+          file_type: string
+          id: string
+          order_id: string
+          original_filename: string | null
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          file_type: string
+          id?: string
+          order_id: string
+          original_filename?: string | null
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          file_type?: string
+          id?: string
+          order_id?: string
+          original_filename?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "files_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          order_id: string | null
+          payload: Json
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          order_id?: string | null
+          payload: Json
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          config_snapshot: Json
+          config_version: number
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          delivery_method: string
+          delivery_notes: string | null
+          error_message: string | null
+          id: string
+          internal_notes: string | null
+          line_items: Json
+          pickup_location: string | null
+          shipping_address: Json | null
+          shipping_amount: number
+          status: Database["public"]["Enums"]["order_status"]
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          subtotal_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          config_snapshot: Json
+          config_version?: number
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          delivery_method: string
+          delivery_notes?: string | null
+          error_message?: string | null
+          id?: string
+          internal_notes?: string | null
+          line_items: Json
+          pickup_location?: string | null
+          shipping_address?: Json | null
+          shipping_amount?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal_amount: number
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          config_snapshot?: Json
+          config_version?: number
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          delivery_method?: string
+          delivery_notes?: string | null
+          error_message?: string | null
+          id?: string
+          internal_notes?: string | null
+          line_items?: Json
+          pickup_location?: string | null
+          shipping_address?: Json | null
+          shipping_amount?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      order_status:
+        | "new"
+        | "manual_review"
+        | "in_production"
+        | "ready_to_print"
+        | "printing"
+        | "shipped"
+        | "done"
+        | "error"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +328,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      order_status: [
+        "new",
+        "manual_review",
+        "in_production",
+        "ready_to_print",
+        "printing",
+        "shipped",
+        "done",
+        "error",
+      ],
+    },
   },
 } as const
