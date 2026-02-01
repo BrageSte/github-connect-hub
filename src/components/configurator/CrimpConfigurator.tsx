@@ -103,182 +103,215 @@ export default function CrimpConfigurator() {
   }
 
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
-      {/* LEFT COLUMN - Inputs */}
-      <div className="space-y-6">
-        {/* Block type selector */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Velg blokktype
-          </h2>
-          <BlockSelector selected={blockVariant} onChange={setBlockVariant} />
+    <div className="space-y-8">
+      {/* STEP 1: Velg produkt */}
+      <section className="bg-card border border-border rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">1</span>
+          <h2 className="text-lg font-semibold text-foreground">Velg produkt</h2>
         </div>
+        
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Block type selector */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              Blokktype
+            </h3>
+            <BlockSelector selected={blockVariant} onChange={setBlockVariant} />
+          </div>
 
-        {/* 3D Preview - STL Model */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            3D Forhåndsvisning
-          </h2>
-          <StlViewer variant={blockVariant} />
-        </div>
-
-        {/* Dynamic 3D Preview - User measurements */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Dine mål
-          </h2>
-          <DynamicBlockPreview 
-            widths={widths} 
-            heights={calculatedHeights} 
-            depth={depth} 
-          />
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            Visualisering av dine valgte mål
-          </p>
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN - Configuration and actions */}
-      <div className="space-y-6">
-        {/* Finger widths */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Fingerbredde (mm)
-          </h2>
-          <div className="grid grid-cols-4 gap-3">
-            {(['Lille', 'Ring', 'Lang', 'Peke'] as const).map((label, i) => {
-              const finger = FINGER_NAMES[i]
-              return (
-                <div key={finger} className="text-center">
-                  <label className="text-xs text-muted-foreground block mb-2">{label}</label>
-                  <input
-                    type="number"
-                    min="15"
-                    max="30"
-                    value={widths[finger]}
-                    onChange={(e) => setWidths(prev => ({...prev, [finger]: Number(e.target.value)}))}
-                    className="w-full px-3 py-3 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
-                  />
-                </div>
-              )
-            })}
+          {/* 3D Preview - STL Model */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              3D Forhåndsvisning
+            </h3>
+            <StlViewer variant={blockVariant} />
           </div>
         </div>
+      </section>
 
-        {/* Height differences */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Høydeforskjell (mm)
-          </h2>
-          <div className="space-y-4">
-            <div className="flex items-center gap-4">
-              <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">A</span>
-              <span className="text-foreground text-sm flex-1">Lille → Ring</span>
-              <input
-                type="number"
-                min="0"
-                max="15"
-                value={heightDiffs.lilleToRing}
-                onChange={(e) => setHeightDiffs(prev => ({...prev, lilleToRing: Number(e.target.value)}))}
-                className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none transition-colors"
-              />
-              <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.ringfinger}mm</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">B</span>
-              <span className="text-foreground text-sm flex-1">Ring → Lang</span>
-              <input
-                type="number"
-                min="0"
-                max="15"
-                value={heightDiffs.ringToLang}
-                onChange={(e) => setHeightDiffs(prev => ({...prev, ringToLang: Number(e.target.value)}))}
-                className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none transition-colors"
-              />
-              <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.langfinger}mm</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="w-7 h-7 bg-red-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">C</span>
-              <span className="text-foreground text-sm flex-1">Lang → Peke</span>
-              <input
-                type="number"
-                min="0"
-                max="15"
-                value={heightDiffs.langToPeke}
-                onChange={(e) => setHeightDiffs(prev => ({...prev, langToPeke: Number(e.target.value)}))}
-                className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-red-500 focus:outline-none transition-colors"
-              />
-              <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.pekefinger}mm</span>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
-            Lillefinger: fast 10mm (utgangspunkt)
-          </p>
-          
-          {/* Help link */}
+      {/* STEP 2: Dine mål */}
+      <section className="bg-card border border-border rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">2</span>
+          <h2 className="text-lg font-semibold text-foreground">Dine mål</h2>
           <button
             onClick={() => setShowMeasureHelp(true)}
-            className="mt-4 flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors w-full justify-center"
+            className="ml-auto flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors"
           >
             <HelpCircle className="w-4 h-4" />
-            Problemer med å måle? Trykk her for hjelp
+            Trenger du hjelp?
           </button>
         </div>
         
-        {/* Depth selector */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Dybde
-          </h2>
-          <div className="flex gap-3">
-            {[15, 20, 25].map((d) => (
-              <button
-                key={d}
-                onClick={() => setDepth(d)}
-                className={`flex-1 py-4 rounded-xl font-mono text-sm font-semibold transition-all ${
-                  depth === d 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'bg-surface-light border border-border text-foreground hover:border-primary/50'
-                }`}
-              >
-                {d} mm
-              </button>
-            ))}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Left: Inputs */}
+          <div className="space-y-6">
+            {/* Finger widths */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+                Fingerbredde (mm)
+              </h3>
+              <div className="grid grid-cols-4 gap-3">
+                {(['Lille', 'Ring', 'Lang', 'Peke'] as const).map((label, i) => {
+                  const finger = FINGER_NAMES[i]
+                  return (
+                    <div key={finger} className="text-center">
+                      <label className="text-xs text-muted-foreground block mb-2">{label}</label>
+                      <input
+                        type="number"
+                        min="15"
+                        max="30"
+                        value={widths[finger]}
+                        onChange={(e) => setWidths(prev => ({...prev, [finger]: Number(e.target.value)}))}
+                        className="w-full px-3 py-3 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/50 transition-colors"
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Height differences */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+                Høydeforskjell (mm)
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center gap-4">
+                  <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">A</span>
+                  <span className="text-foreground text-sm flex-1">Lille → Ring</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="15"
+                    value={heightDiffs.lilleToRing}
+                    onChange={(e) => setHeightDiffs(prev => ({...prev, lilleToRing: Number(e.target.value)}))}
+                    className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none transition-colors"
+                  />
+                  <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.ringfinger}mm</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">B</span>
+                  <span className="text-foreground text-sm flex-1">Ring → Lang</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="15"
+                    value={heightDiffs.ringToLang}
+                    onChange={(e) => setHeightDiffs(prev => ({...prev, ringToLang: Number(e.target.value)}))}
+                    className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-primary focus:outline-none transition-colors"
+                  />
+                  <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.langfinger}mm</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="w-7 h-7 bg-red-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">C</span>
+                  <span className="text-foreground text-sm flex-1">Lang → Peke</span>
+                  <input
+                    type="number"
+                    min="0"
+                    max="15"
+                    value={heightDiffs.langToPeke}
+                    onChange={(e) => setHeightDiffs(prev => ({...prev, langToPeke: Number(e.target.value)}))}
+                    className="w-16 px-2 py-2 bg-surface-light border border-border rounded-lg text-foreground text-center text-sm font-mono focus:border-red-500 focus:outline-none transition-colors"
+                  />
+                  <span className="text-muted-foreground text-sm w-16 text-right font-mono">= {calculatedHeights.pekefinger}mm</span>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Lillefinger: fast 10mm (utgangspunkt)
+              </p>
+            </div>
+
+            {/* Depth selector */}
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+                Dybde
+              </h3>
+              <div className="flex gap-3">
+                {[15, 20, 25].map((d) => (
+                  <button
+                    key={d}
+                    onClick={() => setDepth(d)}
+                    className={`flex-1 py-3 rounded-xl font-mono text-sm font-semibold transition-all ${
+                      depth === d 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-surface-light border border-border text-foreground hover:border-primary/50'
+                    }`}
+                  >
+                    {d} mm
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Dynamic 3D Preview */}
+          <div>
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              Forhåndsvisning av dine mål
+            </h3>
+            <DynamicBlockPreview 
+              widths={widths} 
+              heights={calculatedHeights} 
+              depth={depth} 
+            />
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Roter med musen for å se fra forskjellige vinkler
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* STEP 3: Bestill */}
+      <section className="bg-card border border-border rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">3</span>
+          <h2 className="text-lg font-semibold text-foreground">Bestill</h2>
+        </div>
+
+        {/* Summary */}
+        <div className="bg-surface-light rounded-xl p-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-muted-foreground block">Blokktype</span>
+              <span className="text-foreground font-medium">{blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground block">Totalbredde</span>
+              <span className="text-foreground font-mono font-medium">{totalWidth.toFixed(1)}mm</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground block">Dybde</span>
+              <span className="text-foreground font-mono font-medium">{depth}mm</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground block">Maks høyde</span>
+              <span className="text-foreground font-mono font-medium">{Math.max(...Object.values(calculatedHeights))}mm</span>
+            </div>
           </div>
         </div>
 
         {/* Order buttons */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-            Bestill
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => generateOrder('file')}
-              className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-primary/50 hover:shadow-glow text-center group"
-            >
-              <div className="text-foreground font-medium mb-1">3D-fil (STL)</div>
-              <div className="text-2xl font-bold text-primary">199,-</div>
-            </button>
-            <button
-              onClick={() => generateOrder('printed')}
-              className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-valid/50 text-center group"
-            >
-              <div className="text-foreground font-medium mb-1">Ferdig printet</div>
-              <div className="text-2xl font-bold text-valid">{currentPrice},-</div>
-            </button>
-          </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <button
+            onClick={() => generateOrder('file')}
+            className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-primary/50 hover:shadow-glow text-center group"
+          >
+            <div className="text-foreground font-medium mb-1">3D-fil (STL)</div>
+            <div className="text-2xl font-bold text-primary">199,-</div>
+            <p className="text-xs text-muted-foreground mt-2">Print selv eller hos en leverandør</p>
+          </button>
+          <button
+            onClick={() => generateOrder('printed')}
+            className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-valid/50 text-center group"
+          >
+            <div className="text-foreground font-medium mb-1">Ferdig printet</div>
+            <div className="text-2xl font-bold text-valid">{currentPrice},-</div>
+            <p className="text-xs text-muted-foreground mt-2">Levert til deg, klar til bruk</p>
+          </button>
         </div>
-
-        {/* Summary */}
-        <div className="text-center py-4 border border-border rounded-xl bg-surface">
-          <div className="text-muted-foreground text-sm mb-1">
-            Valgt: <span className="text-foreground font-medium">{blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}</span>
-          </div>
-          <span className="text-muted-foreground text-sm">Beregnet totalbredde: </span>
-          <span className="text-foreground font-mono font-semibold">{totalWidth.toFixed(1)}mm</span>
-        </div>
-      </div>
+      </section>
 
       {/* Order Modal */}
       {showOrderForm && orderType && (
