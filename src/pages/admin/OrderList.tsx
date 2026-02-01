@@ -1,0 +1,162 @@
+import { useState, useMemo } from 'react'
+import { useSearchParams, Link } from 'react-router-dom'
+import { format } from 'date-fns'
+import { nb } from 'date-fns/locale'
+import { Search, ChevronRight, Filter } from 'lucide-react'
+import AdminLayout from '@/components/admin/AdminLayout'
+import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
+import { useOrders } from '@/hooks/useOrders'
+import { OrderStatus, ORDER_STATUS_LABELS, DELIVERY_METHOD_LABELS } from '@/types/admin'
+import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+
+const ALL_STATUSES: OrderStatus[] = [
+  'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error'
+]
+
+export default function OrderList() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const statusFilter = searchParams.get('status') as OrderStatus | null
+  const [search, setSearch] = useState('')
+
+  const { data: orders, isLoading } = useOrders()
+
+  const filteredOrders = useMemo(() => {
+    if (!orders) return []
+
+    return orders.filter(order => {
+      // Status filter
+      if (statusFilter && order.status !== statusFilter) return false
+
+      // Search filter
+      if (search) {
+        const q = search.toLowerCase()
+        return (
+          order.id.toLowerCase().includes(q) ||
+          order.customer_name.toLowerCase().includes(q) ||
+          order.customer_email.toLowerCase().includes(q)
+        )
+      }
+
+      return true
+    })
+  }, [orders, statusFilter, search])
+
+  const handleStatusChange = (value: string) => {
+    if (value === 'all') {
+      searchParams.delete('status')
+    } else {
+      searchParams.set('status', value)
+    }
+    setSearchParams(searchParams)
+  }
+
+  return (
+    <AdminLayout>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Ordrer</h1>
+        <p className="text-muted-foreground">
+          {filteredOrders.length} ordre{filteredOrders.length !== 1 ? 'r' : ''}
+          {statusFilter && ` med status "${ORDER_STATUS_LABELS[statusFilter]}"`}
+        </p>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Søk etter ordre-ID, navn eller e-post..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4 text-muted-foreground" />
+          <Select value={statusFilter ?? 'all'} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Alle statuser" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle statuser</SelectItem>
+              {ALL_STATUSES.map(status => (
+                <SelectItem key={status} value={status}>
+                  {ORDER_STATUS_LABELS[status]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Orders table */}
+      <div className="bg-card border border-border rounded-xl overflow-hidden">
+        {isLoading ? (
+          <div className="p-8 text-center text-muted-foreground">Laster ordrer...</div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            {search || statusFilter ? 'Ingen ordrer matcher søket' : 'Ingen ordrer ennå'}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border bg-surface-light/50">
+                  <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Ordre</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Dato</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Kunde</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Levering</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">Total</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredOrders.map(order => (
+                  <tr
+                    key={order.id}
+                    className="border-b border-border last:border-0 hover:bg-surface-light/30 transition-colors"
+                  >
+                    <td className="px-4 py-4">
+                      <Link to={`/admin/orders/${order.id}`} className="font-mono text-sm text-primary hover:underline">
+                        {order.id.slice(0, 8)}...
+                      </Link>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-muted-foreground">
+                      {format(new Date(order.created_at), 'd. MMM yyyy HH:mm', { locale: nb })}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="text-sm font-medium">{order.customer_name}</div>
+                      <div className="text-xs text-muted-foreground">{order.customer_email}</div>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-muted-foreground">
+                      {DELIVERY_METHOD_LABELS[order.delivery_method] ?? order.delivery_method}
+                    </td>
+                    <td className="px-4 py-4">
+                      <OrderStatusBadge status={order.status} />
+                    </td>
+                    <td className="px-4 py-4 text-right font-medium">
+                      {(order.total_amount / 100).toFixed(0)},- kr
+                    </td>
+                    <td className="px-4 py-4">
+                      <Link to={`/admin/orders/${order.id}`}>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </AdminLayout>
+  )
+}
