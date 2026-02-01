@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import CartSummary from '@/components/cart/CartSummary'
 import { useCart } from '@/contexts/CartContext'
 import { redirectToMockCheckout } from '@/lib/stripe-mock'
+import { createOrder } from '@/lib/orderService'
 import { useToast } from '@/hooks/use-toast'
 import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress } from '@/types/shop'
 
@@ -120,11 +121,25 @@ export default function Checkout() {
       : undefined
 
     try {
-      // If total is 0 (100% discount), skip payment and go directly to success
+      // If total is 0 (100% discount), skip payment and save order directly to database
       if (discountedTotal === 0) {
-        // Store order data directly in sessionStorage
+        const orderId = await createOrder({
+          items,
+          customerName: customerName.trim(),
+          customerEmail: email.trim(),
+          customerPhone: customerPhone.trim() || undefined,
+          deliveryMethod,
+          shippingAddress,
+          promoCode: promoCode || undefined,
+          promoDiscount,
+          subtotal: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+          shipping: isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? 79 : 0),
+          discountedTotal: 0
+        })
+
+        // Store simplified order info for success page
         const order = {
-          orderId: `BS-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
+          orderId,
           items,
           subtotal: items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
           shipping: isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? 79 : 0),
@@ -141,6 +156,7 @@ export default function Checkout() {
         }
         
         sessionStorage.setItem('bs-climbing-pending-order', JSON.stringify(order))
+        clearCart()
         
         // Navigate to success page
         navigate('/checkout/success?session_id=free_order')
