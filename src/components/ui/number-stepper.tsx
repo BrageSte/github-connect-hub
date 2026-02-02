@@ -60,10 +60,11 @@ export function NumberStepper({
     }
   }
 
-  const buttonSize = size === 'sm' ? 'w-8 h-8' : 'w-10 h-10'
-  const iconSize = size === 'sm' ? 16 : 20
-  const inputPadding = size === 'sm' ? 'px-1 py-2' : 'px-2 py-3'
+  const buttonSize = size === 'sm' ? 'w-7 h-7' : 'w-10 h-10'
+  const iconSize = size === 'sm' ? 14 : 20
+  const inputPadding = size === 'sm' ? 'px-0.5 py-1.5' : 'px-2 py-3'
   const fontSize = size === 'sm' ? 'text-sm' : 'text-base'
+  const inputWidth = size === 'sm' ? 'min-w-[32px]' : 'min-w-[40px]'
 
   return (
     <div 
@@ -104,7 +105,8 @@ export function NumberStepper({
         className={cn(
           inputPadding,
           fontSize,
-          "w-full bg-transparent text-foreground text-center font-mono focus:outline-none"
+          inputWidth,
+          "flex-1 bg-transparent text-foreground text-center font-mono focus:outline-none"
         )}
       />
       
