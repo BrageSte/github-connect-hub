@@ -38,18 +38,18 @@ export default function Header() {
 
           {/* Desktop Navigation - Minimal */}
           <div className="hidden md:flex items-center gap-8">
-            <Link 
-              to="/#how-it-works"
+            <a
+              href="/#how-it-works"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Hvordan
-            </Link>
-            <Link 
-              to="/#faq"
+            </a>
+            <a
+              href="/#faq"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               FAQ
-            </Link>
+            </a>
             <Link 
               to="/configure" 
               className="text-sm font-medium text-foreground hover:text-primary transition-colors"
@@ -100,20 +100,20 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden py-6 border-t border-border animate-fade-in">
             <div className="flex flex-col gap-4">
-              <Link 
-                to="/#how-it-works"
+              <a
+                href="/#how-it-works"
                 onClick={closeMobileMenu}
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"
               >
                 Hvordan
-              </Link>
-              <Link 
-                to="/#faq"
+              </a>
+              <a
+                href="/#faq"
                 onClick={closeMobileMenu}
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"
               >
                 FAQ
-              </Link>
+              </a>
               <Link 
                 to="/configure" 
                 className="text-foreground font-medium py-2"
