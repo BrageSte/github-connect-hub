@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, CreditCard, Loader2, Truck, MapPin, Mail, Tag, Check, X } from 'lucide-react'
 import Header from '@/components/Header'
@@ -8,7 +8,7 @@ import { useCart } from '@/contexts/CartContext'
 import { redirectToMockCheckout } from '@/lib/stripe-mock'
 import { createOrder } from '@/lib/orderService'
 import { useToast } from '@/hooks/use-toast'
-import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress } from '@/types/shop'
+import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress, BlockConfig } from '@/types/shop'
 import { supabase } from '@/integrations/supabase/client'
 
 export default function Checkout() {
@@ -42,9 +42,34 @@ export default function Checkout() {
   
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'vipps' | 'card'>('vipps')
+  const [digitalConsent, setDigitalConsent] = useState(false)
   const { toast } = useToast()
 
   const needsShippingAddress = deliveryMethod === 'shipping' && !isDigitalOnly
+  const requiresDigitalConsent = items.some(item => item.product.isDigital)
+  const hasPrintedItem = items.some(item => !item.product.isDigital)
+
+  useEffect(() => {
+    if (!requiresDigitalConsent) {
+      setDigitalConsent(false)
+    }
+  }, [requiresDigitalConsent])
+
+  const getConfigDetails = (config?: BlockConfig) => {
+    if (!config) return []
+    const details: string[] = [`Dybde: ${config.depth} mm`]
+    if (config.widths) {
+      details.push(
+        `Fingerbredder (mm): ${config.widths.lillefinger} / ${config.widths.ringfinger} / ${config.widths.langfinger} / ${config.widths.pekefinger} (lille/ring/lang/peke)`
+      )
+    }
+    if (config.heights) {
+      details.push(
+        `Steghøyder (mm): ${config.heights.lillefinger} / ${config.heights.ringfinger} / ${config.heights.langfinger} / ${config.heights.pekefinger} (lille/ring/lang/peke)`
+      )
+    }
+    return details
+  }
 
   const handleApplyPromoCode = () => {
     setPromoError('')
@@ -82,6 +107,15 @@ export default function Checkout() {
       toast({
         title: 'Leveringsmetode påkrevd',
         description: 'Vennligst velg en leveringsmetode.',
+        variant: 'destructive'
+      })
+      return false
+    }
+    
+    if (requiresDigitalConsent && !digitalConsent) {
+      toast({
+        title: 'Samtykke påkrevd',
+        description: 'Du må samtykke til levering av digitalt innhold før betaling.',
         variant: 'destructive'
       })
       return false
@@ -586,25 +620,35 @@ export default function Checkout() {
               <div className="bg-card border border-border rounded-2xl p-6">
                 <h2 className="text-lg font-semibold mb-4">Din bestilling</h2>
                 <div className="space-y-3">
-                  {items.map(item => (
-                    <div key={item.product.id} className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-surface-light rounded-lg flex items-center justify-center shrink-0">
-                        <span className="text-xl">{item.product.isDigital ? '📄' : '🧗'}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-foreground text-sm truncate">
-                          {item.product.name}
+                  {items.map(item => {
+                    const configDetails = getConfigDetails(item.product.config)
+                    return (
+                      <div key={item.product.id} className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-surface-light rounded-lg flex items-center justify-center shrink-0">
+                          <span className="text-xl">{item.product.isDigital ? '📄' : '🧗'}</span>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          Antall: {item.quantity}
-                          {item.product.isDigital && ' • Digital levering'}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-foreground text-sm truncate">
+                            {item.product.name}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Antall: {item.quantity}
+                            {item.product.isDigital && ' • Digital levering'}
+                          </div>
+                          {configDetails.length > 0 && (
+                            <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
+                              {configDetails.map(detail => (
+                                <div key={detail}>{detail}</div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-sm font-medium text-foreground">
+                          {item.product.price * item.quantity},- kr
                         </div>
                       </div>
-                      <div className="text-sm font-medium text-foreground">
-                        {item.product.price * item.quantity},- kr
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -614,10 +658,28 @@ export default function Checkout() {
               <div className="bg-card border border-border rounded-2xl p-6 sticky top-24">
                 <h2 className="text-lg font-semibold mb-4">Sammendrag</h2>
                 <CartSummary />
+
+                {requiresDigitalConsent && (
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground mt-4">
+                    <input
+                      type="checkbox"
+                      checked={digitalConsent}
+                      onChange={(event) => setDigitalConsent(event.target.checked)}
+                      className="mt-0.5"
+                    />
+                    Jeg samtykker i at levering av digitalt innhold starter umiddelbart og erkjenner at angreretten dermed går tapt.
+                  </label>
+                )}
                 
                 <button
                   onClick={handleCheckout}
-                  disabled={isProcessing || !email || !customerName || (!isDigitalOnly && !deliveryMethod)}
+                  disabled={
+                    isProcessing ||
+                    !email ||
+                    !customerName ||
+                    (!isDigitalOnly && !deliveryMethod) ||
+                    (requiresDigitalConsent && !digitalConsent)
+                  }
                   className="btn-primary w-full justify-center mt-6 disabled:opacity-50"
                 >
                   {isProcessing ? (
@@ -634,6 +696,16 @@ export default function Checkout() {
                     </>
                   )}
                 </button>
+
+                {hasPrintedItem && (
+                  <p className="text-xs text-muted-foreground text-center mt-4">
+                    Custom vare: Produseres etter dine mål. Angrerett gjelder ikke. Reklamasjon ved feil/mangel gjelder.
+                  </p>
+                )}
+
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Gratis avbestilling innen 2 timer / før produksjon starter.
+                </p>
 
                 <p className="text-xs text-muted-foreground text-center mt-4">
                   Ved å fullføre kjøpet godtar du våre{' '}

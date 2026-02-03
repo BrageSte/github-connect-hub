@@ -2,16 +2,16 @@ import { motion } from 'framer-motion'
 
 const benefits = [
   {
-    title: 'Perfekt passform',
-    description: 'Hver finger er unik. Med custom mål unngår du unødvendig stress på leddene.',
+    title: 'Aktiver alle fingrene',
+    description: 'Når kanten matcher fingrene dine, slutter du å overbelaste “favorittfingrene”. Ring og lillefinger blir med.',
   },
   {
-    title: 'Bedre trening',
-    description: 'Når grepet passer perfekt, kan du fokusere på styrke – ikke på å tilpasse deg.',
+    title: 'Mer kontrollert halvcrimp',
+    description: 'Målet er en renere posisjon og jevnere drag – ikke bare “holde igjen på hva som helst”.',
   },
   {
-    title: 'Ingen kompromisser',
-    description: 'Slutt å tvinge fingrene inn i standardmål som ikke passer din hånd.',
+    title: 'Tren smart, ikke tilfeldig',
+    description: 'Du velger dybde (15/20/25 mm). Dypere = snillere. Grunnere = strengere.',
   },
 ]
 
