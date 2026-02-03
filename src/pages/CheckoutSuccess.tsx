@@ -5,6 +5,8 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useCart } from '@/contexts/CartContext'
 import { getPendingOrder, clearPendingOrder, getDeliveryMethodLabel } from '@/lib/stripe-mock'
+import { createOrder } from '@/lib/orderService'
+import { supabase } from '@/integrations/supabase/client'
 import { Order, PICKUP_LOCATIONS, isDigitalOnlyCart } from '@/types/shop'
 
 export default function CheckoutSuccess() {
@@ -14,10 +16,82 @@ export default function CheckoutSuccess() {
   useEffect(() => {
     // Get order data from sessionStorage
     const pendingOrder = getPendingOrder()
-    if (pendingOrder) {
-      setOrder(pendingOrder)
-      clearPendingOrder()
-      clearCart()
+    if (!pendingOrder) return
+
+    let isActive = true
+    setOrder(pendingOrder)
+    clearPendingOrder()
+    clearCart()
+
+    const persistOrder = async () => {
+      if (pendingOrder.savedToDatabase) return
+      if (!pendingOrder.customerName || !pendingOrder.email) {
+        console.error('Missing customer data for order persistence', pendingOrder)
+        return
+      }
+
+      try {
+        const resolvedDeliveryMethod = pendingOrder.deliveryMethod ?? 'shipping'
+        const promoDiscount = pendingOrder.promoDiscount ?? 0
+        const orderId = await createOrder({
+          items: pendingOrder.items,
+          customerName: pendingOrder.customerName,
+          customerEmail: pendingOrder.email,
+          customerPhone: pendingOrder.customerPhone,
+          deliveryMethod: resolvedDeliveryMethod,
+          shippingAddress: pendingOrder.shippingAddress,
+          promoCode: pendingOrder.promoCode,
+          promoDiscount,
+          subtotal: pendingOrder.subtotal,
+          shipping: pendingOrder.shipping,
+          discountedTotal: pendingOrder.total
+        })
+
+        const updatedOrder = {
+          ...pendingOrder,
+          orderId,
+          deliveryMethod: resolvedDeliveryMethod,
+          savedToDatabase: true
+        }
+
+        if (isActive) {
+          setOrder(updatedOrder)
+        }
+
+        const pickupLocation = resolvedDeliveryMethod.startsWith('pickup-')
+          ? PICKUP_LOCATIONS.find(loc => loc.id === resolvedDeliveryMethod)?.name
+          : undefined
+
+        supabase.functions.invoke('send-order-confirmation', {
+          body: {
+            orderId,
+            customerEmail: pendingOrder.email,
+            customerName: pendingOrder.customerName,
+            items: pendingOrder.items.map(item => ({
+              name: item.product.name,
+              quantity: item.quantity,
+              price: item.product.price
+            })),
+            deliveryMethod: resolvedDeliveryMethod,
+            pickupLocation,
+            shippingAddress: pendingOrder.shippingAddress,
+            subtotal: pendingOrder.subtotal,
+            shipping: pendingOrder.shipping,
+            promoDiscount,
+            total: pendingOrder.total
+          }
+        }).catch(() => {
+          // Email sending is non-blocking, errors are logged server-side
+        })
+      } catch (error) {
+        console.error('Failed to persist order after checkout', error)
+      }
+    }
+
+    void persistOrder()
+
+    return () => {
+      isActive = false
     }
   }, [clearCart])
 

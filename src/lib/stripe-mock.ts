@@ -61,7 +61,8 @@ export async function createMockCheckoutSession(
     promoDiscount,
     deliveryMethod,
     createdAt: new Date().toISOString(),
-    status: 'paid'
+    status: 'paid',
+    savedToDatabase: false
   }
   
   sessionStorage.setItem('bs-climbing-pending-order', JSON.stringify(order))
