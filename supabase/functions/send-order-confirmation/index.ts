@@ -154,9 +154,22 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
       </ol>
     </div>
 
+    <!-- Returns -->
+    <div style="background-color: #1a1a1a; border-radius: 16px; padding: 24px; margin-top: 24px; border: 1px solid #333;">
+      <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #ffffff;">Angrerett og retur</h3>
+      <ul style="margin: 0; padding-left: 20px; color: #cccccc; font-size: 14px; line-height: 1.8;">
+        <li>Stepper (ferdig printet) produseres på bestilling og omfattes ikke av angrerett.</li>
+        <li>Digitale filer leveres umiddelbart. Når du samtykker til umiddelbar levering bortfaller angreretten.</li>
+        <li>Ved feil eller mangel ordner vi opp – send oss ordrenummer og bilder.</li>
+      </ul>
+      <p style="margin: 12px 0 0 0; color: #cccccc; font-size: 14px;">
+        Returadresse: Åstadlia 18, 1396 Billingstad, Norway. Retur avtales alltid på forhånd.
+      </p>
+    </div>
+
     <!-- Footer -->
     <div style="text-align: center; margin-top: 40px; color: #666666; font-size: 12px;">
-      <p style="margin: 0 0 8px 0;">Har du spørsmål? Kontakt oss på hei@bsclimbing.no</p>
+      <p style="margin: 0 0 8px 0;">Har du spørsmål? Kontakt oss på post@bsclimbing.no</p>
       <p style="margin: 0;">© ${new Date().getFullYear()} BS Climbing. Alle rettigheter reservert.</p>
     </div>
   </div>
@@ -187,11 +200,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailHtml = generateEmailHtml(orderData);
 
-    // Note: Using onboarding@resend.dev as sender until domain is verified
-    // For production, verify bsclimbing.no at https://resend.com/domains
+    // Note: The sender domain must be verified in Resend.
     const emailResponse = await resend.emails.send({
-      from: "BS Climbing <onboarding@resend.dev>",
+      from: "BS Climbing <post@bsclimbing.no>",
       to: [orderData.customerEmail],
+      reply_to: "post@bsclimbing.no",
       subject: `Ordrebekreftelse #${orderData.orderId.slice(0, 8).toUpperCase()}`,
       html: emailHtml,
     });

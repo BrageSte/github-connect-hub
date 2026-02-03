@@ -110,7 +110,7 @@ export default function Returns() {
               </ul>
               <p className="text-sm text-muted-foreground">
                 Send e-post til{' '}
-                <a href="mailto:hei@bsclimbing.no" className="text-primary hover:underline">hei@bsclimbing.no</a>
+                <a href="mailto:post@bsclimbing.no" className="text-primary hover:underline">post@bsclimbing.no</a>
                 {' '}med ordrenummer, bilder og kort beskrivelse av problemet, så svarer vi med neste steg.
               </p>
             </div>
@@ -120,9 +120,9 @@ export default function Returns() {
               <h3 className="font-semibold mb-2">Returadresse</h3>
               <address className="text-sm text-muted-foreground not-italic">
                 BS Climbing<br />
-                [Gateadresse]<br />
-                [Postnummer] Oslo<br />
-                Norge
+                Åstadlia 18<br />
+                1396 Billingstad<br />
+                Norway
               </address>
               <p className="text-xs text-muted-foreground mt-3">
                 Ikke send retur før du har fått en bekreftelse fra oss.

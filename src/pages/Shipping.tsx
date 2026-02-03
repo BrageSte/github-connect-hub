@@ -92,7 +92,7 @@ export default function Shipping() {
               <h3 className="font-semibold mb-2">Utenfor Norge?</h3>
               <p className="text-sm text-muted-foreground">
                 Vi sender foreløpig kun til adresser i Norge. 
-                Ta kontakt på <a href="mailto:hei@bsclimbing.no" className="text-primary hover:underline">hei@bsclimbing.no</a> 
+                Ta kontakt på <a href="mailto:post@bsclimbing.no" className="text-primary hover:underline">post@bsclimbing.no</a> 
                 {' '}hvis du ønsker levering til andre land, så finner vi en løsning.
               </p>
             </div>

@@ -75,9 +75,15 @@ export default function Footer() {
           <p className="text-muted-foreground text-sm">
             © {new Date().getFullYear()} BS Climbing. Alle rettigheter reservert.
           </p>
-          <p className="text-muted-foreground text-xs">
-            Laget med presisjon i Oslo 🇳🇴
-          </p>
+          <div className="text-muted-foreground text-xs text-center md:text-right space-y-1">
+            <a
+              href="mailto:post@bsclimbing.no"
+              className="hover:text-primary transition-colors"
+            >
+              post@bsclimbing.no
+            </a>
+            <p>Åstadlia 18, 1396 Billingstad, Norway</p>
+          </div>
         </div>
       </div>
     </footer>
