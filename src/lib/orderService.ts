@@ -69,9 +69,13 @@ export async function createOrder(params: CreateOrderParams): Promise<string> {
     city: shippingAddress.city
   } : null
 
-  const { data, error } = await supabase
+  // Generate a unique order ID client-side since anon users can't SELECT after INSERT
+  const orderId = crypto.randomUUID()
+
+  const { error } = await supabase
     .from('orders')
     .insert({
+      id: orderId,
       customer_name: customerName,
       customer_email: customerEmail,
       customer_phone: customerPhone || null,
@@ -86,8 +90,6 @@ export async function createOrder(params: CreateOrderParams): Promise<string> {
       status: 'new',
       stripe_checkout_session_id: `free_order_${Date.now()}`
     })
-    .select('id')
-    .single()
 
   if (error) {
     console.error('Error creating order:', {
@@ -99,5 +101,5 @@ export async function createOrder(params: CreateOrderParams): Promise<string> {
     throw new Error(`Kunne ikke opprette ordre: ${error.message} (${error.code})`)
   }
 
-  return data.id
+  return orderId
 }
