@@ -1,18 +1,22 @@
 import { motion } from 'framer-motion'
+import { Ruler, SlidersHorizontal, Package } from 'lucide-react'
 
 const steps = [
   {
     number: '01',
+    icon: Ruler,
     title: 'Mål fingrene',
     description: 'Mål bredden på hver finger og avstanden mellom leddene. Vår guide viser deg nøyaktig hvordan.',
   },
   {
     number: '02',
+    icon: SlidersHorizontal,
     title: 'Konfigurer',
     description: 'Bruk konfiguratoren til å sette inn målene dine. Se forhåndsvisning i sanntid.',
   },
   {
     number: '03',
+    icon: Package,
     title: 'Bestill',
     description: 'Velg mellom STL-fil for egen printing eller ferdig printet blokk levert hjem.',
   },
@@ -37,7 +41,7 @@ export default function HowItWorks() {
           </p>
         </motion.div>
 
-        <div className="space-y-16">
+        <div className="space-y-12">
           {steps.map((step, index) => (
             <motion.div
               key={step.number}
@@ -45,14 +49,22 @@ export default function HowItWorks() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="flex gap-8 items-start"
+              className="flex gap-6 items-start"
             >
-              <div className="text-4xl font-bold text-muted-foreground/30 font-mono shrink-0">
-                {step.number}
+              {/* Icon container */}
+              <div className="shrink-0 w-14 h-14 rounded-xl bg-muted flex items-center justify-center">
+                <step.icon className="w-6 h-6 text-foreground" />
               </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                <p className="text-muted-foreground">{step.description}</p>
+              
+              {/* Content */}
+              <div className="flex-1 pt-1">
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-xs font-mono text-muted-foreground/50">
+                    {step.number}
+                  </span>
+                  <h3 className="text-lg font-semibold">{step.title}</h3>
+                </div>
+                <p className="text-muted-foreground leading-relaxed">{step.description}</p>
               </div>
             </motion.div>
           ))}
