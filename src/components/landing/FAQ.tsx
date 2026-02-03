@@ -13,7 +13,20 @@ const faqs = [
   },
   {
     question: 'Hvilket materiale brukes?',
-    answer: 'Vi bruker høykvalitets PLA+ som gir en god balanse mellom styrke og overflatestruktur. Materialet tåler normal bruk godt og har en behagelig overflate for fingertrening.',
+    answer: (
+      <>
+        PLA+ (fiberfri). Vi unngår karbon-/trefiberfyll fordi det kan gi mer slitasje og er mindre egnet for hudkontakt.{' '}
+        <a
+          href="https://support.3dxtech.com/hc/en-us/article_attachments/360089687193/Carbon_Fiber_SDS.pdf"
+          className="text-primary hover:underline"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Les mer
+        </a>
+        .
+      </>
+    ),
   },
   {
     question: 'Kan jeg printe selv?',
@@ -22,6 +35,43 @@ const faqs = [
   {
     question: 'Hvor lang er leveringstiden?',
     answer: 'STL-filer leveres umiddelbart. Ferdig printede blokker sendes innen 3-5 virkedager, avhengig av etterspørsel.',
+  },
+  {
+    question: 'Les mer / Research',
+    answer: (
+      <ul className="list-disc pl-4 space-y-1">
+        <li>
+          <a
+            href="https://unlevel-edge.com/"
+            className="text-primary hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            unlevel-edge.com
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://latticetraining.com/blog/what-makes-the-lattice-training-mxedge-different-from-other-edges/"
+            className="text-primary hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Lattice Training: MXEdge
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://www.trainingbeta.com/media/tyler-unlevel/"
+            className="text-primary hover:underline"
+            target="_blank"
+            rel="noreferrer"
+          >
+            TrainingBeta: Tyler Unlevel
+          </a>
+        </li>
+      </ul>
+    ),
   },
 ]
 

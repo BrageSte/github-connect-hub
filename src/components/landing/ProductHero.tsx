@@ -21,6 +21,9 @@ export default function ProductHero() {
             <div className="relative aspect-square max-w-md mx-auto">
               {/* Product image placeholder - styled like real product photography */}
               <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center text-slate-200/70 text-xs uppercase tracking-[0.3em]">
+                  Produktbilde kommer
+                </div>
                 {/* Crimp block visualization */}
                 <div className="absolute inset-0 flex items-end justify-center pb-8">
                   <div className="flex items-end gap-1">
@@ -56,19 +59,22 @@ export default function ProductHero() {
             transition={{ duration: 0.6 }}
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6 text-foreground">
-              CUSTOM CRIMP BLOCK
+              CUSTOM CRIMP BLOCK – aktiver alle fingrene.
             </h1>
             
             <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto lg:mx-0">
-              Skreddersydd for dine fingre. Optimal stimulering og personlig ergonomi.
+              Flate kanter lar de sterke fingrene jukse. Med custom/unlevel får du ring + lillefinger på jobb – jevnere drag, bedre rekruttering, mer relevant styrke.
             </p>
 
             <Link 
               to="/configure" 
               className="inline-flex items-center justify-center px-8 py-4 bg-foreground text-background font-medium hover:bg-foreground/90 transition-colors"
             >
-              KONFIGURER NÅ
+              KONFIGURER (60 sek)
             </Link>
+            <p className="text-sm text-muted-foreground mt-4">
+              Fra 199,- (STL) / 449,- ferdig printet. Henting i Oslo eller frakt.
+            </p>
 
             {/* Minimal specs */}
             <div className="flex gap-12 justify-center lg:justify-start mt-12 text-sm">

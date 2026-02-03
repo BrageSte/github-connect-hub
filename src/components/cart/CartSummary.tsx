@@ -25,6 +25,13 @@ export default function CartSummary() {
     return pickup ? `Henting: ${pickup.name}` : 'Levering'
   }
 
+  const getDeliveryValue = () => {
+    if (!isDigitalOnly && !deliveryMethod) {
+      return 'Velg metode'
+    }
+    return shipping > 0 ? `${shipping},- kr` : 'Gratis'
+  }
+
   return (
     <div className="space-y-3 pt-4 border-t border-border">
       <div className="flex justify-between text-sm">
@@ -34,8 +41,8 @@ export default function CartSummary() {
       
       <div className="flex justify-between text-sm">
         <span className="text-muted-foreground">{getDeliveryLabel()}</span>
-        <span className={shipping === 0 ? 'text-valid font-medium' : 'text-foreground'}>
-          {shipping > 0 ? `${shipping},- kr` : 'Gratis'}
+        <span className={shipping === 0 && deliveryMethod ? 'text-valid font-medium' : 'text-foreground'}>
+          {getDeliveryValue()}
         </span>
       </div>
       
