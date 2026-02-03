@@ -38,12 +38,21 @@ function formatPrice(amount: number): string {
   return `${amount.toLocaleString("nb-NO")},-`;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function generateEmailHtml(order: OrderConfirmationRequest): string {
   const itemsHtml = order.items
     .map(
       (item) => `
         <tr>
-          <td style="padding: 12px; border-bottom: 1px solid #333;">${item.name}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #333;">${escapeHtml(item.name)}</td>
           <td style="padding: 12px; border-bottom: 1px solid #333; text-align: center;">${item.quantity}</td>
           <td style="padding: 12px; border-bottom: 1px solid #333; text-align: right;">${formatPrice(item.price * item.quantity)}</td>
         </tr>
@@ -55,14 +64,18 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
   if (order.deliveryMethod === "shipping" && order.shippingAddress) {
     deliveryHtml = `
       <p style="margin: 0 0 8px 0;"><strong>Leveringsmetode:</strong> Hjemlevering</p>
-      <p style="margin: 0 0 4px 0;">${order.shippingAddress.line1}</p>
-      ${order.shippingAddress.line2 ? `<p style="margin: 0 0 4px 0;">${order.shippingAddress.line2}</p>` : ""}
-      <p style="margin: 0;">${order.shippingAddress.postalCode} ${order.shippingAddress.city}</p>
+      <p style="margin: 0 0 4px 0;">${escapeHtml(order.shippingAddress.line1)}</p>
+      ${
+        order.shippingAddress.line2
+          ? `<p style="margin: 0 0 4px 0;">${escapeHtml(order.shippingAddress.line2)}</p>`
+          : ""
+      }
+      <p style="margin: 0;">${escapeHtml(order.shippingAddress.postalCode)} ${escapeHtml(order.shippingAddress.city)}</p>
     `;
   } else if (order.pickupLocation) {
     deliveryHtml = `
       <p style="margin: 0 0 8px 0;"><strong>Leveringsmetode:</strong> Henting</p>
-      <p style="margin: 0;">${order.pickupLocation}</p>
+      <p style="margin: 0;">${escapeHtml(order.pickupLocation)}</p>
     `;
   } else {
     deliveryHtml = `<p style="margin: 0;"><strong>Leveringsmetode:</strong> Digital levering</p>`;
@@ -88,13 +101,13 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
     <div style="background-color: #1a1a1a; border-radius: 16px; padding: 32px; border: 1px solid #333;">
       <h2 style="margin: 0 0 8px 0; font-size: 24px; color: #ffffff;">Takk for bestillingen!</h2>
       <p style="margin: 0 0 24px 0; color: #888888;">
-        Hei ${order.customerName}, vi har mottatt din bestilling og setter i gang med produksjonen snart.
+        Hei ${escapeHtml(order.customerName)}, vi har mottatt din bestilling og setter i gang med produksjonen snart.
       </p>
 
       <!-- Order ID -->
       <div style="background-color: #262626; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <p style="margin: 0; font-size: 14px; color: #888888;">Ordrenummer</p>
-        <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600; color: #ff6b35; font-family: monospace;">${order.orderId}</p>
+        <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600; color: #ff6b35; font-family: monospace;">${escapeHtml(order.orderId)}</p>
       </div>
 
       <!-- Items table -->
