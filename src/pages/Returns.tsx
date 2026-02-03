@@ -28,19 +28,15 @@ export default function Returns() {
                   <RotateCcw className="w-6 h-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">14 dagers åpent kjøp</h2>
+                  <h2 className="text-xl font-semibold mb-2">Kortversjonen</h2>
                   <p className="text-muted-foreground mb-4">
-                    I henhold til angrerettloven har du rett til å returnere varen innen 14 dager 
-                    etter at du mottok den, uten å oppgi grunn.
+                    Stepper ferdig printet lages etter målene du oppgir. Derfor gjelder ikke angrerett på dette kjøpet 
+                    (custom vare).
                   </p>
                   <div className="bg-surface-light rounded-xl p-4">
-                    <h3 className="font-medium mb-2">For å benytte angreretten:</h3>
-                    <ol className="text-sm text-muted-foreground space-y-2">
-                      <li>1. Send e-post til hei@bsclimbing.no med ordrenummer</li>
-                      <li>2. Du får en bekreftelse og returadresse</li>
-                      <li>3. Send varen tilbake i original emballasje</li>
-                      <li>4. Pengene refunderes innen 14 dager etter vi mottar varen</li>
-                    </ol>
+                    <p className="text-sm text-muted-foreground">
+                      Men: Hvis vi har produsert feil, eller produktet har en mangel, har du selvfølgelig reklamasjonsrett.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -53,21 +49,30 @@ export default function Returns() {
                   <CheckCircle className="w-6 h-6 text-valid" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">Hva kan returneres</h2>
-                  <ul className="space-y-3 text-sm">
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-valid rounded-full" />
-                      <span className="text-foreground">Fysiske produkter i uåpnet/ubrukt stand</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-valid rounded-full" />
-                      <span className="text-foreground">Produkter med produksjonsfeil</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-valid rounded-full" />
-                      <span className="text-foreground">Produkter som avviker fra bestillingen</span>
-                    </li>
-                  </ul>
+                  <h2 className="text-xl font-semibold mb-2">Angrerett</h2>
+                  <div className="space-y-4 text-sm text-muted-foreground">
+                    <div>
+                      <h3 className="font-medium text-foreground mb-1">Stepper (ferdig printet – custom)</h3>
+                      <p>
+                        Stepper produseres på bestilling etter dine mål. Det betyr at angrerett (14 dager) ikke gjelder 
+                        for denne typen varer.
+                      </p>
+                      <p className="mt-2">
+                        Det vi står for: Hvis vi har produsert feil i forhold til spesifikasjonene du oppga, fikser vi det 
+                        (se “Reklamasjon”).
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-foreground mb-1">STL (digital fil)</h3>
+                      <p>
+                        STL leveres som digitalt innhold. Når du får filen levert umiddelbart etter betaling, bortfaller 
+                        angreretten når du har samtykket til umiddelbar levering (dette gjøres i kassa med en checkbox).
+                      </p>
+                      <p className="mt-2">
+                        Hvis filen er defekt/korrupt eller ikke matcher det du bestilte: ta kontakt, så ordner vi.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -79,21 +84,15 @@ export default function Returns() {
                   <AlertCircle className="w-6 h-6 text-destructive" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold mb-2">Unntak fra angreretten</h2>
-                  <ul className="space-y-3 text-sm">
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-destructive rounded-full" />
-                      <span className="text-foreground">Digitale produkter (STL-filer) etter nedlasting</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-destructive rounded-full" />
-                      <span className="text-foreground">Produkter som er tydelig brukt eller skadet av kunden</span>
-                    </li>
-                  </ul>
-                  <p className="text-xs text-muted-foreground mt-4">
-                    Merk: Siden hver Stepper produseres etter dine mål, gjelder angreretten kun 
-                    hvis produktet ikke samsvarer med spesifikasjonene du oppga.
-                  </p>
+                  <h2 className="text-xl font-semibold mb-2">Avbestilling (for å være fair – uten returkaos)</h2>
+                  <div className="space-y-3 text-sm text-muted-foreground">
+                    <p>Du kan avbestille gratis innen 2 timer etter bestilling / før produksjon starter.</p>
+                    <p>Etter at produksjon er startet, kan ordren ikke kanselleres.</p>
+                    <p className="text-xs">
+                      Retur (kun etter avtale): Siden Stepper er custom, tar vi ikke retur ved “angret kjøp”. Ved 
+                      reklamasjon/feil avtaler vi retur eller løsning sammen.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -102,12 +101,17 @@ export default function Returns() {
             <div className="bg-card border border-border rounded-2xl p-6">
               <h2 className="text-xl font-semibold mb-4">Reklamasjon</h2>
               <p className="text-muted-foreground mb-4">
-                Ved produksjonsfeil eller mangler har du rett til å reklamere i inntil 2 år 
-                etter kjøpet, i henhold til forbrukerkjøpsloven.
+                Hvis Stepperen har en feil, eller ikke stemmer med det du bestilte, har du rett til å reklamere etter 
+                forbrukerkjøpsloven.
               </p>
+              <ul className="text-sm text-muted-foreground space-y-2 mb-4">
+                <li>Du har minst 2 år reklamasjonsrett.</li>
+                <li>For produkter som er ment å vare vesentlig lenger enn 2 år, kan fristen være inntil 5 år.</li>
+              </ul>
               <p className="text-sm text-muted-foreground">
-                Ta kontakt på <a href="mailto:hei@bsclimbing.no" className="text-primary hover:underline">hei@bsclimbing.no</a> 
-                {' '}med bilder og beskrivelse av problemet, så hjelper vi deg.
+                Send e-post til{' '}
+                <a href="mailto:hei@bsclimbing.no" className="text-primary hover:underline">hei@bsclimbing.no</a>
+                {' '}med ordrenummer, bilder og kort beskrivelse av problemet, så svarer vi med neste steg.
               </p>
             </div>
 
@@ -121,7 +125,11 @@ export default function Returns() {
                 Norge
               </address>
               <p className="text-xs text-muted-foreground mt-3">
-                Du dekker selv fraktkostnad ved retur, med mindre varen har en feil.
+                Ikke send retur før du har fått en bekreftelse fra oss.
+              </p>
+              <p className="text-xs text-muted-foreground mt-2">
+                Frakt ved reklamasjon: Hvis det er en feil/mangel, dekker vi returkostnad. Hvis produktet er som 
+                bestilt, dekker du frakt selv. (Dette vurderes etter dialog.)
               </p>
             </div>
           </div>
