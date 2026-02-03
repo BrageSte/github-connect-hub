@@ -156,13 +156,13 @@ export default function CrimpConfigurator() {
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Block type selector */}
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Blokktype</h3>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Blokktype</h3>
             <BlockSelector selected={blockVariant} onChange={setBlockVariant} />
           </div>
 
           {/* 3D Preview - STL Model */}
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
               3D Forhåndsvisning
             </h3>
             <StlViewer variant={blockVariant} />
@@ -191,19 +191,18 @@ export default function CrimpConfigurator() {
           <div className="space-y-6">
             {/* Finger widths */}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
                 Fingerbredde (mm)
               </h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                Mål ytterst på fingerpaden. Legg til 1 mm på hver side (2 mm totalt) for komfort. Pro-tip: Klem på en
-                vanlig crimpkant og se hvor bredt padden “sprer seg”.
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                Mål ytterst på fingerpaden. Legg til 1 mm på hver side (2 mm totalt) for komfort.
               </p>
               <div className="grid grid-cols-4 gap-3">
                 {(["Lille", "Ring", "Lang", "Peke"] as const).map((label, i) => {
                   const finger = FINGER_NAMES[i];
                   return (
                     <div key={finger} className="text-center">
-                      <label className="text-xs text-muted-foreground block mb-2">{label}</label>
+                      <label className="text-xs font-medium text-muted-foreground block mb-2">{label}</label>
                       <NumberStepper
                         value={widths[finger]}
                         onChange={(val) => setWidths((prev) => ({ ...prev, [finger]: val }))}
@@ -219,19 +218,18 @@ export default function CrimpConfigurator() {
 
             {/* Height differences */}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
                 Høydeforskjell (mm)
               </h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                Dette er “unlevel”. Vi justerer stegene slik at alle fire fingre jobber mer likt i halvcrimp. Usikker?
-                La standard stå.
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                Justerer stegene slik at alle fire fingre jobber likt i halvcrimp. Usikker? La standard stå.
               </p>
               <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
                     A
                   </span>
-                  <span className="text-foreground text-sm flex-1">Fra lillefinger → ringfinger</span>
+                  <span className="text-foreground text-sm flex-1">Lille → ring</span>
                   <NumberStepper
                     value={heightDiffs.lilleToRing}
                     onChange={(val) => setHeightDiffs((prev) => ({ ...prev, lilleToRing: val }))}
@@ -240,15 +238,15 @@ export default function CrimpConfigurator() {
                     size="sm"
                     className="w-28"
                   />
-                  <span className="text-muted-foreground text-sm w-16 text-right font-mono">
-                    = {calculatedHeights.ringfinger}mm
+                  <span className="text-muted-foreground text-xs w-14 text-right font-mono">
+                    {calculatedHeights.ringfinger}mm
                   </span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="w-7 h-7 bg-blue-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
                     B
                   </span>
-                  <span className="text-foreground text-sm flex-1">Fra ringfinger → langfinger</span>
+                  <span className="text-foreground text-sm flex-1">Ring → lang</span>
                   <NumberStepper
                     value={heightDiffs.ringToLang}
                     onChange={(val) => setHeightDiffs((prev) => ({ ...prev, ringToLang: val }))}
@@ -257,15 +255,15 @@ export default function CrimpConfigurator() {
                     size="sm"
                     className="w-28"
                   />
-                  <span className="text-muted-foreground text-sm w-16 text-right font-mono">
-                    = {calculatedHeights.langfinger}mm
+                  <span className="text-muted-foreground text-xs w-14 text-right font-mono">
+                    {calculatedHeights.langfinger}mm
                   </span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <span className="w-7 h-7 bg-red-600 rounded-lg text-white text-xs flex items-center justify-center font-bold shrink-0">
+                <div className="flex items-center gap-3">
+                  <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
                     C
                   </span>
-                  <span className="text-foreground text-sm flex-1">Fra langfinger → pekefinger</span>
+                  <span className="text-foreground text-sm flex-1">Lang → peke</span>
                   <NumberStepper
                     value={heightDiffs.langToPeke}
                     onChange={(val) => setHeightDiffs((prev) => ({ ...prev, langToPeke: val }))}
@@ -274,32 +272,32 @@ export default function CrimpConfigurator() {
                     size="sm"
                     className="w-28"
                   />
-                  <span className="text-muted-foreground text-sm w-16 text-right font-mono">
-                    = {calculatedHeights.pekefinger}mm
+                  <span className="text-muted-foreground text-xs w-14 text-right font-mono">
+                    {calculatedHeights.pekefinger}mm
                   </span>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-3">Lillefinger: fast 10mm (utgangspunkt)</p>
+              <p className="text-xs text-muted-foreground mt-3 opacity-75">Lillefinger: fast 10mm (utgangspunkt)</p>
             </div>
 
             {/* Depth selector */}
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">Dybde</h3>
-              <p className="text-xs text-muted-foreground mb-4">
-                15 mm = strengere. 20 mm = standard. 25 mm = snillere / mer volum.
+              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Dybde</h3>
+              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                15mm = strengere · 20mm = standard · 25mm = snillere
               </p>
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 {[15, 20, 25].map((d) => (
                   <button
                     key={d}
                     onClick={() => setDepth(d)}
-                    className={`flex-1 py-3 rounded-xl font-mono text-sm font-semibold transition-all ${
+                    className={`flex-1 py-2.5 rounded-lg font-mono text-sm font-medium transition-all ${
                       depth === d
                         ? "bg-primary text-primary-foreground"
                         : "bg-surface-light border border-border text-foreground hover:border-primary/50"
                     }`}
                   >
-                    {d} mm
+                    {d}mm
                   </button>
                 ))}
               </div>
@@ -308,12 +306,12 @@ export default function CrimpConfigurator() {
 
           {/* Right: Dynamic 3D Preview */}
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-4">
-              Forhåndsvisning av dine mål
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
+              Forhåndsvisning
             </h3>
             <DynamicBlockPreview widths={widths} heights={calculatedHeights} depth={depth} />
-            <p className="text-xs text-muted-foreground text-center mt-3">
-              Roter med musen for å se fra forskjellige vinkler
+            <p className="text-xs text-muted-foreground text-center mt-3 opacity-75">
+              Roter med musen for å se fra ulike vinkler
             </p>
           </div>
         </div>
@@ -330,15 +328,15 @@ export default function CrimpConfigurator() {
 
         {/* Summary */}
         <div className="bg-surface-light rounded-xl p-4 mb-6">
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-muted-foreground block">Blokktype</span>
+              <span className="text-muted-foreground text-xs block mb-1">Blokktype</span>
               <span className="text-foreground font-medium">
                 {blockVariant === "shortedge" ? "Short Edge" : "Long Edge"}
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground block">Dybde</span>
+              <span className="text-muted-foreground text-xs block mb-1">Dybde</span>
               <span className="text-foreground font-mono font-medium">{depth}mm</span>
             </div>
           </div>
@@ -348,23 +346,21 @@ export default function CrimpConfigurator() {
         <div className="grid sm:grid-cols-2 gap-4">
           <button
             onClick={() => handleAddToCart("file")}
-            className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-primary/50 hover:shadow-glow text-center group"
+            className="p-5 bg-surface-light border border-border rounded-xl transition-all hover:border-primary/50 hover:shadow-glow text-center group"
           >
-            <Download className="w-6 h-6 mx-auto mb-2 text-primary" />
-            <div className="text-foreground font-medium mb-1">Kjøp STL </div>
-            <div className="text-xs text-muted-foreground">Leveres på mail etter betaling.</div>
-            <div className="text-2xl font-bold text-primary">{filePrice},-</div>
-            <p className="text-xs text-muted-foreground mt-2">Inkluderer dine custom mål.</p>
+            <Download className="w-5 h-5 mx-auto mb-2 text-primary" />
+            <div className="text-foreground font-medium text-sm mb-1">Kjøp STL</div>
+            <div className="text-xs text-muted-foreground mb-2">Leveres på e-post etter betaling</div>
+            <div className="text-xl font-bold text-primary">{filePrice},-</div>
           </button>
           <button
             onClick={() => handleAddToCart("printed")}
-            className="p-6 bg-surface-light border border-border rounded-xl transition-all hover:border-valid/50 text-center group"
+            className="p-5 bg-surface-light border border-border rounded-xl transition-all hover:border-valid/50 text-center group"
           >
-            <ShoppingBag className="w-6 h-6 mx-auto mb-2 text-valid" />
-            <div className="text-foreground font-medium mb-1">Kjøp ferdig printet </div>
-            <div className="text-xs text-muted-foreground">Produseres på bestilling – normalt sendt innen 1 uke.</div>
-            <div className="text-2xl font-bold text-valid">{currentPrice},-</div>
-            <p className="text-xs text-muted-foreground mt-2">Inkluderer dine custom mål.</p>
+            <ShoppingBag className="w-5 h-5 mx-auto mb-2 text-valid" />
+            <div className="text-foreground font-medium text-sm mb-1">Kjøp ferdig printet</div>
+            <div className="text-xs text-muted-foreground mb-2">Normalt sendt innen 1 uke</div>
+            <div className="text-xl font-bold text-valid">{currentPrice},-</div>
           </button>
         </div>
       </section>
