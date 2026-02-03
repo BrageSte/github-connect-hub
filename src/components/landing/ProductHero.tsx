@@ -73,8 +73,16 @@ export default function ProductHero() {
             >
               KONFIGURER (60 sek)
             </Link>
-            <p className="text-sm text-muted-foreground mt-4">
-              Fra 199,- (STL) / fra 449,- ferdig printet. Henting i Oslo eller frakt.
+            <div className="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm">
+              <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">
+                STL-fil fra <span className="font-bold">199,-</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-valid/10 text-valid px-3 py-1.5 rounded-full font-medium">
+                Ferdig printet fra <span className="font-bold">449,-</span>
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-3">
+              Henting i Oslo eller frakt i hele Norge
             </p>
 
             {/* Minimal specs */}
