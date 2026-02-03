@@ -34,7 +34,7 @@ export default function CrimpConfigurator() {
   const [widths, setWidths] = useState<Widths>({
     lillefinger: 21,
     ringfinger: 20,
-    langfinger: 21,
+    langfinger: 20,
     pekefinger: 22,
   });
 
