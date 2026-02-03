@@ -38,12 +38,21 @@ function formatPrice(amount: number): string {
   return `${amount.toLocaleString("nb-NO")},-`;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function generateEmailHtml(order: OrderConfirmationRequest): string {
   const itemsHtml = order.items
     .map(
       (item) => `
         <tr>
-          <td style="padding: 12px; border-bottom: 1px solid #333;">${item.name}</td>
+          <td style="padding: 12px; border-bottom: 1px solid #333;">${escapeHtml(item.name)}</td>
           <td style="padding: 12px; border-bottom: 1px solid #333; text-align: center;">${item.quantity}</td>
           <td style="padding: 12px; border-bottom: 1px solid #333; text-align: right;">${formatPrice(item.price * item.quantity)}</td>
         </tr>
@@ -55,14 +64,18 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
   if (order.deliveryMethod === "shipping" && order.shippingAddress) {
     deliveryHtml = `
       <p style="margin: 0 0 8px 0;"><strong>Leveringsmetode:</strong> Hjemlevering</p>
-      <p style="margin: 0 0 4px 0;">${order.shippingAddress.line1}</p>
-      ${order.shippingAddress.line2 ? `<p style="margin: 0 0 4px 0;">${order.shippingAddress.line2}</p>` : ""}
-      <p style="margin: 0;">${order.shippingAddress.postalCode} ${order.shippingAddress.city}</p>
+      <p style="margin: 0 0 4px 0;">${escapeHtml(order.shippingAddress.line1)}</p>
+      ${
+        order.shippingAddress.line2
+          ? `<p style="margin: 0 0 4px 0;">${escapeHtml(order.shippingAddress.line2)}</p>`
+          : ""
+      }
+      <p style="margin: 0;">${escapeHtml(order.shippingAddress.postalCode)} ${escapeHtml(order.shippingAddress.city)}</p>
     `;
   } else if (order.pickupLocation) {
     deliveryHtml = `
       <p style="margin: 0 0 8px 0;"><strong>Leveringsmetode:</strong> Henting</p>
-      <p style="margin: 0;">${order.pickupLocation}</p>
+      <p style="margin: 0;">${escapeHtml(order.pickupLocation)}</p>
     `;
   } else {
     deliveryHtml = `<p style="margin: 0;"><strong>Leveringsmetode:</strong> Digital levering</p>`;
@@ -88,13 +101,13 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
     <div style="background-color: #1a1a1a; border-radius: 16px; padding: 32px; border: 1px solid #333;">
       <h2 style="margin: 0 0 8px 0; font-size: 24px; color: #ffffff;">Takk for bestillingen!</h2>
       <p style="margin: 0 0 24px 0; color: #888888;">
-        Hei ${order.customerName}, vi har mottatt din bestilling og setter i gang med produksjonen snart.
+        Hei ${escapeHtml(order.customerName)}, vi har mottatt din bestilling og setter i gang med produksjonen snart.
       </p>
 
       <!-- Order ID -->
       <div style="background-color: #262626; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <p style="margin: 0; font-size: 14px; color: #888888;">Ordrenummer</p>
-        <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600; color: #ff6b35; font-family: monospace;">${order.orderId}</p>
+        <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600; color: #ff6b35; font-family: monospace;">${escapeHtml(order.orderId)}</p>
       </div>
 
       <!-- Items table -->
@@ -154,9 +167,22 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
       </ol>
     </div>
 
+    <!-- Returns -->
+    <div style="background-color: #1a1a1a; border-radius: 16px; padding: 24px; margin-top: 24px; border: 1px solid #333;">
+      <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #ffffff;">Angrerett og retur</h3>
+      <ul style="margin: 0; padding-left: 20px; color: #cccccc; font-size: 14px; line-height: 1.8;">
+        <li>Stepper (ferdig printet) produseres på bestilling og omfattes ikke av angrerett.</li>
+        <li>Digitale filer leveres umiddelbart. Når du samtykker til umiddelbar levering bortfaller angreretten.</li>
+        <li>Ved feil eller mangel ordner vi opp – send oss ordrenummer og bilder.</li>
+      </ul>
+      <p style="margin: 12px 0 0 0; color: #cccccc; font-size: 14px;">
+        Returadresse: Åstadlia 18, 1396 Billingstad, Norway. Retur avtales alltid på forhånd.
+      </p>
+    </div>
+
     <!-- Footer -->
     <div style="text-align: center; margin-top: 40px; color: #666666; font-size: 12px;">
-      <p style="margin: 0 0 8px 0;">Har du spørsmål? Kontakt oss på hei@bsclimbing.no</p>
+      <p style="margin: 0 0 8px 0;">Har du spørsmål? Kontakt oss på post@bsclimbing.no</p>
       <p style="margin: 0;">© ${new Date().getFullYear()} BS Climbing. Alle rettigheter reservert.</p>
     </div>
   </div>
@@ -187,11 +213,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailHtml = generateEmailHtml(orderData);
 
-    // Note: Using onboarding@resend.dev as sender until domain is verified
-    // For production, verify bsclimbing.no at https://resend.com/domains
+    // Note: The sender domain must be verified in Resend.
     const emailResponse = await resend.emails.send({
-      from: "BS Climbing <onboarding@resend.dev>",
+      from: "BS Climbing <post@bsclimbing.no>",
       to: [orderData.customerEmail],
+      reply_to: "post@bsclimbing.no",
       subject: `Ordrebekreftelse #${orderData.orderId.slice(0, 8).toUpperCase()}`,
       html: emailHtml,
     });

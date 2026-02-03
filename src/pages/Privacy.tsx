@@ -145,11 +145,11 @@ export default function Privacy() {
             <div className="bg-surface-light rounded-2xl p-6 border border-border">
               <h3 className="font-semibold mb-2">Spørsmål om personvern?</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Kontakt oss på <a href="mailto:hei@bsclimbing.no" className="text-primary hover:underline">hei@bsclimbing.no</a> 
+                Kontakt oss på <a href="mailto:post@bsclimbing.no" className="text-primary hover:underline">post@bsclimbing.no</a> 
                 {' '}hvis du har spørsmål eller ønsker å utøve dine rettigheter.
               </p>
               <p className="text-xs text-muted-foreground">
-                Behandlingsansvarlig: BS Climbing, Oslo, Norge
+                Behandlingsansvarlig: BS Climbing, Åstadlia 18, 1396 Billingstad, Norway
               </p>
             </div>
           </div>

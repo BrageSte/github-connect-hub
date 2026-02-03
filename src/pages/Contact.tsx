@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Mail, MessageCircle, Clock } from 'lucide-react'
+import { ArrowLeft, Mail, MessageCircle, Clock, MapPin } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 
@@ -26,7 +26,7 @@ export default function Contact() {
           <div className="space-y-6">
             {/* Email */}
             <a 
-              href="mailto:hei@bsclimbing.no"
+              href="mailto:post@bsclimbing.no"
               className="bg-card border border-border rounded-2xl p-6 flex items-center gap-4 hover:border-primary/50 transition-colors block"
             >
               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
@@ -34,9 +34,21 @@ export default function Contact() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold mb-1">E-post</h2>
-                <p className="text-primary">hei@bsclimbing.no</p>
+                <p className="text-primary">post@bsclimbing.no</p>
               </div>
             </a>
+
+            <div className="bg-card border border-border rounded-2xl p-6 flex items-center gap-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center shrink-0">
+                <MapPin className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold mb-1">Postadresse</h2>
+                <p className="text-muted-foreground text-sm">
+                  Åstadlia 18, 1396 Billingstad, Norway
+                </p>
+              </div>
+            </div>
 
             {/* Response time */}
             <div className="bg-card border border-border rounded-2xl p-6 flex items-center gap-4">
