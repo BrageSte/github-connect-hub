@@ -1,41 +1,87 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
 
 export default function ProductHero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-background to-surface">
-      {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px]" />
+    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
+      {/* Subtle background gradient */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/3 rounded-full blur-[120px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-32">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Product Visual - Left side, large and prominent */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-16 md:py-24">
+        {/* Mobile: stacked, Desktop: side by side */}
+        <div className="flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          
+          {/* Text content */}
           <motion.div
-            className="relative order-2 lg:order-1"
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-center lg:text-left order-1"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            <div className="relative aspect-square max-w-md mx-auto">
-              {/* Product image placeholder - styled like real product photography */}
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl shadow-2xl overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center text-slate-200/70 text-xs uppercase tracking-[0.3em]">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15] mb-5 text-foreground">
+              Custom crimp block
+              <span className="block text-muted-foreground font-normal text-xl sm:text-2xl lg:text-3xl mt-2">
+                – aktiver alle fingrene
+              </span>
+            </h1>
+
+            <p className="text-base sm:text-lg text-muted-foreground mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              Flate kanter lar de sterke fingrene jukse. Med custom/unlevel får du ring + lillefinger på jobb – jevnere drag, bedre rekruttering, mer relevant styrke.
+            </p>
+
+            {/* CTA Button */}
+            <Link
+              to="/configure"
+              className="inline-flex items-center gap-2 px-7 py-3.5 bg-foreground text-background font-medium rounded-lg hover:bg-foreground/90 transition-all group"
+            >
+              Konfigurer din blokk
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
+
+            {/* Price badges */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
+              <span className="inline-flex items-center gap-1.5 bg-surface border border-border px-4 py-2 rounded-full text-sm">
+                STL-fil fra <span className="font-bold text-foreground">199,-</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-valid/10 border border-valid/20 px-4 py-2 rounded-full text-sm text-valid">
+                Ferdig printet fra <span className="font-bold">449,-</span>
+              </span>
+            </div>
+
+            <p className="text-xs text-muted-foreground mt-4">
+              Henting i Oslo · Frakt i hele Norge
+            </p>
+          </motion.div>
+
+          {/* Product Visual */}
+          <motion.div
+            className="relative order-2 w-full max-w-sm lg:max-w-md mx-auto"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.15 }}
+          >
+            <div className="relative aspect-square">
+              {/* Product image placeholder */}
+              <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted/80 rounded-2xl overflow-hidden">
+                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50 text-xs uppercase tracking-[0.2em]">
                   Produktbilde kommer
                 </div>
+                
                 {/* Crimp block visualization */}
-                <div className="absolute inset-0 flex items-end justify-center pb-8">
-                  <div className="flex items-end gap-1">
+                <div className="absolute inset-0 flex items-end justify-center pb-10">
+                  <div className="flex items-end gap-1.5">
                     {[
-                      { h: "45%", w: "w-12" },
-                      { h: "55%", w: "w-12" },
-                      { h: "65%", w: "w-12" },
-                      { h: "50%", w: "w-12" },
+                      { h: "40%", w: "w-10 sm:w-12" },
+                      { h: "52%", w: "w-10 sm:w-12" },
+                      { h: "60%", w: "w-10 sm:w-12" },
+                      { h: "48%", w: "w-10 sm:w-12" },
                     ].map((block, i) => (
                       <div
                         key={i}
-                        className={`${block.w} bg-gradient-to-t from-slate-600 to-slate-500 rounded-t-sm`}
+                        className={`${block.w} bg-gradient-to-t from-muted-foreground/40 to-muted-foreground/25 rounded-t-sm`}
                         style={{ height: block.h }}
                       />
                     ))}
@@ -43,61 +89,10 @@ export default function ProductHero() {
                 </div>
 
                 {/* Base */}
-                <div className="absolute bottom-0 inset-x-0 h-6 bg-slate-600" />
+                <div className="absolute bottom-0 inset-x-0 h-5 bg-muted-foreground/30" />
 
-                {/* Subtle reflection */}
-                <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/5 to-transparent" />
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Text content - Right side */}
-          <motion.div
-            className="text-center lg:text-left order-1 lg:order-2"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-6 text-foreground">
-              CUSTOM CRIMP BLOCK – aktiver alle fingrene.
-            </h1>
-
-            <p className="text-lg text-muted-foreground mb-8 max-w-md mx-auto lg:mx-0">
-              Flate kanter lar de sterke fingrene jukse. Med custom/unlevel får du ring + lillefinger på jobb – jevnere
-              drag, bedre rekruttering, mer relevant styrke.
-            </p>
-
-            <Link
-              to="/configure"
-              className="inline-flex items-center justify-center px-8 py-4 bg-foreground text-background font-medium hover:bg-foreground/90 transition-colors"
-            >
-              KONFIGURER (60 sek)
-            </Link>
-            <div className="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-4 text-sm">
-              <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-full font-medium">
-                STL-fil fra <span className="font-bold">199,-</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-valid/10 text-valid px-3 py-1.5 rounded-full font-medium">
-                Ferdig printet fra <span className="font-bold">449,-</span>
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-3">
-              Henting i Oslo eller frakt i hele Norge
-            </p>
-
-            {/* Minimal specs */}
-            <div className="flex gap-12 justify-center lg:justify-start mt-12 text-sm">
-              <div>
-                <div className="font-mono text-foreground">±0.3mm</div>
-                <div className="text-muted-foreground">Toleranse</div>
-              </div>
-              <div>
-                <div className="font-mono text-foreground">FDM</div>
-                <div className="text-muted-foreground">Print-klar</div>
-              </div>
-              <div>
-                <div className="font-mono text-foreground">4 grep</div>
-                <div className="text-muted-foreground">Per blokk</div>
+                {/* Subtle highlight */}
+                <div className="absolute top-0 left-0 right-0 h-1/4 bg-gradient-to-b from-background/10 to-transparent" />
               </div>
             </div>
           </motion.div>
