@@ -1,17 +1,17 @@
-import { motion } from 'framer-motion'
+import { motion } from "framer-motion";
 
 const deliverables = [
   {
-    title: 'STL-fil',
-    price: '199,-',
-    description: 'Print-klar fil optimalisert for FDM-printing. Inkluderer anbefalte innstillinger.',
+    title: "STL-fil",
+    price: "199,-",
+    description: "Print-klar fil optimalisert for FDM-printing. Inkluderer anbefalte innstillinger.",
   },
   {
-    title: 'Ferdig printet',
-    price: '449,-',
-    description: 'Vi printer og sender. Høykvalitets PLA+ med ±0.3mm toleranse.',
+    title: "Ferdig printet fra",
+    price: "449,-",
+    description: "Vi printer og sender. Høykvalitets PLA+ med ±0.3mm toleranse.",
   },
-]
+];
 
 export default function WhatYouGet() {
   return (
@@ -24,9 +24,7 @@ export default function WhatYouGet() {
           transition={{ duration: 0.6 }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            VELG DITT FORMAT
-          </h2>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">VELG DITT FORMAT</h2>
         </motion.div>
 
         <div className="grid md:grid-cols-2 gap-6">
@@ -49,5 +47,5 @@ export default function WhatYouGet() {
         </div>
       </div>
     </section>
-  )
+  );
 }
