@@ -81,6 +81,7 @@ export interface Order {
   deliveryMethod?: DeliveryMethod
   createdAt: string
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled'
+  savedToDatabase?: boolean
 }
 
 export const SHIPPING_COST = 79 // Fast frakt i Norge

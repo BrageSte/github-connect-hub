@@ -227,7 +227,8 @@ export default function Checkout() {
           promoDiscount,
           deliveryMethod,
           createdAt: new Date().toISOString(),
-          status: 'paid' as const
+          status: 'paid' as const,
+          savedToDatabase: true
         }
         
         sessionStorage.setItem('bs-climbing-pending-order', JSON.stringify(order))
