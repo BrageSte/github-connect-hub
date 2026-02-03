@@ -44,10 +44,10 @@ export default function CheckoutCancel() {
                   eller har spørsmål om produktet, ta gjerne kontakt.
                 </p>
                 <a 
-                  href="mailto:hei@bsclimbing.no"
+                  href="mailto:post@bsclimbing.no"
                   className="text-sm text-primary hover:underline"
                 >
-                  hei@bsclimbing.no
+                  post@bsclimbing.no
                 </a>
               </div>
             </div>
