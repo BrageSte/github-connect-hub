@@ -2,12 +2,14 @@ import { useState, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
-import { Search, ChevronRight, Filter } from 'lucide-react'
+import { Search, ChevronRight, Filter, Download } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
 import { useOrders } from '@/hooks/useOrders'
-import { OrderStatus, ORDER_STATUS_LABELS, DELIVERY_METHOD_LABELS } from '@/types/admin'
+import { OrderStatus, ORDER_STATUS_LABELS, DELIVERY_METHOD_LABELS, ConfigSnapshot } from '@/types/admin'
+import { downloadFusionParameterCSV } from '@/lib/fusionCsvExport'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -19,6 +21,14 @@ import {
 const ALL_STATUSES: OrderStatus[] = [
   'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error'
 ]
+
+function getConfigSnapshot(order: { config_snapshot: unknown }): ConfigSnapshot | null {
+  try {
+    return order.config_snapshot as ConfigSnapshot
+  } catch {
+    return null
+  }
+}
 
 export default function OrderList() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -146,9 +156,30 @@ export default function OrderList() {
                       {(order.total_amount / 100).toFixed(0)},- kr
                     </td>
                     <td className="px-4 py-4">
-                      <Link to={`/admin/orders/${order.id}`}>
-                        <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-foreground" />
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {(() => {
+                          const config = getConfigSnapshot(order)
+                          const item = config?.items?.[0]
+                          if (!item) return null
+                          return (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => {
+                                e.preventDefault()
+                                downloadFusionParameterCSV(item, order.id)
+                              }}
+                              title="Eksporter Fusion CSV"
+                            >
+                              <Download className="w-4 h-4 text-muted-foreground hover:text-foreground" />
+                            </Button>
+                          )
+                        })()}
+                        <Link to={`/admin/orders/${order.id}`}>
+                          <ChevronRight className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}
