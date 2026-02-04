@@ -49,106 +49,90 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
             </ul>
           </div>
 
-          {/* 1) Fingerbredde */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">1</span>
-              <Ruler className="w-4 h-4 text-primary" />
-              <h3 className="font-medium text-foreground">Fingerbredde (mm)</h3>
-            </div>
-            <div className="ml-10 space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Mål bredden på fingeren ytterst på fingerputen (der fingeren treffer kanten).
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Legg til <strong className="text-foreground">2 mm totalt</strong> (1 mm på hver side) for litt margin.
-              </p>
-              
-              {/* Eksempel-boks */}
-              <div className="bg-surface-light border border-border rounded-lg p-3 flex items-center justify-center gap-3">
-                <span className="text-sm text-muted-foreground">Eksempel:</span>
-                <span className="font-mono text-foreground font-medium">18 mm</span>
-                <ArrowRight className="w-4 h-4 text-primary" />
-                <span className="font-mono text-primary font-bold">20 mm</span>
+          <div className="space-y-4">
+            {/* 1) Fingerbredde */}
+            <section className="bg-surface-light/40 border border-border rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">1</span>
+                <Ruler className="w-4 h-4 text-primary" />
+                <h3 className="font-medium text-foreground">Fingerbredde (mm)</h3>
               </div>
+              <div className="pl-10 space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Mål bredden på fingeren ytterst på fingerputen (der fingeren treffer kanten).
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Legg til <strong className="text-foreground">2 mm totalt</strong> (1 mm på hver side) for litt margin.
+                </p>
 
-              <figure className="bg-surface-light border border-border rounded-lg p-3">
-                <img
-                  src="/images/measure-help/finger-width.jpg"
-                  alt="Måling av fingerbredde med skyvelære"
-                  className="w-full rounded-md"
-                  loading="lazy"
-                />
-                <figcaption className="mt-2 text-xs text-muted-foreground text-center">
-                  Eksempel på hvordan du måler fingerbredde.
-                </figcaption>
-              </figure>
-            </div>
-          </div>
+                <div className="bg-surface-light border border-border rounded-lg p-3 flex items-center justify-center gap-3">
+                  <span className="text-sm text-muted-foreground">Eksempel:</span>
+                  <span className="font-mono text-foreground font-medium">18 mm</span>
+                  <ArrowRight className="w-4 h-4 text-primary" />
+                  <span className="font-mono text-primary font-bold">20 mm</span>
+                </div>
 
-          {/* 2) Høydeforskjell */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">2</span>
-              <ArrowUpDown className="w-4 h-4 text-primary" />
-              <h3 className="font-medium text-foreground">Høydeforskjell (mm)</h3>
-            </div>
-            <div className="ml-10 space-y-3">
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">Lillefinger</strong> er alltid utgangspunktet (fast baseline på 10mm).
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Du legger inn hvor mye <strong className="text-foreground">neste finger er høyere</strong> enn den forrige:
-              </p>
-              {/* Illustration */}
-              <figure className="bg-surface-light rounded-xl p-4 border border-border">
-                <img
-                  src="/images/measure-help/height-differences.jpeg"
-                  alt="Illustrasjon av høydeforskjeller mellom fingrene"
-                  className="w-full rounded-lg"
-                  loading="lazy"
-                />
-                <figcaption className="mt-2 text-xs text-muted-foreground text-center">
-                  Illustrasjon av høydeforskjeller mellom fingrene.
-                </figcaption>
-              </figure>
-            </div>
-          </div>
-
-          {/* Illustration */}
-          <figure className="bg-surface-light rounded-xl p-4 border border-border">
-            <img
-              src="/images/measure-help/height-differences.jpg"
-              alt="Illustrasjon av høydeforskjeller mellom fingrene"
-              className="w-full rounded-lg"
-              loading="lazy"
-            />
-            <figcaption className="mt-2 text-xs text-muted-foreground text-center">
-              Illustrasjon av høydeforskjeller mellom fingrene.
-            </figcaption>
-          </figure>
-
-
-          {/* 3) Dybde */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">3</span>
-              <h3 className="font-medium text-foreground">Dybde</h3>
-            </div>
-            <div className="ml-10 space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Dette styrer hvor mye "hud" som får plass på kanten:
-              </p>
-              
-              {/* Dybdeguide visuell */}
-              <div className="bg-surface-light border border-border rounded-lg p-4">
-                <DepthGuide />
+                <figure className="bg-surface-light border border-border rounded-lg p-3">
+                  <img
+                    src="/images/measure-help/finger-width.jpg"
+                    alt="Måling av fingerbredde med skyvelære"
+                    className="w-full rounded-md"
+                    loading="lazy"
+                  />
+                  <figcaption className="mt-2 text-xs text-muted-foreground text-center">
+                    Eksempel på hvordan du måler fingerbredde.
+                  </figcaption>
+                </figure>
               </div>
+            </section>
 
-              <p className="text-sm text-muted-foreground">
-                <strong className="text-foreground">Usikker?</strong> Velg 20 mm – det passer de fleste.
-              </p>
-            </div>
+            {/* 2) Høydeforskjell */}
+            <section className="bg-surface-light/40 border border-border rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">2</span>
+                <ArrowUpDown className="w-4 h-4 text-primary" />
+                <h3 className="font-medium text-foreground">Høydeforskjell (mm)</h3>
+              </div>
+              <div className="pl-10 space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">Lillefinger</strong> er alltid utgangspunktet (fast baseline på 10mm).
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Du legger inn hvor mye <strong className="text-foreground">neste finger er høyere</strong> enn den forrige.
+                </p>
+                <figure className="bg-surface-light border border-border rounded-lg p-3">
+                  <img
+                    src="/images/measure-help/height-differences.jpg"
+                    alt="Illustrasjon av høydeforskjeller mellom fingrene"
+                    className="w-full rounded-lg"
+                    loading="lazy"
+                  />
+                  <figcaption className="mt-2 text-xs text-muted-foreground text-center">
+                    Illustrasjon av høydeforskjeller mellom fingrene.
+                  </figcaption>
+                </figure>
+              </div>
+            </section>
+
+            {/* 3) Dybde */}
+            <section className="bg-surface-light/40 border border-border rounded-xl p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="w-7 h-7 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold">3</span>
+                <ArrowRight className="w-4 h-4 text-primary rotate-90" />
+                <h3 className="font-medium text-foreground">Dybde</h3>
+              </div>
+              <div className="pl-10 space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Dette styrer hvor mye "hud" som får plass på kanten.
+                </p>
+                <div className="bg-surface-light border border-border rounded-lg p-4">
+                  <DepthGuide />
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  <strong className="text-foreground">Usikker?</strong> Velg 20 mm – det passer de fleste.
+                </p>
+              </div>
+            </section>
           </div>
         </div>
       </DialogContent>
