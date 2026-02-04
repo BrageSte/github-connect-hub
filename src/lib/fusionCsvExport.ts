@@ -16,7 +16,7 @@ export function downloadFusionParameterCSV(item: ConfigSnapshotItem, orderId: st
     formatRow('PekefingerHoyde', item.heights.pekefinger),
     formatRow('LangefingerHoyde', item.heights.langfinger),
     formatRow('RingefingerHoyde', item.heights.ringfinger),
-    formatRow('LongShort_Edge', item.depth),
+    formatRow('LongShort_Edge', item.blockVariant === 'longedge' ? 50 : 35),
   ]
 
   const csv = [header, ...rows].join('\n')
