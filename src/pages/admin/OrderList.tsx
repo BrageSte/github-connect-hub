@@ -2,10 +2,10 @@ import { useState, useMemo } from 'react'
 import { useSearchParams, Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
-import { Search, ChevronRight, Filter, Download } from 'lucide-react'
+import { Search, ChevronRight, Filter, Download, MoreHorizontal, Trash2 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
-import { useOrders } from '@/hooks/useOrders'
+import { useOrders, useBulkUpdateOrderStatus, useBulkDeleteOrders } from '@/hooks/useOrders'
 import { OrderStatus, ORDER_STATUS_LABELS, DELIVERY_METHOD_LABELS, ConfigSnapshot } from '@/types/admin'
 import { downloadFusionParameterCSV, downloadMultipleFusionCSVs } from '@/lib/fusionCsvExport'
 import { Input } from '@/components/ui/input'
@@ -18,9 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { useToast } from '@/hooks/use-toast'
 
 const ALL_STATUSES: OrderStatus[] = [
-  'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error'
+  'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error', 'arkivert', 'reklamasjon'
 ]
 
 function getConfigSnapshot(order: { config_snapshot: unknown }): ConfigSnapshot | null {
@@ -38,6 +49,9 @@ export default function OrderList() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const { data: orders, isLoading } = useOrders()
+  const bulkUpdateStatus = useBulkUpdateOrderStatus()
+  const bulkDelete = useBulkDeleteOrders()
+  const { toast } = useToast()
 
   const filteredOrders = useMemo(() => {
     if (!orders) return []
@@ -104,6 +118,31 @@ export default function OrderList() {
     }
   }
 
+  const handleBulkStatusChange = async (status: OrderStatus) => {
+    const orderIds = Array.from(selectedIds)
+    try {
+      await bulkUpdateStatus.mutateAsync({ orderIds, status })
+      toast({ title: `${orderIds.length} ordre(r) oppdatert til "${ORDER_STATUS_LABELS[status]}"` })
+      setSelectedIds(new Set())
+    } catch {
+      toast({ title: 'Feil ved oppdatering', variant: 'destructive' })
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    const orderIds = Array.from(selectedIds)
+    if (!confirm(`Er du sikker på at du vil slette ${orderIds.length} ordre(r)? Dette kan ikke angres.`)) {
+      return
+    }
+    try {
+      await bulkDelete.mutateAsync(orderIds)
+      toast({ title: `${orderIds.length} ordre(r) slettet` })
+      setSelectedIds(new Set())
+    } catch {
+      toast({ title: 'Feil ved sletting', variant: 'destructive' })
+    }
+  }
+
   return (
     <AdminLayout>
       <div className="mb-6">
@@ -142,10 +181,37 @@ export default function OrderList() {
           </Select>
         </div>
         {selectedIds.size > 0 && (
-          <Button onClick={handleBulkDownload} variant="default" className="gap-2">
-            <Download className="w-4 h-4" />
-            Last ned {selectedIds.size} CSV{selectedIds.size > 1 ? '-er' : ''}
-          </Button>
+          <>
+            <Button onClick={handleBulkDownload} variant="default" className="gap-2">
+              <Download className="w-4 h-4" />
+              Last ned {selectedIds.size} CSV{selectedIds.size > 1 ? '-er' : ''}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <MoreHorizontal className="w-4 h-4" />
+                  Handlinger ({selectedIds.size})
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>Endre status til</DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    {ALL_STATUSES.map(status => (
+                      <DropdownMenuItem key={status} onClick={() => handleBulkStatusChange(status)}>
+                        {ORDER_STATUS_LABELS[status]}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleBulkDelete} className="text-destructive focus:text-destructive">
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Slett valgte
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
         )}
       </div>
 

@@ -78,3 +78,39 @@ export function useUpdateOrderNotes() {
     }
   })
 }
+
+export function useBulkUpdateOrderStatus() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ orderIds, status }: { orderIds: string[]; status: OrderStatus }) => {
+      const { error } = await supabase
+        .from('orders')
+        .update({ status })
+        .in('id', orderIds)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    }
+  })
+}
+
+export function useBulkDeleteOrders() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (orderIds: string[]) => {
+      const { error } = await supabase
+        .from('orders')
+        .delete()
+        .in('id', orderIds)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    }
+  })
+}

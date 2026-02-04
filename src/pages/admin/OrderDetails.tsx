@@ -37,7 +37,7 @@ import { useToast } from '@/hooks/use-toast'
 import { downloadFusionParameterCSV } from '@/lib/fusionCsvExport'
 
 const ALL_STATUSES: OrderStatus[] = [
-  'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error'
+  'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error', 'arkivert', 'reklamasjon'
 ]
 
 export default function OrderDetails() {
