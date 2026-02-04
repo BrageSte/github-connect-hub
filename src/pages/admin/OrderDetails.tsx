@@ -2,16 +2,17 @@ import { useState, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
-import { 
-  ArrowLeft, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Package, 
-  Copy, 
+import {
+  ArrowLeft,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Package,
+  Copy,
   Check,
-  Save
+  Save,
+  Download
 } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
@@ -33,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { downloadFusionParameterCSV } from '@/lib/fusionCsvExport'
 
 const ALL_STATUSES: OrderStatus[] = [
   'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error'
@@ -217,10 +219,16 @@ Total bredde: ${item.totalWidth.toFixed(1)} mm
                   <Package className="w-5 h-5" />
                   Produktkonfigurasjon
                 </h2>
-                <Button variant="outline" size="sm" onClick={copyConfig}>
-                  {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
-                  {copied ? 'Kopiert!' : 'Kopier'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => downloadFusionParameterCSV(item, order.id)}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Eksporter Fusion CSV
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={copyConfig}>
+                    {copied ? <Check className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
+                    {copied ? 'Kopiert!' : 'Kopier'}
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
