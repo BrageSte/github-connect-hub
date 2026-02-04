@@ -52,6 +52,7 @@ interface OrderConfirmationRequest {
   productionNumber?: number;
   customerEmail: string;
   customerName: string;
+  siteUrl?: string;
   items: OrderItem[];
   deliveryMethod: string;
   pickupLocation?: string;
@@ -83,6 +84,11 @@ function formatProductionNumber(value?: number | null, width = 4): string {
 
 function generateEmailHtml(order: OrderConfirmationRequest): string {
   const productionNumber = formatProductionNumber(order.productionNumber);
+  const baseUrl = (order.siteUrl || Deno.env.get("PUBLIC_SITE_URL") || "").replace(/\\/$/, "");
+  const statusUrl = baseUrl
+    ? `${baseUrl}/order-status?orderId=${encodeURIComponent(order.orderId)}`
+    : "";
+  const safeStatusUrl = statusUrl ? escapeHtml(statusUrl) : "";
 
   const itemsHtml = order.items
     .map(
@@ -149,6 +155,16 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
         <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600; color: #ff6b35; font-family: monospace;">${escapeHtml(productionNumber)}</p>
         ` : ''}
       </div>
+      ${safeStatusUrl ? `
+      <div style="margin-bottom: 24px;">
+        <a href="${safeStatusUrl}" style="display: inline-block; padding: 12px 18px; background-color: #ff6b35; color: #0f0f0f; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+          Sjekk ordrestatus
+        </a>
+        <p style="margin: 8px 0 0 0; font-size: 12px; color: #888888;">
+          Følg produksjon og printkø direkte via lenken.
+        </p>
+      </div>
+      ` : ''}
 
       <!-- Items table -->
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">

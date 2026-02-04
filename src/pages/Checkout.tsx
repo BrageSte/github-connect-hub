@@ -193,6 +193,7 @@ export default function Checkout() {
         supabase.functions.invoke('send-order-confirmation', {
           body: {
             orderId,
+            siteUrl: window.location.origin,
             customerEmail: email.trim(),
             customerName: customerName.trim(),
             items: items.map(item => ({

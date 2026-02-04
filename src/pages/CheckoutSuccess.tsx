@@ -65,6 +65,7 @@ export default function CheckoutSuccess() {
         supabase.functions.invoke('send-order-confirmation', {
           body: {
             orderId,
+            siteUrl: window.location.origin,
             customerEmail: pendingOrder.email,
             customerName: pendingOrder.customerName,
             items: pendingOrder.items.map(item => ({

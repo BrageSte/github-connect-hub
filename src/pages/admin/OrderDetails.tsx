@@ -4,6 +4,7 @@ import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
 import {
   ArrowLeft,
+  ArrowUpRight,
   User,
   Mail,
   Phone,
@@ -156,7 +157,15 @@ Total bredde: ${item.totalWidth.toFixed(1)} mm
             {format(new Date(order.created_at), "d. MMMM yyyy 'kl.' HH:mm", { locale: nb })}
           </div>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" asChild>
+            <a href={`/order-status?orderId=${order.id}`} target="_blank" rel="noreferrer">
+              Se kundens ordrestatus
+              <ArrowUpRight className="w-4 h-4" />
+            </a>
+          </Button>
+          <OrderStatusBadge status={order.status} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

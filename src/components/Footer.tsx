@@ -57,6 +57,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/order-status" className="text-muted-foreground hover:text-primary transition-colors text-sm">
+                  Sjekk ordrestatus
+                </Link>
+              </li>
+              <li>
                 <Link to="/privacy" className="text-muted-foreground hover:text-primary transition-colors text-sm">
                   Personvern
                 </Link>
