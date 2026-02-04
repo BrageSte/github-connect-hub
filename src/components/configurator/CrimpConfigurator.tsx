@@ -177,6 +177,13 @@ export default function CrimpConfigurator() {
             2
           </span>
           <h2 className="text-lg font-semibold text-foreground">Dine mål</h2>
+          <button
+            onClick={() => setShowMeasureHelp(true)}
+            className="ml-auto flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors"
+          >
+            <HelpCircle className="w-4 h-4" />
+            Måleguide
+          </button>
         </div>
         <button
           onClick={() => setShowMeasureHelp(true)}
