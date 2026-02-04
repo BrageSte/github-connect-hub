@@ -5,7 +5,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import MeasureGuide from './MeasureGuide'
 import DepthGuide from './DepthGuide'
 import { Lightbulb, Ruler, ArrowUpDown, ArrowRight } from 'lucide-react'
 
@@ -72,6 +71,18 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
                 <ArrowRight className="w-4 h-4 text-primary" />
                 <span className="font-mono text-primary font-bold">20 mm</span>
               </div>
+
+              <figure className="bg-surface-light border border-border rounded-lg p-3">
+                <img
+                  src="/images/measure-help/finger-width.jpg"
+                  alt="Måling av fingerbredde med skyvelære"
+                  className="w-full rounded-md"
+                  loading="lazy"
+                />
+                <figcaption className="mt-2 text-xs text-muted-foreground text-center">
+                  Eksempel på hvordan du måler fingerbredde.
+                </figcaption>
+              </figure>
             </div>
           </div>
 
@@ -93,9 +104,17 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
           </div>
 
           {/* Illustration */}
-          <div className="bg-surface-light rounded-xl p-4">
-            <MeasureGuide />
-          </div>
+          <figure className="bg-surface-light rounded-xl p-4 border border-border">
+            <img
+              src="/images/measure-help/height-differences.jpg"
+              alt="Illustrasjon av høydeforskjeller mellom fingrene"
+              className="w-full rounded-lg"
+              loading="lazy"
+            />
+            <figcaption className="mt-2 text-xs text-muted-foreground text-center">
+              Illustrasjon av høydeforskjeller mellom fingrene.
+            </figcaption>
+          </figure>
 
 
           {/* 3) Dybde */}
