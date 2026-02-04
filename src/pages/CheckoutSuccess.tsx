@@ -84,7 +84,10 @@ export default function CheckoutSuccess() {
           // Email sending is non-blocking, errors are logged server-side
         })
       } catch (error) {
-        console.error('Failed to persist order after checkout', error)
+        // Only log details in development mode
+        if (import.meta.env.DEV) {
+          console.error('Failed to persist order after checkout', error)
+        }
       }
     }
 

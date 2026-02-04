@@ -97,7 +97,6 @@ export type Database = {
           internal_notes: string | null
           line_items: Json
           pickup_location: string | null
-          production_number: number
           shipping_address: Json | null
           shipping_amount: number
           status: Database["public"]["Enums"]["order_status"]
@@ -122,7 +121,6 @@ export type Database = {
           internal_notes?: string | null
           line_items: Json
           pickup_location?: string | null
-          production_number?: number
           shipping_address?: Json | null
           shipping_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
@@ -147,7 +145,6 @@ export type Database = {
           internal_notes?: string | null
           line_items?: Json
           pickup_location?: string | null
-          production_number?: number
           shipping_address?: Json | null
           shipping_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
@@ -205,8 +202,6 @@ export type Database = {
         | "shipped"
         | "done"
         | "error"
-        | "arkivert"
-        | "reklamasjon"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -344,8 +339,6 @@ export const Constants = {
         "shipped",
         "done",
         "error",
-        "arkivert",
-        "reklamasjon",
       ],
     },
   },

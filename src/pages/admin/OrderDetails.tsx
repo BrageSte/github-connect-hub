@@ -17,7 +17,6 @@ import {
 import AdminLayout from '@/components/admin/AdminLayout'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
 import { useOrder, useUpdateOrderStatus, useUpdateOrderNotes } from '@/hooks/useOrders'
-import { formatProductionNumber } from '@/lib/orderFormatting'
 import { 
   OrderStatus, 
   ORDER_STATUS_LABELS, 
@@ -38,7 +37,7 @@ import { useToast } from '@/hooks/use-toast'
 import { downloadFusionParameterCSV } from '@/lib/fusionCsvExport'
 
 const ALL_STATUSES: OrderStatus[] = [
-  'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error', 'arkivert', 'reklamasjon'
+  'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error'
 ]
 
 export default function OrderDetails() {
@@ -97,7 +96,7 @@ export default function OrderDetails() {
     const text = `
 BLOKK-KONFIGURASJON
 -------------------
-Produksjonsnr: ${formatProductionNumber(order?.production_number)}
+Ordre: ${order?.id.slice(0, 8)}
 
 Type: ${item.blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}
 
@@ -153,9 +152,8 @@ Total bredde: ${item.totalWidth.toFixed(1)} mm
           <h1 className="text-2xl font-bold mb-1">
             Ordre #{order.id.slice(0, 8)}
           </h1>
-          <div className="text-muted-foreground space-y-1">
-            <div>Produksjonsnr #{formatProductionNumber(order.production_number)}</div>
-            <div>{format(new Date(order.created_at), "d. MMMM yyyy 'kl.' HH:mm", { locale: nb })}</div>
+          <div className="text-muted-foreground">
+            {format(new Date(order.created_at), "d. MMMM yyyy 'kl.' HH:mm", { locale: nb })}
           </div>
         </div>
         <OrderStatusBadge status={order.status} />

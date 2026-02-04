@@ -60,9 +60,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   printing: 'Printer',
   shipped: 'Sendt',
   done: 'Fullført',
-  error: 'Feil',
-  arkivert: 'Arkivert',
-  reklamasjon: 'Reklamasjon'
+  error: 'Feil'
 }
 
 // Status colors for badges
@@ -74,9 +72,7 @@ export const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   printing: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
   shipped: 'bg-valid/20 text-valid border-valid/30',
   done: 'bg-muted text-muted-foreground border-border',
-  error: 'bg-destructive/20 text-destructive border-destructive/30',
-  arkivert: 'bg-slate-500/20 text-slate-400 border-slate-500/30',
-  reklamasjon: 'bg-orange-500/20 text-orange-400 border-orange-500/30'
+  error: 'bg-destructive/20 text-destructive border-destructive/30'
 }
 
 // Delivery method labels
