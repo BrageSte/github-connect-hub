@@ -172,7 +172,7 @@ export default function CrimpConfigurator() {
 
       {/* STEP 2: Dine mål */}
       <section className="bg-card border border-border rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center gap-3">
           <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">
             2
           </span>
@@ -185,6 +185,23 @@ export default function CrimpConfigurator() {
             Måleguide
           </button>
         </div>
+        <button
+          onClick={() => setShowMeasureHelp(true)}
+          className="mt-4 mb-6 w-full flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-surface-light px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-primary/10"
+        >
+          <span className="flex items-center gap-3">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
+              <HelpCircle className="w-4 h-4" />
+            </span>
+            <span>
+              <span className="block text-sm font-semibold text-foreground">Målehjelp</span>
+              <span className="block text-xs text-muted-foreground">
+                Se bilder og tips for å måle riktig før du fyller inn.
+              </span>
+            </span>
+          </span>
+          <span className="text-xs font-semibold text-primary">Åpne</span>
+        </button>
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left: Inputs */}

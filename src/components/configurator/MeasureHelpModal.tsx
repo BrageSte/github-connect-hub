@@ -100,6 +100,18 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
               <p className="text-sm text-muted-foreground">
                 Du legger inn hvor mye <strong className="text-foreground">neste finger er høyere</strong> enn den forrige:
               </p>
+              {/* Illustration */}
+              <figure className="bg-surface-light rounded-xl p-4 border border-border">
+                <img
+                  src="/images/measure-help/height-differences.jpeg"
+                  alt="Illustrasjon av høydeforskjeller mellom fingrene"
+                  className="w-full rounded-lg"
+                  loading="lazy"
+                />
+                <figcaption className="mt-2 text-xs text-muted-foreground text-center">
+                  Illustrasjon av høydeforskjeller mellom fingrene.
+                </figcaption>
+              </figure>
             </div>
           </div>
 
