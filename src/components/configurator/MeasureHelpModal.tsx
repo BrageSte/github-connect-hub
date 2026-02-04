@@ -30,13 +30,13 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
             <div className="flex items-center gap-2 mb-3">
               <Lightbulb className="w-5 h-5 text-amber-500" />
               <h4 className="font-semibold text-amber-500 text-sm uppercase tracking-wide">
-                Tips før du måler
+                TIPS FØR DU MÅLER
               </h4>
             </div>
             <ul className="text-sm text-foreground space-y-2">
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 mt-0.5">•</span>
-                <span>Bruk <strong>skyvelære</strong> for best presisjon.</span>
+                <span>Bruk <strong>skyvelære</strong> for best presisjon. Funker bra med linjal/tommestokk.</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 mt-0.5">•</span>
@@ -44,7 +44,7 @@ export default function MeasureHelpModal({ open, onOpenChange }: MeasureHelpModa
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-amber-500 mt-0.5">•</span>
-                <span>Litt ekstra margin er <strong>bedre enn for tight</strong>.</span>
+                <span>Litt ekstra margin er bedre enn for tight.</span>
               </li>
             </ul>
           </div>

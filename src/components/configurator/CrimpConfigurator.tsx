@@ -182,7 +182,7 @@ export default function CrimpConfigurator() {
             className="ml-auto flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors"
           >
             <HelpCircle className="w-4 h-4" />
-            Trenger du hjelp?
+            Måleguide
           </button>
         </div>
 
