@@ -38,3 +38,19 @@ function downloadCSV(content: string, filename: string): void {
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
+
+/**
+ * Downloads multiple Fusion 360 parameter CSVs with a small delay between each.
+ */
+export async function downloadMultipleFusionCSVs(
+  orders: Array<{ item: ConfigSnapshotItem; orderId: string }>
+): Promise<void> {
+  for (let i = 0; i < orders.length; i++) {
+    const { item, orderId } = orders[i]
+    downloadFusionParameterCSV(item, orderId)
+    // Small delay between downloads to avoid browser blocking
+    if (i < orders.length - 1) {
+      await new Promise(resolve => setTimeout(resolve, 200))
+    }
+  }
+}

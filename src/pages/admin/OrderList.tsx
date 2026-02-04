@@ -7,9 +7,10 @@ import AdminLayout from '@/components/admin/AdminLayout'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
 import { useOrders } from '@/hooks/useOrders'
 import { OrderStatus, ORDER_STATUS_LABELS, DELIVERY_METHOD_LABELS, ConfigSnapshot } from '@/types/admin'
-import { downloadFusionParameterCSV } from '@/lib/fusionCsvExport'
+import { downloadFusionParameterCSV, downloadMultipleFusionCSVs } from '@/lib/fusionCsvExport'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ export default function OrderList() {
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = searchParams.get('status') as OrderStatus | null
   const [search, setSearch] = useState('')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const { data: orders, isLoading } = useOrders()
 
@@ -65,6 +67,41 @@ export default function OrderList() {
       searchParams.set('status', value)
     }
     setSearchParams(searchParams)
+  }
+
+  const toggleSelect = (orderId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(orderId)) {
+        next.delete(orderId)
+      } else {
+        next.add(orderId)
+      }
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredOrders.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filteredOrders.map(o => o.id)))
+    }
+  }
+
+  const handleBulkDownload = async () => {
+    const ordersToDownload = filteredOrders
+      .filter(order => selectedIds.has(order.id))
+      .map(order => {
+        const config = getConfigSnapshot(order)
+        const item = config?.items?.[0]
+        return item ? { item, orderId: order.id } : null
+      })
+      .filter((o): o is { item: ConfigSnapshot['items'][0]; orderId: string } => o !== null)
+
+    if (ordersToDownload.length > 0) {
+      await downloadMultipleFusionCSVs(ordersToDownload)
+    }
   }
 
   return (
@@ -104,6 +141,12 @@ export default function OrderList() {
             </SelectContent>
           </Select>
         </div>
+        {selectedIds.size > 0 && (
+          <Button onClick={handleBulkDownload} variant="default" className="gap-2">
+            <Download className="w-4 h-4" />
+            Last ned {selectedIds.size} CSV{selectedIds.size > 1 ? '-er' : ''}
+          </Button>
+        )}
       </div>
 
       {/* Orders table */}
@@ -119,6 +162,12 @@ export default function OrderList() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-surface-light/50">
+                  <th className="w-10 px-4 py-3">
+                    <Checkbox
+                      checked={selectedIds.size === filteredOrders.length && filteredOrders.length > 0}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Ordre</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Dato</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Kunde</th>
@@ -134,6 +183,12 @@ export default function OrderList() {
                     key={order.id}
                     className="border-b border-border last:border-0 hover:bg-surface-light/30 transition-colors"
                   >
+                    <td className="px-4 py-4">
+                      <Checkbox
+                        checked={selectedIds.has(order.id)}
+                        onCheckedChange={() => toggleSelect(order.id)}
+                      />
+                    </td>
                     <td className="px-4 py-4">
                       <Link to={`/admin/orders/${order.id}`} className="font-mono text-sm text-primary hover:underline">
                         {order.id.slice(0, 8)}...
