@@ -1,11 +1,38 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      auth: { persistSession: false }
+    })
+  : null;
+
+async function resolveProductionNumber(order: OrderConfirmationRequest): Promise<OrderConfirmationRequest> {
+  if (order.productionNumber !== undefined && order.productionNumber !== null) return order;
+  if (!supabaseAdmin) return order;
+
+  const { data, error } = await supabaseAdmin
+    .from('orders')
+    .select('production_number')
+    .eq('id', order.orderId)
+    .single();
+
+  if (!error && data?.production_number) {
+    return { ...order, productionNumber: data.production_number };
+  }
+
+  return order;
+}
 
 interface OrderItem {
   name: string;
@@ -22,6 +49,7 @@ interface ShippingAddress {
 
 interface OrderConfirmationRequest {
   orderId: string;
+  productionNumber?: number;
   customerEmail: string;
   customerName: string;
   items: OrderItem[];
@@ -47,7 +75,15 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function formatProductionNumber(value?: number | null, width = 4): string {
+  if (value === null || value === undefined) return "";
+  return value.toString().padStart(width, "0");
+}
+
+
 function generateEmailHtml(order: OrderConfirmationRequest): string {
+  const productionNumber = formatProductionNumber(order.productionNumber);
+
   const itemsHtml = order.items
     .map(
       (item) => `
@@ -108,6 +144,10 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
       <div style="background-color: #262626; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
         <p style="margin: 0; font-size: 14px; color: #888888;">Ordrenummer</p>
         <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600; color: #ff6b35; font-family: monospace;">${escapeHtml(order.orderId)}</p>
+        ${productionNumber ? `
+        <p style="margin: 12px 0 0 0; font-size: 14px; color: #888888;">Produksjonsnummer</p>
+        <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 600; color: #ff6b35; font-family: monospace;">${escapeHtml(productionNumber)}</p>
+        ` : ''}
       </div>
 
       <!-- Items table -->
@@ -204,12 +244,14 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const resend = new Resend(RESEND_API_KEY);
-    const orderData: OrderConfirmationRequest = await req.json();
+    let orderData: OrderConfirmationRequest = await req.json();
 
     // Validate required fields
     if (!orderData.orderId || !orderData.customerEmail || !orderData.customerName) {
       throw new Error("Missing required fields: orderId, customerEmail, or customerName");
     }
+
+    orderData = await resolveProductionNumber(orderData);
 
     const emailHtml = generateEmailHtml(orderData);
 

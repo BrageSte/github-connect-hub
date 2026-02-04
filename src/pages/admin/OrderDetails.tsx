@@ -17,6 +17,7 @@ import {
 import AdminLayout from '@/components/admin/AdminLayout'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
 import { useOrder, useUpdateOrderStatus, useUpdateOrderNotes } from '@/hooks/useOrders'
+import { formatProductionNumber } from '@/lib/orderFormatting'
 import { 
   OrderStatus, 
   ORDER_STATUS_LABELS, 
@@ -96,6 +97,8 @@ export default function OrderDetails() {
     const text = `
 BLOKK-KONFIGURASJON
 -------------------
+Produksjonsnr: ${formatProductionNumber(order?.production_number)}
+
 Type: ${item.blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}
 
 Bredder (mm):
@@ -150,9 +153,10 @@ Total bredde: ${item.totalWidth.toFixed(1)} mm
           <h1 className="text-2xl font-bold mb-1">
             Ordre #{order.id.slice(0, 8)}
           </h1>
-          <p className="text-muted-foreground">
-            {format(new Date(order.created_at), "d. MMMM yyyy 'kl.' HH:mm", { locale: nb })}
-          </p>
+          <div className="text-muted-foreground space-y-1">
+            <div>Produksjonsnr #{formatProductionNumber(order.production_number)}</div>
+            <div>{format(new Date(order.created_at), "d. MMMM yyyy 'kl.' HH:mm", { locale: nb })}</div>
+          </div>
         </div>
         <OrderStatusBadge status={order.status} />
       </div>

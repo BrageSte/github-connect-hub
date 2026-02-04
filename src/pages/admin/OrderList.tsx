@@ -8,6 +8,7 @@ import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
 import { useOrders, useBulkUpdateOrderStatus, useBulkDeleteOrders } from '@/hooks/useOrders'
 import { OrderStatus, ORDER_STATUS_LABELS, DELIVERY_METHOD_LABELS, ConfigSnapshot } from '@/types/admin'
 import { downloadFusionParameterCSV, downloadMultipleFusionCSVs } from '@/lib/fusionCsvExport'
+import { formatProductionNumber } from '@/lib/orderFormatting'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -63,8 +64,14 @@ export default function OrderList() {
       // Search filter
       if (search) {
         const q = search.toLowerCase()
+        const productionNumberRaw = order.production_number?.toString() ?? ''
+        const productionNumberPadded = order.production_number
+          ? formatProductionNumber(order.production_number)
+          : ''
         return (
           order.id.toLowerCase().includes(q) ||
+          productionNumberRaw.includes(q) ||
+          productionNumberPadded.includes(q) ||
           order.customer_name.toLowerCase().includes(q) ||
           order.customer_email.toLowerCase().includes(q)
         )
@@ -158,7 +165,7 @@ export default function OrderList() {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Søk etter ordre-ID, navn eller e-post..."
+            placeholder="Søk etter ordre-ID, prod.nr, navn eller e-post..."
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-10"
@@ -235,6 +242,7 @@ export default function OrderList() {
                     />
                   </th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Ordre</th>
+                  <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Prod.nr</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Dato</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Kunde</th>
                   <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Levering</th>
@@ -259,6 +267,9 @@ export default function OrderList() {
                       <Link to={`/admin/orders/${order.id}`} className="font-mono text-sm text-primary hover:underline">
                         {order.id.slice(0, 8)}...
                       </Link>
+                    </td>
+                    <td className="px-4 py-4 text-sm font-mono text-muted-foreground">
+                      {formatProductionNumber(order.production_number)}
                     </td>
                     <td className="px-4 py-4 text-sm text-muted-foreground">
                       {format(new Date(order.created_at), 'd. MMM yyyy HH:mm', { locale: nb })}
