@@ -60,11 +60,11 @@ export function NumberStepper({
     }
   }
 
-  const buttonSize = size === 'sm' ? 'w-7 h-7' : 'w-10 h-10'
-  const iconSize = size === 'sm' ? 14 : 20
+  const buttonSize = size === 'sm' ? 'w-8 h-8 md:w-7 md:h-7' : 'w-10 h-10'
+  const iconSize = size === 'sm' ? 18 : 20
   const inputPadding = size === 'sm' ? 'px-0.5 py-1.5' : 'px-2 py-3'
   const fontSize = size === 'sm' ? 'text-sm' : 'text-base'
-  const inputWidth = size === 'sm' ? 'min-w-[32px]' : 'min-w-[40px]'
+  const inputWidth = size === 'sm' ? 'w-12 sm:w-auto sm:min-w-[32px]' : 'min-w-[40px]'
 
   return (
     <div 
@@ -84,7 +84,7 @@ export function NumberStepper({
         disabled={value <= min}
         className={cn(
           buttonSize,
-          "flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 active:bg-primary/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         )}
         aria-label="Reduser"
       >
@@ -120,7 +120,7 @@ export function NumberStepper({
         disabled={value >= max}
         className={cn(
           buttonSize,
-          "flex items-center justify-center shrink-0 text-muted-foreground hover:text-foreground hover:bg-primary/10 active:bg-primary/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         )}
         aria-label="Øk"
       >

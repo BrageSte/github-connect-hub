@@ -61,6 +61,7 @@ interface OrderConfirmationRequest {
   shipping: number;
   promoDiscount?: number;
   total: number;
+  configSnapshot?: any;
 }
 
 function formatPrice(amount: number): string {
@@ -81,6 +82,45 @@ function formatProductionNumber(value?: number | null, width = 4): string {
   return value.toString().padStart(width, "0");
 }
 
+function validateHeightDifferences(configSnapshot: any): { valid: boolean; warnings: string[] } {
+  const warnings: string[] = [];
+
+  if (configSnapshot?.heights) {
+    const heights = configSnapshot.heights;
+    const heightKeys = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'];
+
+    // Calculate height differences from the actual heights
+    const lille = heights.lillefinger || 10;
+    const ring = heights.ringfinger || 10;
+    const lang = heights.langfinger || 10;
+    const peke = heights.pekefinger || 10;
+
+    const lilleToRing = ring - lille;
+    const ringToLang = lang - ring;
+    const langToPeke = peke - lang;
+
+    const heightDiffs = [
+      { name: 'Lille → Ring', value: lilleToRing },
+      { name: 'Ring → Lang', value: ringToLang },
+      { name: 'Lang → Peke', value: langToPeke }
+    ];
+
+    heightDiffs.forEach(diff => {
+      const absValue = Math.abs(diff.value);
+      if (absValue > 30) {
+        warnings.push(`Warning: ${diff.name} height difference is ${diff.value > 0 ? '+' : ''}${diff.value}mm (unusually high, typical range is -30mm to +30mm)`);
+      }
+      if (absValue > 50) {
+        warnings.push(`Error: ${diff.name} height difference is ${diff.value > 0 ? '+' : ''}${diff.value}mm (outside acceptable range of -50mm to +50mm)`);
+      }
+    });
+  }
+
+  return {
+    valid: warnings.filter(w => w.includes('Error')).length === 0,
+    warnings
+  };
+}
 
 function generateEmailHtml(order: OrderConfirmationRequest): string {
   const productionNumber = formatProductionNumber(order.productionNumber);
@@ -268,6 +308,16 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     orderData = await resolveProductionNumber(orderData);
+
+    // Validate height differences if config snapshot exists
+    if (orderData.configSnapshot) {
+      const validation = validateHeightDifferences(orderData.configSnapshot);
+      if (validation.warnings.length > 0) {
+        console.warn('Order validation warnings:', validation.warnings);
+        console.warn('Order ID:', orderData.orderId);
+        // Log to order notes or send to admin notification if needed
+      }
+    }
 
     const emailHtml = generateEmailHtml(orderData);
 

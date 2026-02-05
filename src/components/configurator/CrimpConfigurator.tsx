@@ -4,6 +4,7 @@ import StlViewer, { type BlockVariant } from "./StlViewer";
 import BlockSelector, { BLOCK_OPTIONS } from "./BlockSelector";
 import DynamicBlockPreview from "./DynamicBlockPreview";
 import MeasureHelpModal from "./MeasureHelpModal";
+import HeightValidationDialog from "./HeightValidationDialog";
 import { HelpCircle, ShoppingBag, Download } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { Product, generateProductId, BlockConfig } from "@/types/shop";
@@ -64,6 +65,14 @@ export default function CrimpConfigurator() {
   const [orderSent, setOrderSent] = useState(false);
   const [showMeasureHelp, setShowMeasureHelp] = useState(false);
 
+  const [validationDialog, setValidationDialog] = useState<{
+    open: boolean;
+    heightDiffName: string;
+    value: number;
+    pendingValue: number;
+    heightKey: keyof HeightDiffs;
+  } | null>(null);
+
   const totalWidth = useMemo(() => {
     const fingerWidths = Object.values(widths).reduce((sum, w) => sum + w, 0);
     return fingerWidths + 16;
@@ -71,6 +80,37 @@ export default function CrimpConfigurator() {
 
   const currentPrice = BLOCK_OPTIONS.find((o) => o.variant === blockVariant)?.price ?? 449;
   const filePrice = 199;
+
+  const handleHeightChange = (heightKey: keyof HeightDiffs, value: number) => {
+    if (Math.abs(value) > 30) {
+      // Show warning dialog
+      const heightLabels: Record<keyof HeightDiffs, string> = {
+        lilleToRing: "Lille → ring",
+        ringToLang: "Ring → lang",
+        langToPeke: "Lang → peke"
+      };
+
+      setValidationDialog({
+        open: true,
+        heightDiffName: heightLabels[heightKey],
+        value: value,
+        pendingValue: value,
+        heightKey: heightKey
+      });
+    } else {
+      // Direct update for values <= 30mm absolute value
+      setHeightDiffs((prev) => ({ ...prev, [heightKey]: value }));
+    }
+  };
+
+  const confirmHeightChange = () => {
+    if (validationDialog) {
+      setHeightDiffs((prev) => ({
+        ...prev,
+        [validationDialog.heightKey]: validationDialog.pendingValue
+      }));
+    }
+  };
 
   const createBlockConfig = (): BlockConfig => ({
     blockVariant,
@@ -214,18 +254,19 @@ export default function CrimpConfigurator() {
               <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
                 Mål ytterst på fingerpaden. Legg til 1 mm på hver side (2 mm totalt) for komfort.
               </p>
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3">
                 {(["Lille", "Ring", "Lang", "Peke"] as const).map((label, i) => {
                   const finger = FINGER_NAMES[i];
                   return (
-                    <div key={finger} className="text-center">
-                      <label className="text-xs font-medium text-muted-foreground block mb-2">{label}</label>
+                    <div key={finger} className="flex flex-col items-center">
+                      <label className="text-xs font-medium text-muted-foreground mb-2 text-center">{label}</label>
                       <NumberStepper
                         value={widths[finger]}
                         onChange={(val) => setWidths((prev) => ({ ...prev, [finger]: val }))}
                         min={15}
                         max={30}
                         size="sm"
+                        className="w-full"
                       />
                     </div>
                   );
@@ -242,54 +283,54 @@ export default function CrimpConfigurator() {
                 Justerer stegene slik at alle fire fingre jobber likt i halvcrimp. Usikker? La standard stå.
               </p>
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
                     A
                   </span>
                   <span className="text-foreground text-sm flex-1">Lille → ring</span>
                   <NumberStepper
                     value={heightDiffs.lilleToRing}
-                    onChange={(val) => setHeightDiffs((prev) => ({ ...prev, lilleToRing: val }))}
-                    min={-15}
-                    max={15}
+                    onChange={(val) => handleHeightChange('lilleToRing', val)}
+                    min={-40}
+                    max={40}
                     size="sm"
-                    className="w-28"
+                    className="w-full sm:w-28"
                   />
-                  <span className="text-muted-foreground text-xs w-14 text-right font-mono">
+                  <span className="text-muted-foreground text-xs w-full sm:w-14 text-center sm:text-right font-mono">
                     {calculatedHeights.ringfinger}mm
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
                     B
                   </span>
                   <span className="text-foreground text-sm flex-1">Ring → lang</span>
                   <NumberStepper
                     value={heightDiffs.ringToLang}
-                    onChange={(val) => setHeightDiffs((prev) => ({ ...prev, ringToLang: val }))}
-                    min={-15}
-                    max={15}
+                    onChange={(val) => handleHeightChange('ringToLang', val)}
+                    min={-40}
+                    max={40}
                     size="sm"
-                    className="w-28"
+                    className="w-full sm:w-28"
                   />
-                  <span className="text-muted-foreground text-xs w-14 text-right font-mono">
+                  <span className="text-muted-foreground text-xs w-full sm:w-14 text-center sm:text-right font-mono">
                     {calculatedHeights.langfinger}mm
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                   <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
                     C
                   </span>
                   <span className="text-foreground text-sm flex-1">Lang → peke</span>
                   <NumberStepper
                     value={heightDiffs.langToPeke}
-                    onChange={(val) => setHeightDiffs((prev) => ({ ...prev, langToPeke: val }))}
-                    min={-15}
-                    max={15}
+                    onChange={(val) => handleHeightChange('langToPeke', val)}
+                    min={-40}
+                    max={40}
                     size="sm"
-                    className="w-28"
+                    className="w-full sm:w-28"
                   />
-                  <span className="text-muted-foreground text-xs w-14 text-right font-mono">
+                  <span className="text-muted-foreground text-xs w-full sm:w-14 text-center sm:text-right font-mono">
                     {calculatedHeights.pekefinger}mm
                   </span>
                 </div>
@@ -398,6 +439,17 @@ export default function CrimpConfigurator() {
 
       {/* Measure Help Modal */}
       <MeasureHelpModal open={showMeasureHelp} onOpenChange={setShowMeasureHelp} />
+
+      {/* Height Validation Dialog */}
+      {validationDialog && (
+        <HeightValidationDialog
+          open={validationDialog.open}
+          onOpenChange={(open) => !open && setValidationDialog(null)}
+          heightDiffName={validationDialog.heightDiffName}
+          value={validationDialog.value}
+          onConfirm={confirmHeightChange}
+        />
+      )}
     </div>
   );
 }
