@@ -9,7 +9,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import CheckoutSuccess from "./pages/CheckoutSuccess";
 import CheckoutCancel from "./pages/CheckoutCancel";
-import OrderStatus from "./pages/OrderStatus";
+import OrderStatusPage from "./pages/OrderStatus";
 import Shipping from "./pages/Shipping";
 import Returns from "./pages/Returns";
 import Privacy from "./pages/Privacy";
@@ -38,7 +38,7 @@ const App = () => (
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/checkout/success" element={<CheckoutSuccess />} />
             <Route path="/checkout/cancel" element={<CheckoutCancel />} />
-            <Route path="/order-status" element={<OrderStatus />} />
+            <Route path="/order-status" element={<OrderStatusPage />} />
             <Route path="/shipping" element={<Shipping />} />
             <Route path="/returns" element={<Returns />} />
             <Route path="/privacy" element={<Privacy />} />

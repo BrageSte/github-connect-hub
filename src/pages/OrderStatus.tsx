@@ -11,7 +11,8 @@ import Footer from '@/components/Footer'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge'
-import { OrderStatus, ConfigSnapshot, DELIVERY_METHOD_LABELS, ORDER_STATUS_LABELS } from '@/types/admin'
+import { DELIVERY_METHOD_LABELS, ORDER_STATUS_LABELS } from '@/types/admin'
+import type { OrderStatus, ConfigSnapshot } from '@/types/admin'
 import { supabase } from '@/integrations/supabase/client'
 
 interface OrderStatusResponse {
@@ -34,7 +35,7 @@ interface OrderStatusResponse {
     position?: number
     ahead?: number
     total?: number
-    basis?: 'printing'
+    basis?: 'printing' | 'ready_to_print' | 'in_production'
   } | null
 }
 
@@ -93,7 +94,7 @@ function OrderModelPreview({ blockVariant }: { blockVariant?: 'shortedge' | 'lon
   )
 }
 
-export default function OrderStatus() {
+export default function OrderStatusPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const initialOrderId = searchParams.get('orderId') ?? ''
   const [orderIdInput, setOrderIdInput] = useState(initialOrderId)

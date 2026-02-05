@@ -84,7 +84,7 @@ function formatProductionNumber(value?: number | null, width = 4): string {
 
 function generateEmailHtml(order: OrderConfirmationRequest): string {
   const productionNumber = formatProductionNumber(order.productionNumber);
-  const baseUrl = (order.siteUrl || Deno.env.get("PUBLIC_SITE_URL") || "").replace(/\\/$/, "");
+  const baseUrl = (order.siteUrl || Deno.env.get("PUBLIC_SITE_URL") || "").replace(/\/$/, "");
   const statusUrl = baseUrl
     ? `${baseUrl}/order-status?orderId=${encodeURIComponent(order.orderId)}`
     : "";
