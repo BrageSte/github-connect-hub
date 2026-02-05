@@ -2,8 +2,8 @@ import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Canvas, useFrame, useLoader } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { STLLoader } from 'three/examples/jsm/loaders/STLLoader'
-import { Box3, Vector3, type Mesh } from 'three'
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js'
+import * as THREE from 'three'
 import { format } from 'date-fns'
 import { nb } from 'date-fns/locale'
 import Header from '@/components/Header'
@@ -53,12 +53,18 @@ const formatNok = (amountOre: number) => `${(amountOre / 100).toLocaleString('nb
 
 function ModelMesh({ url }: { url: string }) {
   const geometry = useLoader(STLLoader, url)
-  const meshRef = useRef<Mesh>(null)
+  const meshRef = useRef<THREE.Mesh>(null)
 
   const { centeredGeometry, scale } = useMemo(() => {
     const centered = geometry.clone()
     centered.center()
-    const size = new Box3().setFromBufferGeometry(centered).getSize(new Vector3())
+    centered.computeBoundingBox()
+    const box = centered.boundingBox
+    if (!box) {
+      return { centeredGeometry: centered, scale: 1 }
+    }
+    const size = new THREE.Vector3()
+    box.getSize(size)
     const maxAxis = Math.max(size.x, size.y, size.z) || 1
     return { centeredGeometry: centered, scale: 1.4 / maxAxis }
   }, [geometry])
