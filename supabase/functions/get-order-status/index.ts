@@ -45,13 +45,22 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { data: order, error } = await supabaseAdmin
       .from("orders")
-      .select(
-        "id, created_at, status, production_number, delivery_method, pickup_location, shipping_address, line_items, config_snapshot, subtotal_amount, shipping_amount, total_amount, customer_name",
-      )
+      .select("*")
       .eq("id", orderId)
       .single();
 
-    if (error || !order) {
+    if (error) {
+      const status = error.code === "PGRST116" ? 404 : 500;
+      return new Response(
+        JSON.stringify({ success: false, error: error.message, code: error.code }),
+        {
+          status,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
+      );
+    }
+
+    if (!order) {
       return new Response(
         JSON.stringify({ success: false, error: "Order not found" }),
         {
