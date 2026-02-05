@@ -122,8 +122,17 @@ export default function OrderStatusPage() {
       body: { orderId }
     })
 
-    if (invokeError || !data?.order) {
-      setError('Fant ingen ordre med det ordrenummeret. Sjekk at du har kopiert riktig.')
+    if (invokeError) {
+      const status = invokeError?.status ? ` (${invokeError.status})` : ''
+      const details = invokeError?.message ? `: ${invokeError.message}` : ''
+      setError(`Kunne ikke hente ordrestatus${status}${details}`)
+      setIsLoading(false)
+      return
+    }
+
+    if (!data?.order) {
+      const reason = data?.error ? `: ${data.error}` : ''
+      setError(`Fant ingen ordre med det ordrenummeret${reason}`)
       setIsLoading(false)
       return
     }
