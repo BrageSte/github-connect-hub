@@ -16,6 +16,13 @@ const supabaseAdmin = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
     })
   : null;
 
+const ERROR_CODES = {
+  missingOrderId: "OS_MISSING_ORDER_ID",
+  notFound: "OS_NOT_FOUND",
+  dbError: "OS_DB_ERROR",
+  configMissing: "OS_CONFIG_MISSING",
+} as const;
+
 interface OrderStatusRequest {
   orderId?: string;
 }
@@ -27,7 +34,17 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     if (!supabaseAdmin) {
-      throw new Error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Configuration missing",
+          code: ERROR_CODES.configMissing,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        },
+      );
     }
 
     const body: OrderStatusRequest = await req.json();
@@ -35,7 +52,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!orderId) {
       return new Response(
-        JSON.stringify({ success: false, error: "orderId is required" }),
+        JSON.stringify({
+          success: false,
+          error: "orderId is required",
+          code: ERROR_CODES.missingOrderId,
+        }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -52,7 +73,11 @@ const handler = async (req: Request): Promise<Response> => {
     if (error) {
       const status = error.code === "PGRST116" ? 404 : 500;
       return new Response(
-        JSON.stringify({ success: false, error: error.message, code: error.code }),
+        JSON.stringify({
+          success: false,
+          error: status === 404 ? "Order not found" : "Database error",
+          code: status === 404 ? ERROR_CODES.notFound : ERROR_CODES.dbError,
+        }),
         {
           status,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -62,7 +87,11 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!order) {
       return new Response(
-        JSON.stringify({ success: false, error: "Order not found" }),
+        JSON.stringify({
+          success: false,
+          error: "Order not found",
+          code: ERROR_CODES.notFound,
+        }),
         {
           status: 404,
           headers: { "Content-Type": "application/json", ...corsHeaders },

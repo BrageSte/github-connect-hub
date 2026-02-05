@@ -71,3 +71,13 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Order status feilkoder
+
+Kunder som sjekker ordrestatus kan se en feilkode. Bruk listen under ved support:
+
+- `OS_MISSING_ORDER_ID`: Ordrenummer mangler i foresporselen.
+- `OS_NOT_FOUND`: Ordren finnes ikke i Supabase-prosjektet denne siden peker til.
+- `OS_DB_ERROR`: Feil under oppslag i databasen.
+- `OS_CONFIG_MISSING`: Edge function mangler konfigurasjon (service role key).
+- `OS_EDGE_HTTP_ERROR`: Kall til edge function feilet uten spesifikk feilkode.

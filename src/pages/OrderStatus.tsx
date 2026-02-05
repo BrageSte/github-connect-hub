@@ -16,7 +16,7 @@ import type { OrderStatus, ConfigSnapshot } from '@/types/admin'
 import { supabase } from '@/integrations/supabase/client'
 
 interface OrderStatusResponse {
-  order: {
+  order?: {
     id: string
     createdAt: string
     status: OrderStatus
@@ -37,6 +37,8 @@ interface OrderStatusResponse {
     total?: number
     basis?: 'printing' | 'ready_to_print' | 'in_production'
   } | null
+  error?: string
+  code?: string
 }
 
 const STATUS_STEPS: { status: OrderStatus; title: string; description: string }[] = [
@@ -50,6 +52,16 @@ const STATUS_STEPS: { status: OrderStatus; title: string; description: string }[
 ]
 
 const formatNok = (amountOre: number) => `${(amountOre / 100).toLocaleString('nb-NO')},- kr`
+
+const normalizeErrorMessage = (raw?: string) => {
+  if (!raw) return 'Kunne ikke hente ordrestatus'
+  const value = raw.toLowerCase()
+  if (value.includes('order not found')) return 'Fant ingen ordre med det ordrenummeret'
+  if (value.includes('orderid is required')) return 'Skriv inn ordrenummeret fra e-posten'
+  if (value.includes('configuration missing')) return 'Tjenesten mangler oppsett. Prøv igjen senere'
+  if (value.includes('database error')) return 'Det oppstod en databasefeil. Prøv igjen senere'
+  return raw
+}
 
 function ModelMesh({ url }: { url: string }) {
   const geometry = useLoader(STLLoader, url)
@@ -124,29 +136,35 @@ export default function OrderStatusPage() {
 
     if (invokeError) {
       let statusText = ''
-      let bodyText = ''
+      let serverMessage = ''
+      let serverCode = ''
       const context = (invokeError as { context?: Response }).context
       if (context) {
         const statusInfo = context.status ? ` ${context.status}${context.statusText ? ` ${context.statusText}` : ''}` : ''
-        statusText = statusInfo ? ` (${statusInfo.trim()})` : ''
+        statusText = statusInfo ? ` (HTTP ${statusInfo.trim()})` : ''
         try {
-          bodyText = await context.text()
+          const bodyText = await context.text()
+          if (bodyText) {
+            const parsed = JSON.parse(bodyText) as { error?: string; code?: string }
+            serverMessage = parsed.error ?? ''
+            serverCode = parsed.code ?? ''
+          }
         } catch {
-          bodyText = ''
+          // Ignore parse failures
         }
-      } else if ((invokeError as { status?: number }).status) {
-        statusText = ` (${(invokeError as { status: number }).status})`
       }
-      const details = invokeError?.message ? `: ${invokeError.message}` : ''
-      const bodyDetails = bodyText ? ` | ${bodyText}` : ''
-      setError(`Kunne ikke hente ordrestatus${statusText}${details}${bodyDetails}`)
+
+      const normalizedMessage = normalizeErrorMessage(serverMessage || invokeError.message)
+      const codeLabel = serverCode ? ` Feilkode: ${serverCode}.` : ' Feilkode: OS_EDGE_HTTP_ERROR.'
+      setError(`${normalizedMessage}.${codeLabel}${statusText}`)
       setIsLoading(false)
       return
     }
 
     if (!data?.order) {
-      const reason = data?.error ? `: ${data.error}` : ''
-      setError(`Fant ingen ordre med det ordrenummeret${reason}`)
+      const normalizedMessage = normalizeErrorMessage(data?.error)
+      const codeLabel = data?.code ? ` Feilkode: ${data.code}.` : ' Feilkode: OS_NOT_FOUND.'
+      setError(`${normalizedMessage}.${codeLabel}`)
       setIsLoading(false)
       return
     }
