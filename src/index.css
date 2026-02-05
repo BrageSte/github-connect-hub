@@ -184,4 +184,24 @@
   .bg-radial-gradient {
     background: radial-gradient(ellipse at center top, hsl(var(--primary) / 0.08) 0%, transparent 50%);
   }
+
+  /* Section highlight when navigating via hash */
+  .section-highlight {
+    position: relative;
+    animation: sectionHighlight 1.6s ease-out;
+  }
+
+  @keyframes sectionHighlight {
+    0% {
+      box-shadow: 0 0 0 0 hsl(var(--primary) / 0.35);
+      background-color: hsl(var(--primary) / 0.06);
+    }
+    60% {
+      box-shadow: 0 0 0 12px hsl(var(--primary) / 0.2);
+    }
+    100% {
+      box-shadow: 0 0 0 24px hsl(var(--primary) / 0);
+      background-color: transparent;
+    }
+  }
 }
