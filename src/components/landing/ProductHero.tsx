@@ -16,10 +16,10 @@ export default function ProductHero() {
           
           {/* Text content */}
           <motion.div
-            className="text-center lg:text-left order-1"
+            className="text-center lg:text-left order-2 lg:order-1"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
           >
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.15] mb-5 text-foreground">
               Custom crimp block
@@ -58,10 +58,10 @@ export default function ProductHero() {
 
           {/* Product Visual */}
           <motion.div
-            className="relative order-2 w-full max-w-sm lg:max-w-md mx-auto"
+            className="relative order-1 lg:order-2 w-full max-w-sm lg:max-w-md mx-auto"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
+            transition={{ duration: 0.5, delay: 0 }}
           >
             <div className="relative aspect-square">
               {/* Product image placeholder */}

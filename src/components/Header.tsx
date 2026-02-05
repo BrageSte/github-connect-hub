@@ -98,7 +98,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-6 border-t border-border animate-fade-in">
+          <div className="md:hidden py-6 border-t border-border bg-background animate-fade-in">
             <div className="flex flex-col gap-4">
               <Link 
                 to="/#how-it-works"
