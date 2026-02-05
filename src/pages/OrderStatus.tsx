@@ -123,9 +123,23 @@ export default function OrderStatusPage() {
     })
 
     if (invokeError) {
-      const status = invokeError?.status ? ` (${invokeError.status})` : ''
+      let statusText = ''
+      let bodyText = ''
+      const context = (invokeError as { context?: Response }).context
+      if (context) {
+        const statusInfo = context.status ? ` ${context.status}${context.statusText ? ` ${context.statusText}` : ''}` : ''
+        statusText = statusInfo ? ` (${statusInfo.trim()})` : ''
+        try {
+          bodyText = await context.text()
+        } catch {
+          bodyText = ''
+        }
+      } else if ((invokeError as { status?: number }).status) {
+        statusText = ` (${(invokeError as { status: number }).status})`
+      }
       const details = invokeError?.message ? `: ${invokeError.message}` : ''
-      setError(`Kunne ikke hente ordrestatus${status}${details}`)
+      const bodyDetails = bodyText ? ` | ${bodyText}` : ''
+      setError(`Kunne ikke hente ordrestatus${statusText}${details}${bodyDetails}`)
       setIsLoading(false)
       return
     }
