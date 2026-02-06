@@ -252,10 +252,14 @@ export default function OrderStatusPage() {
               {order && (
                 <>
                   <section className="bg-card border border-border rounded-2xl p-6">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    {/* Prominent order ID + customer name header */}
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
                       <div>
-                        <p className="text-sm text-muted-foreground">Ordrenummer</p>
-                        <p className="font-mono text-base text-foreground">{order.id}</p>
+                        {order.customerName && (
+                          <p className="text-lg font-semibold text-foreground mb-1">{order.customerName}</p>
+                        )}
+                        <p className="text-xs uppercase tracking-wide text-muted-foreground mb-0.5">Ordre-ID</p>
+                        <p className="font-mono text-sm text-foreground bg-surface-light border border-border rounded-lg px-3 py-1.5 inline-block select-all">{order.id}</p>
                       </div>
                       <OrderStatusBadge status={order.status} />
                     </div>
@@ -382,6 +386,12 @@ export default function OrderStatusPage() {
                   <>
                     <OrderModelPreview blockVariant={primaryConfigItem?.blockVariant} />
                     <div className="mt-4 grid gap-2 text-sm">
+                      {order.customerName && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Kunde</span>
+                          <span className="text-foreground font-medium">{order.customerName}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Variant</span>
                         <span className="text-foreground">{variantLabel}</span>
