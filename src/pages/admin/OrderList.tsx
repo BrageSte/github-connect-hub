@@ -117,7 +117,7 @@ export default function OrderList() {
         const item = config?.items?.[0]
         return item ? { item, orderId: order.id, fallbackProductionNumber: order.production_number } : null
       })
-      .filter((o): o is { item: ConfigSnapshot['items'][0]; orderId: string; fallbackProductionNumber?: number | null } => o !== null)
+      .filter((o): o is { item: ConfigSnapshot['items'][0]; orderId: string; fallbackProductionNumber: number | null } => o !== null)
 
     if (ordersToDownload.length === 0) {
       toast({ title: 'Ingen ordre å eksportere', description: 'Velg minst én ordre med konfigurasjon.' })
