@@ -93,12 +93,12 @@ export type Database = {
           delivery_method: string
           delivery_notes: string | null
           error_message: string | null
+          exported_at: string | null
           id: string
           internal_notes: string | null
           line_items: Json
           pickup_location: string | null
           production_number: number | null
-          exported_at: string | null
           shipping_address: Json | null
           shipping_amount: number
           status: Database["public"]["Enums"]["order_status"]
@@ -119,12 +119,12 @@ export type Database = {
           delivery_method: string
           delivery_notes?: string | null
           error_message?: string | null
+          exported_at?: string | null
           id?: string
           internal_notes?: string | null
           line_items: Json
           pickup_location?: string | null
           production_number?: number | null
-          exported_at?: string | null
           shipping_address?: Json | null
           shipping_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
@@ -145,12 +145,12 @@ export type Database = {
           delivery_method?: string
           delivery_notes?: string | null
           error_message?: string | null
+          exported_at?: string | null
           id?: string
           internal_notes?: string | null
           line_items?: Json
           pickup_location?: string | null
           production_number?: number | null
-          exported_at?: string | null
           shipping_address?: Json | null
           shipping_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
@@ -158,24 +158,6 @@ export type Database = {
           stripe_payment_intent_id?: string | null
           subtotal_amount?: number
           total_amount?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      site_settings: {
-        Row: {
-          key: string
-          value: Json
-          updated_at: string
-        }
-        Insert: {
-          key: string
-          value: Json
-          updated_at?: string
-        }
-        Update: {
-          key?: string
-          value?: Json
           updated_at?: string
         }
         Relationships: []
@@ -207,12 +189,10 @@ export type Database = {
     }
     Functions: {
       assign_production_number: {
-        Args: {
-          order_id: string
-        }
+        Args: { order_id: string }
         Returns: {
+          exported_at: string
           production_number: number
-          exported_at: string | null
         }[]
       }
       has_role: {
