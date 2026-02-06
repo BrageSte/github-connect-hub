@@ -10,10 +10,13 @@ import { createOrder } from '@/lib/orderService'
 import { useToast } from '@/hooks/use-toast'
 import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress, BlockConfig } from '@/types/shop'
 import { supabase } from '@/integrations/supabase/client'
+import { useSettings } from '@/hooks/useSettings'
 
 export default function Checkout() {
   const navigate = useNavigate()
-  const { 
+  const { data: settings } = useSettings()
+  const dynamicShippingCost = settings?.shipping_cost ?? 79
+  const {
     items, 
     itemCount, 
     discountedTotal,
@@ -167,7 +170,7 @@ export default function Checkout() {
 
     try {
       const subtotalAmount = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
-      const shippingAmount = isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? 79 : 0)
+      const shippingAmount = isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? dynamicShippingCost : 0)
       
       // If total is 0 (100% discount), skip payment and save order directly to database
       if (discountedTotal === 0) {
@@ -379,7 +382,7 @@ export default function Checkout() {
                         <div className="text-sm text-muted-foreground">Sendes med Posten/Bring (3-5 dager)</div>
                       </div>
                       <div className="text-right">
-                        <span className="font-medium text-foreground">79,- kr</span>
+                        <span className="font-medium text-foreground">{dynamicShippingCost},- kr</span>
                       </div>
                       {deliveryMethod === 'shipping' && (
                         <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">

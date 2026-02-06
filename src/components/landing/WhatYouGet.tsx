@@ -1,19 +1,26 @@
 import { motion } from "framer-motion";
-
-const deliverables = [
-  {
-    title: "STL-fil",
-    price: "199,-",
-    description: "Print-klar fil optimalisert for FDM-printing. Inkluderer anbefalte innstillinger.",
-  },
-  {
-    title: "Ferdig printet fra",
-    price: "399,-",
-    description: "Vi printer og sender. Høykvalitets PLA+ med ±0.3mm toleranse.",
-  },
-];
+import { useSettings } from "@/hooks/useSettings";
 
 export default function WhatYouGet() {
+  const { data: settings } = useSettings();
+  const stlPrice = settings?.stl_file_price ?? 199;
+  const printedPrice = settings?.products?.length
+    ? Math.min(...settings.products.map(p => p.price))
+    : 399;
+
+  const deliverables = [
+    {
+      title: "STL-fil",
+      price: `${stlPrice},-`,
+      description: "Print-klar fil optimalisert for FDM-printing. Inkluderer anbefalte innstillinger.",
+    },
+    {
+      title: "Ferdig printet fra",
+      price: `${printedPrice},-`,
+      description: "Vi printer og sender. Høykvalitets PLA+ med ±0.3mm toleranse.",
+    },
+  ];
+
   return (
     <section className="py-32 bg-background">
       <div className="max-w-4xl mx-auto px-6">

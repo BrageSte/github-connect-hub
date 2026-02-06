@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import type { BlockVariant } from './StlViewer'
-import { BLOCK_OPTIONS } from './BlockSelector'
+import { DEFAULT_BLOCK_OPTIONS } from './BlockSelector'
 
 interface OrderModalProps {
   orderType: 'file' | 'printed'
@@ -38,7 +38,7 @@ export default function OrderModal({
   const [customerEmail, setCustomerEmail] = useState('')
   const [quantity, setQuantity] = useState(1)
 
-  const blockOption = BLOCK_OPTIONS.find(o => o.variant === blockVariant)
+  const blockOption = DEFAULT_BLOCK_OPTIONS.find(o => o.variant === blockVariant)
   const blockName = blockOption?.name ?? 'Compact'
   const blockPrice = blockOption?.price ?? 399
   

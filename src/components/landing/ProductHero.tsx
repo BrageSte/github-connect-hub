@@ -1,8 +1,14 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useSettings } from "@/hooks/useSettings";
 
 export default function ProductHero() {
+  const { data: settings } = useSettings();
+  const stlPrice = settings?.stl_file_price ?? 199;
+  const printedPrice = settings?.products?.length
+    ? Math.min(...settings.products.map(p => p.price))
+    : 399;
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
       {/* Subtle background gradient */}
@@ -44,10 +50,10 @@ export default function ProductHero() {
             {/* Price badges */}
             <div className="mt-6 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3">
               <span className="inline-flex items-center gap-1.5 bg-surface border border-border px-4 py-2 rounded-full text-sm">
-                STL-fil fra <span className="font-bold text-foreground">199,-</span>
+                STL-fil fra <span className="font-bold text-foreground">{stlPrice},-</span>
               </span>
               <span className="inline-flex items-center gap-1.5 bg-valid/10 border border-valid/20 px-4 py-2 rounded-full text-sm text-valid">
-                Ferdig printet fra <span className="font-bold">399,-</span>
+                Ferdig printet fra <span className="font-bold">{printedPrice},-</span>
               </span>
             </div>
 

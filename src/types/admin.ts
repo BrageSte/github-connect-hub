@@ -51,6 +51,26 @@ export interface LineItem {
   productId?: string
 }
 
+// Site settings types
+export interface ProductSetting {
+  variant: 'shortedge' | 'longedge'
+  name: string
+  price: number
+  description: string
+}
+
+export interface PromoCodeSetting {
+  type: 'percent' | 'fixed'
+  value: number
+}
+
+export interface SiteSettings {
+  products: ProductSetting[]
+  stl_file_price: number
+  shipping_cost: number
+  promo_codes: Record<string, PromoCodeSetting>
+}
+
 // Status labels in Norwegian
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   new: 'Ny',

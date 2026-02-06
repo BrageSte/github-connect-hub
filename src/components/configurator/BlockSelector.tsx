@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react'
 import type { BlockVariant } from './StlViewer'
+import type { ProductSetting } from '@/types/admin'
 
 interface BlockOption {
   variant: BlockVariant
@@ -7,7 +8,7 @@ interface BlockOption {
   price: number
 }
 
-const BLOCK_OPTIONS: BlockOption[] = [
+const DEFAULT_BLOCK_OPTIONS: BlockOption[] = [
   {
     variant: 'shortedge',
     name: 'Compact',
@@ -20,7 +21,7 @@ const BLOCK_OPTIONS: BlockOption[] = [
   }
 ]
 
-const BLOCK_DESCRIPTIONS: Record<BlockVariant, { title: string; description: string }> = {
+const DEFAULT_BLOCK_DESCRIPTIONS: Record<BlockVariant, { title: string; description: string }> = {
   shortedge: {
     title: 'Compact',
     description: 'Ultrakompakt design tilpasset fingrene. Individuelt tilpassede steg for optimal halvkrimpp-trening.'
@@ -31,12 +32,29 @@ const BLOCK_DESCRIPTIONS: Record<BlockVariant, { title: string; description: str
   }
 }
 
+function toBlockOptions(products?: ProductSetting[]): BlockOption[] {
+  if (!products?.length) return DEFAULT_BLOCK_OPTIONS
+  return products.map(p => ({ variant: p.variant, name: p.name, price: p.price }))
+}
+
+function toBlockDescriptions(products?: ProductSetting[]): Record<BlockVariant, { title: string; description: string }> {
+  if (!products?.length) return DEFAULT_BLOCK_DESCRIPTIONS
+  const result = { ...DEFAULT_BLOCK_DESCRIPTIONS }
+  for (const p of products) {
+    result[p.variant] = { title: p.name, description: p.description }
+  }
+  return result
+}
+
 interface BlockSelectorProps {
   selected: BlockVariant
   onChange: (variant: BlockVariant) => void
+  products?: ProductSetting[]
 }
 
-export default function BlockSelector({ selected, onChange }: BlockSelectorProps) {
+export default function BlockSelector({ selected, onChange, products }: BlockSelectorProps) {
+  const BLOCK_OPTIONS = toBlockOptions(products)
+  const BLOCK_DESCRIPTIONS = toBlockDescriptions(products)
   return (
     <div className="space-y-6">
       {/* Always visible descriptions */}
@@ -86,5 +104,5 @@ export default function BlockSelector({ selected, onChange }: BlockSelectorProps
   )
 }
 
-export { BLOCK_OPTIONS, BLOCK_DESCRIPTIONS }
+export { DEFAULT_BLOCK_OPTIONS, DEFAULT_BLOCK_DESCRIPTIONS, toBlockOptions, toBlockDescriptions }
 export type { BlockOption }
