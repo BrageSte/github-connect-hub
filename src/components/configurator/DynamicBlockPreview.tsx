@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Text, RoundedBox } from '@react-three/drei'
+import { OrbitControls, Text } from '@react-three/drei'
 import { useMemo } from 'react'
+import * as THREE from 'three'
 
 interface DynamicBlockPreviewProps {
   widths: {
@@ -46,21 +47,50 @@ function FingerBlock({
   const w = width * scale
   const h = height * scale
   const d = depth * scale
-  const filletRadius = Math.min(w, h, d) * 0.15
+
+  // Custom geometry: fillet only on top-front edge
+  const geometry = useMemo(() => {
+    const r = Math.min(h, d) * 0.25
+    const segments = 8
+
+    // Side profile (depth=X, height=Y), extruded along width
+    // Front = +X in shape → +Z in scene after rotation
+    const shape = new THREE.Shape()
+    shape.moveTo(-d / 2, 0)        // bottom-back
+    shape.lineTo(d / 2, 0)         // bottom-front
+    shape.lineTo(d / 2, h - r)     // up front face to fillet start
+    shape.quadraticCurveTo(d / 2, h, d / 2 - r, h) // fillet: top-front corner
+    shape.lineTo(-d / 2, h)        // across top to back
+    shape.closePath()               // back edge down
+
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: w,
+      bevelEnabled: false,
+      curveSegments: segments,
+    })
+
+    // Extrusion goes along +Z; rotate so it goes along X instead
+    geo.rotateY(-Math.PI / 2)
+
+    // Center on X and Z, keep bottom at y=0
+    geo.computeBoundingBox()
+    const bb = geo.boundingBox!
+    geo.translate(
+      -(bb.min.x + bb.max.x) / 2,
+      0,
+      -(bb.min.z + bb.max.z) / 2
+    )
+
+    geo.computeVertexNormals()
+    return geo
+  }, [w, h, d])
 
   return (
     <group position={position}>
-      {/* Rounded finger block (fillet on edges) */}
-      <RoundedBox
-        args={[w, h, d]}
-        radius={filletRadius}
-        smoothness={4}
-        castShadow
-        receiveShadow
-        position={[0, h / 2, 0]}
-      >
+      {/* Finger block with front-edge fillet */}
+      <mesh geometry={geometry} castShadow receiveShadow>
         <meshStandardMaterial color={color} roughness={0.4} metalness={0.1} />
-      </RoundedBox>
+      </mesh>
 
       {/* Height label on front face */}
       <Text
