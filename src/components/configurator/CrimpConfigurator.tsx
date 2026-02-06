@@ -5,7 +5,8 @@ import BlockSelector, { BLOCK_OPTIONS } from "./BlockSelector";
 import DynamicBlockPreview from "./DynamicBlockPreview";
 import MeasureHelpModal from "./MeasureHelpModal";
 import HeightValidationDialog from "./HeightValidationDialog";
-import { HelpCircle, ShoppingBag, Download } from "lucide-react";
+import { HelpCircle, ShoppingBag, Download, Info } from "lucide-react";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useCart } from "@/contexts/CartContext";
 import { Product, generateProductId, BlockConfig } from "@/types/shop";
 import { useToast } from "@/hooks/use-toast";
@@ -128,8 +129,8 @@ export default function CrimpConfigurator() {
       id: productId,
       name:
         type === "file"
-          ? `Stepper STL-fil (${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"})`
-          : `Stepper ${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"}`,
+          ? `Digital 3D-print-fil – Stepper ${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"} (print selv)`
+          : `Ferdig printet – Stepper ${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"}`,
       description: `Tilpasset crimp block: ${totalWidth.toFixed(1)}mm bred × ${depth}mm dyp`,
       price: type === "file" ? filePrice : currentPrice,
       variant: blockVariant === "shortedge" ? "Short Edge" : "Long Edge",
@@ -401,25 +402,50 @@ export default function CrimpConfigurator() {
         </div>
 
         {/* Order buttons */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          <button
-            onClick={() => handleAddToCart("file")}
-            className="p-5 bg-surface-light border border-border rounded-xl transition-all hover:border-primary/50 hover:shadow-glow text-center group"
-          >
-            <Download className="w-5 h-5 mx-auto mb-2 text-primary" />
-            <div className="text-foreground font-medium text-sm mb-1">Kjøp STL</div>
-            <div className="text-xs text-muted-foreground mb-2">Leveres på e-post etter betaling</div>
-            <div className="text-xl font-bold text-primary">{filePrice},-</div>
-          </button>
+        <div className="space-y-3">
+          {/* Primary: Ferdig printet */}
           <button
             onClick={() => handleAddToCart("printed")}
-            className="p-5 bg-surface-light border border-border rounded-xl transition-all hover:border-valid/50 text-center group"
+            className="w-full p-6 bg-valid/5 border-2 border-valid/40 rounded-xl transition-all hover:border-valid hover:shadow-lg text-center group relative"
           >
-            <ShoppingBag className="w-5 h-5 mx-auto mb-2 text-valid" />
-            <div className="text-foreground font-medium text-sm mb-1">Kjøp ferdig printet</div>
-            <div className="text-xs text-muted-foreground mb-2">Normalt sendt innen 1 uke</div>
-            <div className="text-xl font-bold text-valid">{currentPrice},-</div>
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-valid text-white text-[11px] font-semibold px-3 py-0.5 rounded-full">
+              Anbefalt
+            </span>
+            <ShoppingBag className="w-6 h-6 mx-auto mb-2 text-valid" />
+            <div className="text-foreground font-semibold text-base mb-1">Kjøp ferdig printet</div>
+            <div className="text-xs text-muted-foreground mb-3">Sendes hjem eller hentes – normalt innen 1 uke</div>
+            <div className="text-2xl font-bold text-valid">{currentPrice},-</div>
           </button>
+
+          {/* Secondary: Digital fil */}
+          <TooltipProvider>
+            <button
+              onClick={() => handleAddToCart("file")}
+              className="w-full p-4 bg-surface-light border border-border rounded-xl transition-all hover:border-primary/50 text-center group"
+            >
+              <div className="flex items-center justify-center gap-2 mb-1">
+                <Download className="w-4 h-4 text-primary" />
+                <span className="text-foreground font-medium text-sm">Kjøp 3D-print-fil (print selv)</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-muted-foreground/20 text-muted-foreground cursor-help"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Info className="w-3 h-3" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[250px] text-center">
+                    STL/3D-print-fil: Dette er en digital fil for 3D-printer. Ikke et fysisk produkt.
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <div className="text-[11px] text-muted-foreground mb-2">
+                For deg som har egen 3D-printer. Du får en fil du kan printe hjemme.
+              </div>
+              <div className="text-lg font-bold text-primary">{filePrice},-</div>
+            </button>
+          </TooltipProvider>
         </div>
       </section>
 
