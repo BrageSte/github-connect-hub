@@ -43,7 +43,7 @@ export default function OrderModal({
   const blockPrice = blockOption?.price ?? 449
   
   const price = orderType === 'file' ? 199 : blockPrice
-  const productName = orderType === 'file' ? '3D-fil (STL)' : `Ferdig printet - ${blockName}`
+  const productName = orderType === 'file' ? 'Digital 3D-print-fil (print selv)' : `Ferdig printet (sendes hjem / hentes) - ${blockName}`
 
   const submitOrder = () => {
     const subject = encodeURIComponent(`Bestilling: Custom Crimp Blokk - ${productName}`)

@@ -16,7 +16,7 @@ export default function CartItem({ item }: CartItemProps) {
     <div className="flex gap-4 py-4 border-b border-border">
       {/* Product image placeholder */}
       <div className="w-16 h-16 bg-surface-light rounded-lg flex items-center justify-center shrink-0">
-        <span className="text-2xl">🧗</span>
+        <span className="text-2xl">{product.isDigital ? '📄' : '🧗'}</span>
       </div>
 
       <div className="flex-1 min-w-0">

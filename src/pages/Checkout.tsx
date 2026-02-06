@@ -334,8 +334,8 @@ export default function Checkout() {
                       required
                     />
                     <p className="text-xs text-muted-foreground mt-2">
-                      {isDigitalOnly 
-                        ? 'STL-filen sendes til denne e-postadressen.'
+                      {isDigitalOnly
+                        ? '3D-print-filen sendes til denne e-postadressen.'
                         : 'Du får ordrebekreftelse og oppdateringer på denne adressen.'
                       }
                     </p>
@@ -507,7 +507,7 @@ export default function Checkout() {
                     <div>
                       <h2 className="text-lg font-semibold mb-1">Digital levering</h2>
                       <p className="text-sm text-muted-foreground">
-                        STL-filen(e) sendes direkte til e-postadressen din etter fullført betaling. 
+                        3D-print-filen(e) sendes direkte til e-postadressen din etter fullført betaling.
                         Ingen frakt – ingen ventetid!
                       </p>
                     </div>
