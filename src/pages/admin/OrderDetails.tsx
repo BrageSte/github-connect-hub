@@ -41,6 +41,12 @@ const ALL_STATUSES: OrderStatus[] = [
   'new', 'manual_review', 'in_production', 'ready_to_print', 'printing', 'shipped', 'done', 'error'
 ]
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Ukjent feil.'
+}
+
 export default function OrderDetails() {
   const { orderId } = useParams<{ orderId: string }>()
   const { data: order, isLoading } = useOrder(orderId)
@@ -77,6 +83,17 @@ export default function OrderDetails() {
       toast({ title: 'Status oppdatert' })
     } catch {
       toast({ title: 'Feil', description: 'Kunne ikke oppdatere status', variant: 'destructive' })
+    }
+  }
+
+  const handleExport = async (item: ConfigSnapshot['items'][0]) => {
+    if (!order) return
+    try {
+      await downloadFusionParameterCSV(item, order.id, {
+        fallbackProductionNumber: order.production_number
+      })
+    } catch (error) {
+      toast({ title: 'Eksport feilet', description: getErrorMessage(error), variant: 'destructive' })
     }
   }
 
@@ -235,7 +252,7 @@ Total bredde: ${item.totalWidth.toFixed(1)} mm
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      void downloadFusionParameterCSV(item, order.id)
+                      void handleExport(item)
                     }}
                   >
                     <Download className="w-4 h-4 mr-2" />

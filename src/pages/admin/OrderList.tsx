@@ -42,6 +42,12 @@ function getConfigSnapshot(order: { config_snapshot: unknown }): ConfigSnapshot 
   }
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Ukjent feil.'
+}
+
 export default function OrderList() {
   const [searchParams, setSearchParams] = useSearchParams()
   const statusFilter = searchParams.get('status') as OrderStatus | null
@@ -109,12 +115,19 @@ export default function OrderList() {
       .map(order => {
         const config = getConfigSnapshot(order)
         const item = config?.items?.[0]
-        return item ? { item, orderId: order.id } : null
+        return item ? { item, orderId: order.id, fallbackProductionNumber: order.production_number } : null
       })
-      .filter((o): o is { item: ConfigSnapshot['items'][0]; orderId: string } => o !== null)
+      .filter((o): o is { item: ConfigSnapshot['items'][0]; orderId: string; fallbackProductionNumber?: number | null } => o !== null)
 
-    if (ordersToDownload.length > 0) {
+    if (ordersToDownload.length === 0) {
+      toast({ title: 'Ingen ordre å eksportere', description: 'Velg minst én ordre med konfigurasjon.' })
+      return
+    }
+
+    try {
       await downloadMultipleFusionCSVs(ordersToDownload)
+    } catch (error) {
+      toast({ title: 'Eksport feilet', description: getErrorMessage(error), variant: 'destructive' })
     }
   }
 
@@ -287,9 +300,19 @@ export default function OrderList() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.preventDefault()
-                                void downloadFusionParameterCSV(item, order.id)
+                                try {
+                                  await downloadFusionParameterCSV(item, order.id, {
+                                    fallbackProductionNumber: order.production_number
+                                  })
+                                } catch (error) {
+                                  toast({
+                                    title: 'Eksport feilet',
+                                    description: getErrorMessage(error),
+                                    variant: 'destructive'
+                                  })
+                                }
                               }}
                               title="Eksporter Fusion CSV"
                             >

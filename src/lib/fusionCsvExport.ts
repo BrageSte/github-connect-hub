@@ -10,12 +10,18 @@ type ProductionAssignment = {
   modellId: string
 }
 
+type DownloadOptions = {
+  assignment?: ProductionAssignment
+  fallbackProductionNumber?: number | null
+}
+
 export async function downloadFusionParameterCSV(
   item: ConfigSnapshotItem,
   orderId: string,
-  assignment?: ProductionAssignment
+  options?: DownloadOptions
 ): Promise<void> {
-  const resolvedAssignment = assignment ?? await ensureProductionAssignment(orderId)
+  const resolvedAssignment = options?.assignment
+    ?? await resolveProductionAssignment(orderId, options?.fallbackProductionNumber)
   const edgeMode = resolveEdgeMode(item.blockVariant)
   const header = 'Name,Unit,Expression,Value,Comments,Favorite'
 
@@ -66,20 +72,20 @@ function downloadCSV(content: string, filename: string): void {
  * Downloads multiple Fusion 360 parameter CSVs with a small delay between each.
  */
 export async function downloadMultipleFusionCSVs(
-  orders: Array<{ item: ConfigSnapshotItem; orderId: string }>
+  orders: Array<{ item: ConfigSnapshotItem; orderId: string; fallbackProductionNumber?: number | null }>
 ): Promise<void> {
   const assigned: Array<{ item: ConfigSnapshotItem; orderId: string } & ProductionAssignment> = []
 
   for (const order of orders) {
-    const assignment = await ensureProductionAssignment(order.orderId)
-    assigned.push({ ...order, ...assignment })
+    const assignment = await resolveProductionAssignment(order.orderId, order.fallbackProductionNumber)
+    assigned.push({ item: order.item, orderId: order.orderId, ...assignment })
   }
 
   assigned.sort((a, b) => a.productionNumber - b.productionNumber)
 
   for (let i = 0; i < assigned.length; i++) {
     const { item, orderId, productionNumber, modellId } = assigned[i]
-    await downloadFusionParameterCSV(item, orderId, { productionNumber, modellId })
+    await downloadFusionParameterCSV(item, orderId, { assignment: { productionNumber, modellId } })
     // Small delay between downloads to avoid browser blocking
     if (i < assigned.length - 1) {
       await new Promise(resolve => setTimeout(resolve, 200))
@@ -87,18 +93,40 @@ export async function downloadMultipleFusionCSVs(
   }
 }
 
-async function ensureProductionAssignment(orderId: string): Promise<ProductionAssignment> {
+async function resolveProductionAssignment(
+  orderId: string,
+  fallbackProductionNumber?: number | null
+): Promise<ProductionAssignment> {
   const { data, error } = await supabase
     .rpc('assign_production_number', { order_id: orderId })
 
-  if (error || !data || data.length === 0 || !data[0]?.production_number) {
-    throw new Error('Kunne ikke tildele produksjonsnummer.')
+  const productionNumber = normalizeProductionNumber(data?.[0]?.production_number)
+  if (error || productionNumber === null) {
+    const fallback = normalizeProductionNumber(fallbackProductionNumber)
+    if (fallback !== null) {
+      return {
+        productionNumber: fallback,
+        modellId: formatModelId(fallback),
+      }
+    }
+    throw new Error(error?.message ?? 'Kunne ikke tildele produksjonsnummer.')
   }
 
   return {
-    productionNumber: data[0].production_number,
-    modellId: formatModelId(data[0].production_number),
+    productionNumber,
+    modellId: formatModelId(productionNumber),
   }
+}
+
+function normalizeProductionNumber(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
 }
 
 function formatModelId(productionNumber: number): string {
