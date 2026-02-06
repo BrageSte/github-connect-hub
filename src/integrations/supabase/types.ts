@@ -97,6 +97,8 @@ export type Database = {
           internal_notes: string | null
           line_items: Json
           pickup_location: string | null
+          production_number: number | null
+          exported_at: string | null
           shipping_address: Json | null
           shipping_amount: number
           status: Database["public"]["Enums"]["order_status"]
@@ -121,6 +123,8 @@ export type Database = {
           internal_notes?: string | null
           line_items: Json
           pickup_location?: string | null
+          production_number?: number | null
+          exported_at?: string | null
           shipping_address?: Json | null
           shipping_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
@@ -145,6 +149,8 @@ export type Database = {
           internal_notes?: string | null
           line_items?: Json
           pickup_location?: string | null
+          production_number?: number | null
+          exported_at?: string | null
           shipping_address?: Json | null
           shipping_amount?: number
           status?: Database["public"]["Enums"]["order_status"]
@@ -182,6 +188,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assign_production_number: {
+        Args: {
+          order_id: string
+        }
+        Returns: {
+          production_number: number
+          exported_at: string | null
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

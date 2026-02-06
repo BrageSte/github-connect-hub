@@ -289,7 +289,7 @@ export default function OrderList() {
                               className="h-8 w-8"
                               onClick={(e) => {
                                 e.preventDefault()
-                                downloadFusionParameterCSV(item, order.id)
+                                void downloadFusionParameterCSV(item, order.id)
                               }}
                               title="Eksporter Fusion CSV"
                             >

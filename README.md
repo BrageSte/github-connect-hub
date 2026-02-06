@@ -81,3 +81,11 @@ Kunder som sjekker ordrestatus kan se en feilkode. Bruk listen under ved support
 - `OS_DB_ERROR`: Feil under oppslag i databasen.
 - `OS_CONFIG_MISSING`: Edge function mangler konfigurasjon (service role key).
 - `OS_EDGE_HTTP_ERROR`: Kall til edge function feilet uten spesifikk feilkode.
+
+## Produksjonsnummer og Fusion‑eksport
+
+- Kjør migrasjoner med Supabase (f.eks. `supabase db push`) før eksport.
+- `production_number` tildeles første gang en ordre eksporteres/lastes ned, og beholdes ved senere exporter.
+- `ModellID` i Fusion‑CSV = `BS-` + `production_number` (4 siffer med ledende nuller).
+- `EdgeMode` i Fusion‑CSV: `0` for Short edge, `1` for Long edge (case‑insensitive; støtter `short/long` og `Short edge/Long edge`).
+- Bulk‑eksport sorteres på `production_number` stigende for deterministisk printkø.

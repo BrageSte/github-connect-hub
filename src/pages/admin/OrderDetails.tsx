@@ -231,7 +231,13 @@ Total bredde: ${item.totalWidth.toFixed(1)} mm
                   Produktkonfigurasjon
                 </h2>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => downloadFusionParameterCSV(item, order.id)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      void downloadFusionParameterCSV(item, order.id)
+                    }}
+                  >
                     <Download className="w-4 h-4 mr-2" />
                     Eksporter Fusion CSV
                   </Button>
