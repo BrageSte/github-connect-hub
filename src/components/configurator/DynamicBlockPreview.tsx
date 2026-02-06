@@ -1,5 +1,5 @@
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Text } from '@react-three/drei'
+import { OrbitControls, Text, RoundedBox } from '@react-three/drei'
 import { useMemo } from 'react'
 
 interface DynamicBlockPreviewProps {
@@ -42,37 +42,91 @@ function FingerBlock({
   color: string
   label: string
 }) {
-  // Scale down for visualization (mm to scene units)
   const scale = 0.04
   const w = width * scale
   const h = height * scale
   const d = depth * scale
+  const filletRadius = Math.min(w, h, d) * 0.15
 
   return (
     <group position={position}>
-      <mesh castShadow receiveShadow position={[0, h / 2, 0]}>
-        <boxGeometry args={[w, h, d]} />
+      {/* Rounded finger block (fillet on edges) */}
+      <RoundedBox
+        args={[w, h, d]}
+        radius={filletRadius}
+        smoothness={4}
+        castShadow
+        receiveShadow
+        position={[0, h / 2, 0]}
+      >
         <meshStandardMaterial color={color} roughness={0.4} metalness={0.1} />
-      </mesh>
-      {/* Height label on front */}
+      </RoundedBox>
+
+      {/* Height label on front face */}
       <Text
         position={[0, h / 2, d / 2 + 0.1]}
-        fontSize={0.15}
+        fontSize={0.14}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
       >
         {height}mm
       </Text>
-      {/* Finger name below */}
+
+      {/* Finger name ABOVE the block (always visible) */}
       <Text
-        position={[0, -0.2, 0]}
+        position={[0, h + 0.12, 0]}
         fontSize={0.12}
-        color="#9ca3af"
+        color="#ffffff"
         anchorX="center"
-        anchorY="top"
+        anchorY="bottom"
       >
         {label}
+      </Text>
+    </group>
+  )
+}
+
+function DepthIndicator({ position, depth }: { position: [number, number, number]; depth: number }) {
+  const scale = 0.04
+  const d = depth * scale
+
+  return (
+    <group position={position}>
+      {/* Dimension line along Z (depth axis) */}
+      <mesh>
+        <boxGeometry args={[0.012, 0.012, d]} />
+        <meshBasicMaterial color="#9ca3af" />
+      </mesh>
+      {/* Front end cap */}
+      <mesh position={[0, 0, d / 2]}>
+        <boxGeometry args={[0.08, 0.012, 0.012]} />
+        <meshBasicMaterial color="#9ca3af" />
+      </mesh>
+      {/* Back end cap */}
+      <mesh position={[0, 0, -d / 2]}>
+        <boxGeometry args={[0.08, 0.012, 0.012]} />
+        <meshBasicMaterial color="#9ca3af" />
+      </mesh>
+      {/* Depth value label */}
+      <Text
+        position={[0.12, 0, 0]}
+        fontSize={0.11}
+        color="#9ca3af"
+        anchorX="left"
+        anchorY="middle"
+      >
+        {`${depth}mm`}
+      </Text>
+      {/* "Dybde" text below */}
+      <Text
+        position={[0.12, -0.14, 0]}
+        fontSize={0.08}
+        color="#6b7280"
+        anchorX="left"
+        anchorY="middle"
+      >
+        dybde
       </Text>
     </group>
   )
@@ -81,7 +135,7 @@ function FingerBlock({
 function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
   const fingerPositions = useMemo(() => {
     const scale = 0.04
-    const gap = 0.08 // Gap between fingers
+    const gap = 0.08
     const positions: [number, number, number][] = []
 
     let currentX = 0
@@ -101,6 +155,14 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
     const offset = totalWidth / 2
     return positions.map(([x, y, z]) => [x - offset, y, z] as [number, number, number])
   }, [widths])
+
+  // Calculate right edge for depth indicator placement
+  const rightEdge = useMemo(() => {
+    if (fingerPositions.length === 0) return 1
+    const lastPos = fingerPositions[fingerPositions.length - 1][0]
+    const lastHalfWidth = (widths.pekefinger * 0.04) / 2
+    return lastPos + lastHalfWidth + 0.2
+  }, [fingerPositions, widths.pekefinger])
 
   const fingerLabels = ['Lille', 'Ring', 'Lang', 'Peke']
 
@@ -128,6 +190,12 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
           label={fingerLabels[i]}
         />
       ))}
+
+      {/* Depth dimension indicator on the right side */}
+      <DepthIndicator
+        position={[rightEdge, 0.25, 0]}
+        depth={depth}
+      />
 
       <OrbitControls
         enablePan={false}
