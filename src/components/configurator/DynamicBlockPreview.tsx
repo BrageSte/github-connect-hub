@@ -131,6 +131,7 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
 
       <OrbitControls
         enablePan={false}
+        enableZoom={false}
         minDistance={2}
         maxDistance={6}
         target={[0, 0.5, 0]}
@@ -141,11 +142,12 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
 
 export default function DynamicBlockPreview({ widths, heights, depth }: DynamicBlockPreviewProps) {
   return (
-    <div className="w-full h-64 bg-surface-light rounded-xl overflow-hidden">
+    <div className="w-full h-64 bg-surface-light rounded-xl overflow-hidden" style={{ touchAction: 'pan-y' }}>
       <Canvas
         shadows
         camera={{ position: [0, 2, 4], fov: 45 }}
         gl={{ antialias: true }}
+        style={{ touchAction: 'pan-y' }}
       >
         <BlockScene widths={widths} heights={heights} depth={depth} />
       </Canvas>

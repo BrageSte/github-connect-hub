@@ -76,11 +76,12 @@ export default function StlViewer({ variant }: StlViewerProps) {
     : '/models/blokk_longedge.stl'
 
   return (
-    <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 rounded-xl overflow-hidden">
-      <Canvas shadows>
+    <div className="relative w-full aspect-square bg-gradient-to-br from-muted/30 to-muted/60 rounded-xl overflow-hidden" style={{ touchAction: 'pan-y' }}>
+      <Canvas shadows style={{ touchAction: 'pan-y' }}>
         <PerspectiveCamera makeDefault position={[4, 3, 4]} fov={35} />
-        <OrbitControls 
+        <OrbitControls
           enablePan={false}
+          enableZoom={false}
           minDistance={3}
           maxDistance={8}
           autoRotate={false}
@@ -106,7 +107,7 @@ export default function StlViewer({ variant }: StlViewerProps) {
       
       {/* Drag hint */}
       <div className="absolute bottom-3 right-3 text-xs text-muted-foreground bg-background/80 backdrop-blur-sm px-2 py-1 rounded">
-        Dra for å rotere
+        Klikk og dra for å rotere
       </div>
     </div>
   )
