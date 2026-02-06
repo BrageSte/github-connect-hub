@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import OrderModal from "./OrderModal";
 import StlViewer, { type BlockVariant } from "./StlViewer";
-import BlockSelector, { BLOCK_OPTIONS } from "./BlockSelector";
+import BlockSelector, { DEFAULT_BLOCK_OPTIONS } from "./BlockSelector";
 import DynamicBlockPreview from "./DynamicBlockPreview";
 import MeasureHelpModal from "./MeasureHelpModal";
 import HeightValidationDialog from "./HeightValidationDialog";
@@ -11,6 +11,7 @@ import { useCart } from "@/contexts/CartContext";
 import { Product, generateProductId, BlockConfig } from "@/types/shop";
 import { useToast } from "@/hooks/use-toast";
 import { NumberStepper } from "@/components/ui/number-stepper";
+import { useSettings } from "@/hooks/useSettings";
 
 const FINGER_NAMES = ["lillefinger", "ringfinger", "langfinger", "pekefinger"] as const;
 type FingerName = (typeof FINGER_NAMES)[number];
@@ -31,6 +32,7 @@ interface HeightDiffs {
 export default function CrimpConfigurator() {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { data: settings } = useSettings();
   const [blockVariant, setBlockVariant] = useState<BlockVariant>("shortedge");
 
   const [widths, setWidths] = useState<Widths>({
@@ -79,8 +81,11 @@ export default function CrimpConfigurator() {
     return fingerWidths + 16;
   }, [widths]);
 
-  const currentPrice = BLOCK_OPTIONS.find((o) => o.variant === blockVariant)?.price ?? 449;
-  const filePrice = 199;
+  const blockOptions = settings?.products?.length
+    ? settings.products.map(p => ({ variant: p.variant, name: p.name, price: p.price }))
+    : DEFAULT_BLOCK_OPTIONS;
+  const currentPrice = blockOptions.find((o) => o.variant === blockVariant)?.price ?? 399;
+  const filePrice = settings?.stl_file_price ?? 199;
 
   const handleHeightChange = (heightKey: keyof HeightDiffs, value: number) => {
     if (Math.abs(value) > 30) {
@@ -129,11 +134,11 @@ export default function CrimpConfigurator() {
       id: productId,
       name:
         type === "file"
-          ? `Digital 3D-print-fil – Stepper ${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"} (print selv)`
-          : `Ferdig printet – Stepper ${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"}`,
+          ? `Digital 3D-print-fil – Stepper ${blockVariant === "shortedge" ? "Compact" : "Long Edge"} (print selv)`
+          : `Ferdig printet – Stepper ${blockVariant === "shortedge" ? "Compact" : "Long Edge"}`,
       description: `Tilpasset crimp block: ${totalWidth.toFixed(1)}mm bred × ${depth}mm dyp`,
       price: type === "file" ? filePrice : currentPrice,
-      variant: blockVariant === "shortedge" ? "Short Edge" : "Long Edge",
+      variant: blockVariant === "shortedge" ? "Compact" : "Long Edge",
       isDigital: type === "file",
       config,
     };
@@ -198,7 +203,7 @@ export default function CrimpConfigurator() {
           {/* Block type selector */}
           <div>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Blokktype</h3>
-            <BlockSelector selected={blockVariant} onChange={setBlockVariant} />
+            <BlockSelector selected={blockVariant} onChange={setBlockVariant} products={settings?.products} />
           </div>
 
           {/* 3D Preview - STL Model */}
@@ -391,7 +396,7 @@ export default function CrimpConfigurator() {
             <div>
               <span className="text-muted-foreground text-xs block mb-1">Blokktype</span>
               <span className="text-foreground font-medium">
-                {blockVariant === "shortedge" ? "Short Edge" : "Long Edge"}
+                {blockVariant === "shortedge" ? "Compact" : "Long Edge"}
               </span>
             </div>
             <div>

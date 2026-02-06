@@ -116,7 +116,7 @@ BLOKK-KONFIGURASJON
 -------------------
 Ordre: ${order?.id.slice(0, 8)}
 
-Type: ${item.blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}
+Type: ${item.blockVariant === 'shortedge' ? 'Compact' : 'Long Edge'}
 
 Bredder (mm):
   Lillefinger: ${item.widths.lillefinger}
@@ -269,7 +269,7 @@ Total bredde: ${item.totalWidth.toFixed(1)} mm
                 <div>
                   <div className="text-sm text-muted-foreground mb-2">Blokk</div>
                   <div className="font-medium">
-                    {item.blockVariant === 'shortedge' ? 'Short Edge' : 'Long Edge'}
+                    {item.blockVariant === 'shortedge' ? 'Compact' : 'Long Edge'}
                   </div>
                 </div>
                 <div>

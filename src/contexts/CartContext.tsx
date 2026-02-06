@@ -1,12 +1,8 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react'
-import { CartItem, Product, DeliveryMethod, getShippingCost, isDigitalOnlyCart } from '@/types/shop'
-
-// Hardcoded promo codes for testing
-const PROMO_CODES: Record<string, { type: 'percent' | 'fixed', value: number }> = {
-  'TESTMEG': { type: 'percent', value: 100 }
-}
+import { CartItem, Product, DeliveryMethod, isDigitalOnlyCart } from '@/types/shop'
+import { useSettings, DEFAULT_SETTINGS } from '@/hooks/useSettings'
 
 interface CartContextType {
   items: CartItem[]
@@ -36,6 +32,10 @@ const CartContext = createContext<CartContextType | undefined>(undefined)
 const CART_STORAGE_KEY = 'bs-climbing-cart'
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { data: settings } = useSettings()
+  const promoCodes = settings?.promo_codes ?? DEFAULT_SETTINGS.promo_codes
+  const shippingCost = settings?.shipping_cost ?? DEFAULT_SETTINGS.shipping_cost
+
   const [items, setItems] = useState<CartItem[]>([])
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
@@ -77,8 +77,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
   
   const shipping = useMemo(() => {
     if (items.length === 0) return 0
-    return getShippingCost(items, deliveryMethod)
-  }, [items, deliveryMethod])
+    if (isDigitalOnlyCart(items)) return 0
+    if (!deliveryMethod) return 0
+    if (deliveryMethod === 'pickup-gneis' || deliveryMethod === 'pickup-oslo') return 0
+    return shippingCost
+  }, [items, deliveryMethod, shippingCost])
   
   const total = subtotal + shipping
 
@@ -86,30 +89,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const promoDiscount = useMemo(() => {
     if (!promoCode) return 0
     const normalizedCode = promoCode.toUpperCase()
-    const promo = PROMO_CODES[normalizedCode]
+    const promo = promoCodes[normalizedCode]
     if (!promo) return 0
 
-    if (normalizedCode === 'TESTMEG') {
-      return total
-    }
-    
     if (promo.type === 'percent') {
       return Math.round(total * (promo.value / 100))
     } else {
       return Math.min(promo.value, total)
     }
-  }, [promoCode, total])
+  }, [promoCode, total, promoCodes])
 
   const discountedTotal = Math.max(0, total - promoDiscount)
 
   const applyPromoCode = useCallback((code: string): boolean => {
     const normalizedCode = code.toUpperCase().trim()
-    if (PROMO_CODES[normalizedCode]) {
+    if (promoCodes[normalizedCode]) {
       setPromoCode(normalizedCode)
       return true
     }
     return false
-  }, [])
+  }, [promoCodes])
 
   const clearPromoCode = useCallback(() => {
     setPromoCode(null)
