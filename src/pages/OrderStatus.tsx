@@ -209,7 +209,7 @@ export default function OrderStatusPage() {
     ? order.productionNumber.toString().padStart(4, '0')
     : null
   const variantLabel = primaryConfigItem?.blockVariant
-    ? primaryConfigItem.blockVariant === 'longedge' ? 'Long Edge' : 'Short Edge'
+    ? primaryConfigItem.blockVariant === 'longedge' ? 'Long Edge' : 'Compact'
     : 'Ukjent'
 
   return (

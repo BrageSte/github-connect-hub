@@ -39,8 +39,8 @@ export default function OrderModal({
   const [quantity, setQuantity] = useState(1)
 
   const blockOption = BLOCK_OPTIONS.find(o => o.variant === blockVariant)
-  const blockName = blockOption?.name ?? 'Short Edge'
-  const blockPrice = blockOption?.price ?? 449
+  const blockName = blockOption?.name ?? 'Compact'
+  const blockPrice = blockOption?.price ?? 399
   
   const price = orderType === 'file' ? 199 : blockPrice
   const productName = orderType === 'file' ? 'Digital 3D-print-fil (print selv)' : `Ferdig printet (sendes hjem / hentes) - ${blockName}`

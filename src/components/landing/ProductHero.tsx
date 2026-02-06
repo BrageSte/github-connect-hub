@@ -47,7 +47,7 @@ export default function ProductHero() {
                 STL-fil fra <span className="font-bold text-foreground">199,-</span>
               </span>
               <span className="inline-flex items-center gap-1.5 bg-valid/10 border border-valid/20 px-4 py-2 rounded-full text-sm text-valid">
-                Ferdig printet fra <span className="font-bold">449,-</span>
+                Ferdig printet fra <span className="font-bold">399,-</span>
               </span>
             </div>
 

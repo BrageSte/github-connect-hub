@@ -79,7 +79,7 @@ export default function CrimpConfigurator() {
     return fingerWidths + 16;
   }, [widths]);
 
-  const currentPrice = BLOCK_OPTIONS.find((o) => o.variant === blockVariant)?.price ?? 449;
+  const currentPrice = BLOCK_OPTIONS.find((o) => o.variant === blockVariant)?.price ?? 399;
   const filePrice = 199;
 
   const handleHeightChange = (heightKey: keyof HeightDiffs, value: number) => {
@@ -129,11 +129,11 @@ export default function CrimpConfigurator() {
       id: productId,
       name:
         type === "file"
-          ? `Digital 3D-print-fil – Stepper ${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"} (print selv)`
-          : `Ferdig printet – Stepper ${blockVariant === "shortedge" ? "Short Edge" : "Long Edge"}`,
+          ? `Digital 3D-print-fil – Stepper ${blockVariant === "shortedge" ? "Compact" : "Long Edge"} (print selv)`
+          : `Ferdig printet – Stepper ${blockVariant === "shortedge" ? "Compact" : "Long Edge"}`,
       description: `Tilpasset crimp block: ${totalWidth.toFixed(1)}mm bred × ${depth}mm dyp`,
       price: type === "file" ? filePrice : currentPrice,
-      variant: blockVariant === "shortedge" ? "Short Edge" : "Long Edge",
+      variant: blockVariant === "shortedge" ? "Compact" : "Long Edge",
       isDigital: type === "file",
       config,
     };
@@ -391,7 +391,7 @@ export default function CrimpConfigurator() {
             <div>
               <span className="text-muted-foreground text-xs block mb-1">Blokktype</span>
               <span className="text-foreground font-medium">
-                {blockVariant === "shortedge" ? "Short Edge" : "Long Edge"}
+                {blockVariant === "shortedge" ? "Compact" : "Long Edge"}
               </span>
             </div>
             <div>

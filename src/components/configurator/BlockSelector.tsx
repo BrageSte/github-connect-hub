@@ -10,20 +10,20 @@ interface BlockOption {
 const BLOCK_OPTIONS: BlockOption[] = [
   {
     variant: 'shortedge',
-    name: 'Short Edge',
-    price: 449,
+    name: 'Compact',
+    price: 399,
   },
   {
     variant: 'longedge',
     name: 'Long Edge',
-    price: 549,
+    price: 499,
   }
 ]
 
 const BLOCK_DESCRIPTIONS: Record<BlockVariant, { title: string; description: string }> = {
   shortedge: {
-    title: 'Short Edge',
-    description: 'Kompakt og liten. Ren løfteblokk med custom høyder til fingrene – pluss en liten kant for 3-finger drags.'
+    title: 'Compact',
+    description: 'Ultrakompakt design tilpasset fingrene. Individuelt tilpassede steg for optimal halvkrimpp-trening.'
   },
   longedge: {
     title: 'Long Edge',

@@ -8,7 +8,7 @@ const deliverables = [
   },
   {
     title: "Ferdig printet fra",
-    price: "449,-",
+    price: "399,-",
     description: "Vi printer og sender. Høykvalitets PLA+ med ±0.3mm toleranse.",
   },
 ];
