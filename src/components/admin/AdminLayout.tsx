@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Package, LayoutDashboard, LogOut, Menu, Settings } from 'lucide-react'
+import { Package, LayoutDashboard, LogOut, Menu, Box } from 'lucide-react'
 import { signOut } from '@/hooks/useAdmin'
 import { useToast } from '@/hooks/use-toast'
 import { useIsMobile } from '@/hooks/use-mobile'
@@ -32,7 +32,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navItems = [
     { href: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/admin/orders', icon: Package, label: 'Ordrer' },
-    { href: '/admin/settings', icon: Settings, label: 'Innstillinger' }
+    { href: '/admin/products', icon: Box, label: 'Produkter' }
   ]
 
   const navContent = (

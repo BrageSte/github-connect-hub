@@ -24,7 +24,7 @@ const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const OrderList = lazy(() => import("./pages/admin/OrderList"));
 const OrderDetails = lazy(() => import("./pages/admin/OrderDetails"));
-const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminProducts = lazy(() => import("./pages/admin/AdminSettings"));
 
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
@@ -67,7 +67,7 @@ const App = () => (
               <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
               <Route path="/admin/orders" element={<ProtectedRoute><OrderList /></ProtectedRoute>} />
               <Route path="/admin/orders/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
-              <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+              <Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
