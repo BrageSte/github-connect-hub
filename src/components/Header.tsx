@@ -22,14 +22,14 @@ export default function Header() {
   }
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-background/95 backdrop-blur-md border-b border-border' 
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 overflow-hidden transition-all duration-300 ${
+        isScrolled
+          ? 'bg-background/95 backdrop-blur-md border-b border-border'
           : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <nav className="flex items-center justify-between h-16">
           {/* Logo - Clean text only like Hand of God */}
           <Link to="/" className="font-semibold text-lg tracking-wide text-foreground hover:text-primary transition-colors">
