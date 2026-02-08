@@ -96,7 +96,7 @@ function FingerBlock({
 
       {/* Finger name ABOVE the block */}
       <Text
-        position={[0, h + 0.12, 0]}
+        position={[0, h + 0.12, d / 2 + 0.08]}
         fontSize={0.12}
         color="#ffffff"
         anchorX="center"
@@ -115,6 +115,7 @@ function HeightDiffIndicator({
   heightRight,
   diff,
   badgeLabel,
+  depth,
 }: {
   posLeft: [number, number, number]
   posRight: [number, number, number]
@@ -122,6 +123,7 @@ function HeightDiffIndicator({
   heightRight: number
   diff: number
   badgeLabel: string
+  depth: number
 }) {
   const scale = 0.04
   const hL = heightLeft * scale
@@ -130,13 +132,14 @@ function HeightDiffIndicator({
   const yMin = Math.min(hL, hR)
   const yMax = Math.max(hL, hR)
   const lineMidY = (yMin + yMax) / 2
+  const frontZ = (depth * scale) / 2 + 0.08
 
   // Don't render if diff is 0
   if (diff === 0) {
     return (
       <group>
         <Text
-          position={[midX, Math.max(hL, hR) + 0.04, 0.01]}
+          position={[midX, Math.max(hL, hR) + 0.04, frontZ]}
           fontSize={0.09}
           color="#9ca3af"
           anchorX="center"
@@ -153,23 +156,23 @@ function HeightDiffIndicator({
   return (
     <group>
       {/* Vertical line between the two heights */}
-      <mesh position={[midX, lineMidY, 0.01]}>
+      <mesh position={[midX, lineMidY, frontZ]}>
         <boxGeometry args={[0.015, lineHeight, 0.005]} />
         <meshBasicMaterial color="#9ca3af" />
       </mesh>
       {/* Top cap */}
-      <mesh position={[midX, yMax, 0.01]}>
+      <mesh position={[midX, yMax, frontZ]}>
         <boxGeometry args={[0.08, 0.015, 0.005]} />
         <meshBasicMaterial color="#9ca3af" />
       </mesh>
       {/* Bottom cap */}
-      <mesh position={[midX, yMin, 0.01]}>
+      <mesh position={[midX, yMin, frontZ]}>
         <boxGeometry args={[0.08, 0.015, 0.005]} />
         <meshBasicMaterial color="#9ca3af" />
       </mesh>
       {/* Label */}
       <Text
-        position={[midX, lineMidY, 0.03]}
+        position={[midX, lineMidY, frontZ + 0.02]}
         fontSize={0.1}
         color="#ffffff"
         anchorX="center"
@@ -296,6 +299,7 @@ function BlockScene({ widths, heights, heightDiffs, depth }: DynamicBlockPreview
           heightRight={heights[FINGER_ORDER[right]]}
           diff={diff}
           badgeLabel={badge}
+          depth={depth}
         />
       ))}
 
