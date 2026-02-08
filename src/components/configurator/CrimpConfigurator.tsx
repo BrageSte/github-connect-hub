@@ -62,7 +62,7 @@ export default function CrimpConfigurator() {
     };
   }, [heightDiffs]);
 
-  const [depth, setDepth] = useState(20);
+  const depth = 20;
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [orderType, setOrderType] = useState<"file" | "printed" | null>(null);
   const [orderSent, setOrderSent] = useState(false);
@@ -315,26 +315,11 @@ export default function CrimpConfigurator() {
             <p className="text-[10px] sm:text-xs text-muted-foreground mt-2 opacity-75">Lillefinger: fast 10mm</p>
           </div>
 
-          {/* Depth selector */}
+          {/* Depth info */}
           <div>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">Dybde</h3>
-            <div className="flex gap-2">
-              {[15, 20, 25].map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDepth(d)}
-                  className={`flex-1 py-2 sm:py-2.5 rounded-lg font-mono text-sm font-medium transition-all ${
-                    depth === d
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-surface-light border border-border text-foreground hover:border-primary/50"
-                  }`}
-                >
-                  {d}mm
-                </button>
-              ))}
-            </div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 opacity-75">
-              15 = strengere · 20 = standard · 25 = snillere
+            <p className="text-sm text-muted-foreground">
+              Optimal dybde og avrunding for behagelig grep.
             </p>
           </div>
         </div>
