@@ -25,7 +25,7 @@ export default function ProductHero() {
             transition={{ duration: 0.6, delay: 0.3 }}
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-4 text-foreground">
-              Custom crimp block
+              Stepper
               <span className="block text-muted-foreground font-medium text-xl sm:text-2xl lg:text-3xl mt-2">
                 – bygget etter hver finger
               </span>
@@ -33,7 +33,7 @@ export default function ProductHero() {
 
             <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed">
               Crimpblokker finnes overalt. Dette er Stepper: Du taster inn fingerhøydene dine, og vi lager en custom
-              blokk som passer perfekt til din hånd.
+              Stepper som passer perfekt til din hånd.
             </p>
 
             <p className="text-base sm:text-lg text-foreground/90 font-medium mt-4 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
