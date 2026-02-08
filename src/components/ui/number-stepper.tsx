@@ -71,12 +71,6 @@ export function NumberStepper({
     }
   }
 
-  const buttonSize = size === 'sm' ? 'w-8 h-8 md:w-7 md:h-7' : 'w-10 h-10'
-  const iconSize = size === 'sm' ? 18 : 20
-  const inputPadding = size === 'sm' ? 'px-0.5 py-1.5' : 'px-2 py-3'
-  const fontSize = size === 'sm' ? 'text-sm' : 'text-base'
-  const inputWidth = size === 'sm' ? 'w-12 sm:w-auto sm:min-w-[32px]' : 'min-w-[40px]'
-
   return (
     <div
       className={cn(
@@ -93,30 +87,30 @@ export function NumberStepper({
         onPointerCancel={stopHold}
         disabled={value <= min}
         className={cn(
-          buttonSize,
+          size === 'sm' ? 'h-7 min-w-[1.75rem]' : 'h-10 min-w-[2.5rem]',
           "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed touch-none select-none"
         )}
         aria-label="Reduser"
       >
-        <Minus size={iconSize} strokeWidth={2.5} />
+        <Minus size={size === 'sm' ? 14 : 20} strokeWidth={2.5} />
       </button>
 
       <input
         type="text"
         inputMode="numeric"
-        pattern="[0-9]*"
+        pattern="-?[0-9]*"
         value={value}
         onChange={(e) => {
-          const num = parseInt(e.target.value, 10)
+          const raw = e.target.value
+          if (raw === '' || raw === '-') return
+          const num = parseInt(raw, 10)
           if (!isNaN(num)) {
             onChange(Math.max(min, Math.min(max, num)))
           }
         }}
         className={cn(
-          inputPadding,
-          fontSize,
-          inputWidth,
-          "flex-1 bg-transparent text-foreground text-center font-mono focus:outline-none"
+          size === 'sm' ? 'py-1 text-xs sm:text-sm' : 'px-1 py-3 text-base',
+          "flex-1 min-w-0 bg-transparent text-foreground text-center font-mono focus:outline-none"
         )}
       />
 
@@ -128,12 +122,12 @@ export function NumberStepper({
         onPointerCancel={stopHold}
         disabled={value >= max}
         className={cn(
-          buttonSize,
+          size === 'sm' ? 'h-7 min-w-[1.75rem]' : 'h-10 min-w-[2.5rem]',
           "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed touch-none select-none"
         )}
         aria-label="Øk"
       >
-        <Plus size={iconSize} strokeWidth={2.5} />
+        <Plus size={size === 'sm' ? 14 : 20} strokeWidth={2.5} />
       </button>
     </div>
   )
