@@ -358,6 +358,23 @@ export default function CrimpConfigurator() {
               <span className="text-muted-foreground text-xs block mb-1">Dybde</span>
               <span className="text-foreground font-mono font-medium">{depth}mm</span>
             </div>
+            <div>
+              <span className="text-muted-foreground text-xs block mb-1">Farge</span>
+              <span className="text-foreground font-medium">Svart</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground text-xs block mb-1">Materiale</span>
+              <span className="text-foreground font-medium">PLA+</span>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-border">
+            <span className="text-muted-foreground text-xs block mb-1.5">Fingermål</span>
+            <div className="flex gap-3 text-xs font-mono text-foreground">
+              <span>P: {widths.pekefinger}×{calculatedHeights.pekefinger}mm</span>
+              <span>L: {widths.langfinger}×{calculatedHeights.langfinger}mm</span>
+              <span>R: {widths.ringfinger}×{calculatedHeights.ringfinger}mm</span>
+              <span>Li: {widths.lillefinger}×{calculatedHeights.lillefinger}mm</span>
+            </div>
           </div>
         </div>
 
