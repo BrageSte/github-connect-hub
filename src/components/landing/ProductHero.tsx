@@ -12,11 +12,11 @@ export default function ProductHero() {
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
       {/* Subtle background gradient */}
-      <div className="absolute inset-0">
+      <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/3 rounded-full blur-[120px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-5xl mx-auto px-6 py-16 md:py-24">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-16 md:py-24">
         {/* Mobile: stacked, Desktop: side by side */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           

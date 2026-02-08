@@ -78,7 +78,7 @@ const faqs = [
 export default function FAQ() {
   return (
     <section id="faq" className="py-32 bg-background">
-      <div className="max-w-2xl mx-auto px-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
