@@ -30,20 +30,16 @@ export default function ProductHero() {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1] mb-4 text-foreground">
               Custom crimp block
               <span className="block text-muted-foreground font-medium text-xl sm:text-2xl lg:text-3xl mt-2">
-                – aktiver alle fingrene
+                – bygget etter hver finger
               </span>
             </h1>
 
             <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Flate kanter lar deg jukse. Du henger på de sterkeste fingrene og lar resten slippe unna.
+              Unlevel finnes overalt. Dette er custom: Du taster inn fingerhøydene dine, og vi lager en blokk som passer din hånd.
             </p>
 
-            <p className="text-base sm:text-lg text-foreground/90 font-medium mt-4 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Med custom unlevel edge blir alle fingrene med – jevnt drag, bedre rekruttering, ekte fingerstyrke.
-            </p>
-
-            <p className="text-lg sm:text-xl font-semibold text-foreground mt-6 mb-8 max-w-lg mx-auto lg:mx-0">
-              Slutt å trene "bare de sterke". Kjøp custom.
+            <p className="text-base sm:text-lg text-foreground/90 font-medium mt-4 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+              Jevnere drag. Mer rekruttering. Råere fingerstyrke.
             </p>
 
             {/* CTA Button */}
