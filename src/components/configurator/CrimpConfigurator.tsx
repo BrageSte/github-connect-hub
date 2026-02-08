@@ -293,18 +293,18 @@ export default function CrimpConfigurator() {
                 { key: 'ringToLang' as const, label: 'Ring → Lang', badge: 'B', resultFinger: 'langfinger' as const },
                 { key: 'langToPeke' as const, label: 'Lang → Peke', badge: 'C', resultFinger: 'pekefinger' as const },
               ]).map(({ key, label, badge, resultFinger }) => (
-                <div key={key} className="flex items-center gap-2 sm:gap-3">
+                <div key={key} className="flex items-center gap-1.5 sm:gap-3">
                   <span className="w-5 h-5 sm:w-6 sm:h-6 bg-primary/20 border border-primary/40 rounded text-primary text-[10px] sm:text-xs flex items-center justify-center font-semibold shrink-0">
                     {badge}
                   </span>
-                  <span className="text-foreground text-xs sm:text-sm flex-1 min-w-0 truncate">{label}</span>
+                  <span className="text-foreground text-xs sm:text-sm shrink-0">{label}</span>
                   <NumberStepper
                     value={heightDiffs[key]}
                     onChange={(val) => handleHeightChange(key, val)}
                     min={-40}
                     max={40}
                     size="sm"
-                    className="w-24 sm:w-28 shrink-0"
+                    className="flex-1 min-w-0"
                   />
                   <span className="text-muted-foreground text-xs w-10 sm:w-14 text-right font-mono shrink-0">
                     {calculatedHeights[resultFinger]}mm
