@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 interface NumberStepperProps {
   value: number
   onChange: (value: number) => void
+  onChangeComplete?: () => void
   min?: number
   max?: number
   step?: number
@@ -15,6 +16,7 @@ interface NumberStepperProps {
 export function NumberStepper({
   value,
   onChange,
+  onChangeComplete,
   min = -Infinity,
   max = Infinity,
   step = 1,
@@ -23,16 +25,20 @@ export function NumberStepper({
 }: NumberStepperProps) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const didChangeRef = useRef(false)
 
   const increment = useCallback(() => {
     onChange(Math.min(max, value + step))
+    didChangeRef.current = true
   }, [value, max, step, onChange])
 
   const decrement = useCallback(() => {
     onChange(Math.max(min, value - step))
+    didChangeRef.current = true
   }, [value, min, step, onChange])
 
   const startHold = useCallback((action: () => void) => {
+    didChangeRef.current = false
     action()
     timeoutRef.current = setTimeout(() => {
       intervalRef.current = setInterval(action, 80)
@@ -42,13 +48,18 @@ export function NumberStepper({
   const stopHold = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     if (intervalRef.current) clearInterval(intervalRef.current)
-  }, [])
+    if (didChangeRef.current && onChangeComplete) {
+      onChangeComplete()
+    }
+    didChangeRef.current = false
+  }, [onChangeComplete])
 
   useEffect(() => {
     return () => {
-      stopHold()
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+      if (intervalRef.current) clearInterval(intervalRef.current)
     }
-  }, [stopHold])
+  }, [])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'ArrowUp') {
@@ -67,7 +78,7 @@ export function NumberStepper({
   const inputWidth = size === 'sm' ? 'w-12 sm:w-auto sm:min-w-[32px]' : 'min-w-[40px]'
 
   return (
-    <div 
+    <div
       className={cn(
         "flex items-center bg-surface-light border border-border rounded-lg overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/50 transition-colors",
         className
@@ -76,21 +87,20 @@ export function NumberStepper({
     >
       <button
         type="button"
-        onMouseDown={() => startHold(decrement)}
-        onMouseUp={stopHold}
-        onMouseLeave={stopHold}
-        onTouchStart={() => startHold(decrement)}
-        onTouchEnd={stopHold}
+        onPointerDown={(e) => { e.preventDefault(); startHold(decrement) }}
+        onPointerUp={stopHold}
+        onPointerLeave={stopHold}
+        onPointerCancel={stopHold}
         disabled={value <= min}
         className={cn(
           buttonSize,
-          "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed touch-none select-none"
         )}
         aria-label="Reduser"
       >
         <Minus size={iconSize} strokeWidth={2.5} />
       </button>
-      
+
       <input
         type="text"
         inputMode="numeric"
@@ -109,18 +119,17 @@ export function NumberStepper({
           "flex-1 bg-transparent text-foreground text-center font-mono focus:outline-none"
         )}
       />
-      
+
       <button
         type="button"
-        onMouseDown={() => startHold(increment)}
-        onMouseUp={stopHold}
-        onMouseLeave={stopHold}
-        onTouchStart={() => startHold(increment)}
-        onTouchEnd={stopHold}
+        onPointerDown={(e) => { e.preventDefault(); startHold(increment) }}
+        onPointerUp={stopHold}
+        onPointerLeave={stopHold}
+        onPointerCancel={stopHold}
         disabled={value >= max}
         className={cn(
           buttonSize,
-          "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          "flex items-center justify-center shrink-0 text-foreground hover:text-primary hover:bg-primary/15 active:bg-primary/25 transition-colors disabled:opacity-30 disabled:cursor-not-allowed touch-none select-none"
         )}
         aria-label="Øk"
       >

@@ -3,6 +3,12 @@ import { OrbitControls, Text } from '@react-three/drei'
 import { useMemo } from 'react'
 import * as THREE from 'three'
 
+interface HeightDiffs {
+  lilleToRing: number
+  ringToLang: number
+  langToPeke: number
+}
+
 interface DynamicBlockPreviewProps {
   widths: {
     lillefinger: number
@@ -16,6 +22,7 @@ interface DynamicBlockPreviewProps {
     langfinger: number
     pekefinger: number
   }
+  heightDiffs: HeightDiffs
   depth: number
 }
 
@@ -53,15 +60,13 @@ function FingerBlock({
     const r = Math.min(h, d) * 0.25
     const segments = 8
 
-    // Side profile (depth=X, height=Y), extruded along width
-    // Front = +X in shape → +Z in scene after rotation
     const shape = new THREE.Shape()
-    shape.moveTo(-d / 2, 0)        // bottom-back
-    shape.lineTo(d / 2, 0)         // bottom-front
-    shape.lineTo(d / 2, h - r)     // up front face to fillet start
-    shape.quadraticCurveTo(d / 2, h, d / 2 - r, h) // fillet: top-front corner
-    shape.lineTo(-d / 2, h)        // across top to back
-    shape.closePath()               // back edge down
+    shape.moveTo(-d / 2, 0)
+    shape.lineTo(d / 2, 0)
+    shape.lineTo(d / 2, h - r)
+    shape.quadraticCurveTo(d / 2, h, d / 2 - r, h)
+    shape.lineTo(-d / 2, h)
+    shape.closePath()
 
     const geo = new THREE.ExtrudeGeometry(shape, {
       depth: w,
@@ -69,10 +74,8 @@ function FingerBlock({
       curveSegments: segments,
     })
 
-    // Extrusion goes along +Z; rotate so it goes along X instead
     geo.rotateY(-Math.PI / 2)
 
-    // Center on X and Z, keep bottom at y=0
     geo.computeBoundingBox()
     const bb = geo.boundingBox!
     geo.translate(
@@ -87,23 +90,11 @@ function FingerBlock({
 
   return (
     <group position={position}>
-      {/* Finger block with front-edge fillet */}
       <mesh geometry={geometry} castShadow receiveShadow>
         <meshStandardMaterial color={color} roughness={0.4} metalness={0.1} />
       </mesh>
 
-      {/* Height label on front face */}
-      <Text
-        position={[0, h / 2, d / 2 + 0.1]}
-        fontSize={0.14}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-      >
-        {height}mm
-      </Text>
-
-      {/* Finger name ABOVE the block (always visible) */}
+      {/* Finger name ABOVE the block */}
       <Text
         position={[0, h + 0.12, 0]}
         fontSize={0.12}
@@ -117,28 +108,99 @@ function FingerBlock({
   )
 }
 
+function HeightDiffIndicator({
+  posLeft,
+  posRight,
+  heightLeft,
+  heightRight,
+  diff,
+  badgeLabel,
+}: {
+  posLeft: [number, number, number]
+  posRight: [number, number, number]
+  heightLeft: number
+  heightRight: number
+  diff: number
+  badgeLabel: string
+}) {
+  const scale = 0.04
+  const hL = heightLeft * scale
+  const hR = heightRight * scale
+  const midX = (posLeft[0] + posRight[0]) / 2
+  const yMin = Math.min(hL, hR)
+  const yMax = Math.max(hL, hR)
+  const lineMidY = (yMin + yMax) / 2
+
+  // Don't render if diff is 0
+  if (diff === 0) {
+    return (
+      <group>
+        <Text
+          position={[midX, Math.max(hL, hR) + 0.04, 0.01]}
+          fontSize={0.09}
+          color="#9ca3af"
+          anchorX="center"
+          anchorY="bottom"
+        >
+          {`${badgeLabel}: 0mm`}
+        </Text>
+      </group>
+    )
+  }
+
+  const lineHeight = yMax - yMin
+
+  return (
+    <group>
+      {/* Vertical line between the two heights */}
+      <mesh position={[midX, lineMidY, 0.01]}>
+        <boxGeometry args={[0.015, lineHeight, 0.005]} />
+        <meshBasicMaterial color="#9ca3af" />
+      </mesh>
+      {/* Top cap */}
+      <mesh position={[midX, yMax, 0.01]}>
+        <boxGeometry args={[0.08, 0.015, 0.005]} />
+        <meshBasicMaterial color="#9ca3af" />
+      </mesh>
+      {/* Bottom cap */}
+      <mesh position={[midX, yMin, 0.01]}>
+        <boxGeometry args={[0.08, 0.015, 0.005]} />
+        <meshBasicMaterial color="#9ca3af" />
+      </mesh>
+      {/* Label */}
+      <Text
+        position={[midX, lineMidY, 0.03]}
+        fontSize={0.1}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+        outlineWidth={0.02}
+        outlineColor="#000000"
+      >
+        {`${badgeLabel}: ${diff > 0 ? '+' : ''}${diff}mm`}
+      </Text>
+    </group>
+  )
+}
+
 function DepthIndicator({ position, depth }: { position: [number, number, number]; depth: number }) {
   const scale = 0.04
   const d = depth * scale
 
   return (
     <group position={position}>
-      {/* Dimension line along Z (depth axis) */}
       <mesh>
         <boxGeometry args={[0.012, 0.012, d]} />
         <meshBasicMaterial color="#9ca3af" />
       </mesh>
-      {/* Front end cap */}
       <mesh position={[0, 0, d / 2]}>
         <boxGeometry args={[0.08, 0.012, 0.012]} />
         <meshBasicMaterial color="#9ca3af" />
       </mesh>
-      {/* Back end cap */}
       <mesh position={[0, 0, -d / 2]}>
         <boxGeometry args={[0.08, 0.012, 0.012]} />
         <meshBasicMaterial color="#9ca3af" />
       </mesh>
-      {/* Depth value label */}
       <Text
         position={[0.12, 0, 0]}
         fontSize={0.11}
@@ -148,7 +210,6 @@ function DepthIndicator({ position, depth }: { position: [number, number, number
       >
         {`${depth}mm`}
       </Text>
-      {/* "Dybde" text below */}
       <Text
         position={[0.12, -0.14, 0]}
         fontSize={0.08}
@@ -162,7 +223,7 @@ function DepthIndicator({ position, depth }: { position: [number, number, number
   )
 }
 
-function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
+function BlockScene({ widths, heights, heightDiffs, depth }: DynamicBlockPreviewProps) {
   const fingerPositions = useMemo(() => {
     const scale = 0.04
     const gap = 0.08
@@ -180,13 +241,11 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
       positions.push([currentX, 0, 0])
     })
 
-    // Center the group
     const totalWidth = currentX + (widths.pekefinger * scale) / 2
     const offset = totalWidth / 2
     return positions.map(([x, y, z]) => [x - offset, y, z] as [number, number, number])
   }, [widths])
 
-  // Calculate right edge for depth indicator placement
   const rightEdge = useMemo(() => {
     if (fingerPositions.length === 0) return 1
     const lastPos = fingerPositions[fingerPositions.length - 1][0]
@@ -195,6 +254,12 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
   }, [fingerPositions, widths.pekefinger])
 
   const fingerLabels = ['Lille', 'Ring', 'Lang', 'Peke']
+
+  const diffPairs = [
+    { left: 0, right: 1, diff: heightDiffs.lilleToRing, badge: 'A' },
+    { left: 1, right: 2, diff: heightDiffs.ringToLang, badge: 'B' },
+    { left: 2, right: 3, diff: heightDiffs.langToPeke, badge: 'C' },
+  ]
 
   return (
     <>
@@ -221,7 +286,20 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
         />
       ))}
 
-      {/* Depth dimension indicator on the right side */}
+      {/* Height difference indicators between adjacent fingers */}
+      {diffPairs.map(({ left, right, diff, badge }) => (
+        <HeightDiffIndicator
+          key={badge}
+          posLeft={fingerPositions[left]}
+          posRight={fingerPositions[right]}
+          heightLeft={heights[FINGER_ORDER[left]]}
+          heightRight={heights[FINGER_ORDER[right]]}
+          diff={diff}
+          badgeLabel={badge}
+        />
+      ))}
+
+      {/* Depth dimension indicator */}
       <DepthIndicator
         position={[rightEdge, 0.25, 0]}
         depth={depth}
@@ -238,16 +316,16 @@ function BlockScene({ widths, heights, depth }: DynamicBlockPreviewProps) {
   )
 }
 
-export default function DynamicBlockPreview({ widths, heights, depth }: DynamicBlockPreviewProps) {
+export default function DynamicBlockPreview({ widths, heights, heightDiffs, depth }: DynamicBlockPreviewProps) {
   return (
-    <div className="w-full h-64 bg-surface-light rounded-xl overflow-hidden" style={{ touchAction: 'pan-y' }}>
+    <div className="w-full h-56 sm:h-64 bg-surface-light rounded-xl overflow-hidden" style={{ touchAction: 'pan-y' }}>
       <Canvas
         shadows
         camera={{ position: [0, 2, 4], fov: 45 }}
         gl={{ antialias: true }}
         style={{ touchAction: 'pan-y' }}
       >
-        <BlockScene widths={widths} heights={heights} depth={depth} />
+        <BlockScene widths={widths} heights={heights} heightDiffs={heightDiffs} depth={depth} />
       </Canvas>
     </div>
   )
