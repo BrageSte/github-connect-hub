@@ -6,9 +6,7 @@ import { useSettings } from "@/hooks/useSettings";
 export default function ProductHero() {
   const { data: settings } = useSettings();
   const stlPrice = settings?.stl_file_price ?? 199;
-  const printedPrice = settings?.products?.length
-    ? Math.min(...settings.products.map(p => p.price))
-    : 399;
+  const printedPrice = settings?.products?.length ? Math.min(...settings.products.map((p) => p.price)) : 399;
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-background">
       {/* Subtle background gradient */}
@@ -19,7 +17,6 @@ export default function ProductHero() {
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 py-16 md:py-24">
         {/* Mobile: stacked, Desktop: side by side */}
         <div className="flex flex-col lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          
           {/* Text content */}
           <motion.div
             className="text-center lg:text-left order-2 lg:order-1"
@@ -35,7 +32,8 @@ export default function ProductHero() {
             </h1>
 
             <p className="text-base sm:text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Unlevel finnes overalt. Dette er custom: Du taster inn fingerhøydene dine, og vi lager en blokk som passer din hånd.
+              Crimpblokker finnes overalt. Dette er Stepper: Du taster inn fingerhøydene dine, og vi lager en custom
+              blokk som passer perfekt til din hånd.
             </p>
 
             <p className="text-base sm:text-lg text-foreground/90 font-medium mt-4 mb-8 max-w-lg mx-auto lg:mx-0 leading-relaxed">
@@ -47,7 +45,7 @@ export default function ProductHero() {
               to="/configure"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-foreground text-background font-medium rounded-lg hover:bg-foreground/90 transition-all group"
             >
-              Kjøp custom
+              Kjøp Stepper
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
 
@@ -61,9 +59,7 @@ export default function ProductHero() {
               </span>
             </div>
 
-            <p className="text-xs text-muted-foreground mt-4">
-              Henting i Oslo · Frakt i hele Norge
-            </p>
+            <p className="text-xs text-muted-foreground mt-4">Henting i Oslo · Frakt i hele Norge</p>
           </motion.div>
 
           {/* Product Visual */}
@@ -79,7 +75,7 @@ export default function ProductHero() {
                 <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/50 text-xs uppercase tracking-[0.2em]">
                   Produktbilde kommer
                 </div>
-                
+
                 {/* Crimp block visualization */}
                 <div className="absolute inset-0 flex items-end justify-center pb-10">
                   <div className="flex items-end gap-1.5">
