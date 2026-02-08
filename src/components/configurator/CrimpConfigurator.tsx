@@ -370,10 +370,10 @@ export default function CrimpConfigurator() {
           <div className="mt-3 pt-3 border-t border-border">
             <span className="text-muted-foreground text-xs block mb-1.5">Fingermål</span>
             <div className="flex gap-3 text-xs font-mono text-foreground">
-              <span>P: {widths.pekefinger}×{calculatedHeights.pekefinger}mm</span>
-              <span>L: {widths.langfinger}×{calculatedHeights.langfinger}mm</span>
-              <span>R: {widths.ringfinger}×{calculatedHeights.ringfinger}mm</span>
-              <span>Li: {widths.lillefinger}×{calculatedHeights.lillefinger}mm</span>
+              <span>P: {widths.pekefinger}×{heightDiffs.langToPeke}({calculatedHeights.pekefinger})</span>
+              <span>L: {widths.langfinger}×{heightDiffs.ringToLang}({calculatedHeights.langfinger})</span>
+              <span>R: {widths.ringfinger}×{heightDiffs.lilleToRing}({calculatedHeights.ringfinger})</span>
+              <span>Li: {widths.lillefinger}({calculatedHeights.lillefinger})</span>
             </div>
           </div>
         </div>
@@ -433,6 +433,7 @@ export default function CrimpConfigurator() {
           blockVariant={blockVariant}
           widths={widths}
           calculatedHeights={calculatedHeights}
+          heightDiffs={heightDiffs}
           depth={depth}
           totalWidth={totalWidth}
           onClose={() => setShowOrderForm(false)}
