@@ -18,6 +18,11 @@ interface OrderModalProps {
     langfinger: number
     pekefinger: number
   }
+  heightDiffs: {
+    lilleToRing: number
+    ringToLang: number
+    langToPeke: number
+  }
   depth: number
   totalWidth: number
   onClose: () => void
@@ -29,6 +34,7 @@ export default function OrderModal({
   blockVariant,
   widths,
   calculatedHeights,
+  heightDiffs,
   depth,
   totalWidth,
   onClose,
@@ -60,12 +66,12 @@ Antall: ${quantity}
 Pris per stk: ${price} kr
 Totalpris: ${price * quantity} kr
 
-MÅL:
+MÅL (bredde × input (total høyde)):
 ----
-Lillefinger:  Bredde ${widths.lillefinger}mm, Høyde ${calculatedHeights.lillefinger}mm (fast)
-Ringfinger:   Bredde ${widths.ringfinger}mm, Høyde ${calculatedHeights.ringfinger}mm
-Langfinger:   Bredde ${widths.langfinger}mm, Høyde ${calculatedHeights.langfinger}mm
-Pekefinger:   Bredde ${widths.pekefinger}mm, Høyde ${calculatedHeights.pekefinger}mm
+Pekefinger:   ${widths.pekefinger}×${heightDiffs.langToPeke}(${calculatedHeights.pekefinger})mm
+Langfinger:   ${widths.langfinger}×${heightDiffs.ringToLang}(${calculatedHeights.langfinger})mm
+Ringfinger:   ${widths.ringfinger}×${heightDiffs.lilleToRing}(${calculatedHeights.ringfinger})mm
+Lillefinger:  ${widths.lillefinger}(${calculatedHeights.lillefinger})mm (fast)
 
 Dybde: ${depth}mm
 Beregnet totalbredde: ${totalWidth.toFixed(1)}mm
