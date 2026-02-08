@@ -217,7 +217,7 @@ export default function CrimpConfigurator() {
       </section>
 
       {/* STEP 2: Dine mål */}
-      <section className="bg-card border border-border rounded-2xl p-6">
+      <section className="bg-card border border-border rounded-2xl p-4 sm:p-6">
         <div className="flex items-center gap-3">
           <span className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-bold text-sm">
             2
@@ -228,156 +228,126 @@ export default function CrimpConfigurator() {
             className="ml-auto flex items-center gap-2 text-sm text-primary hover:text-primary-hover transition-colors"
           >
             <HelpCircle className="w-4 h-4" />
-            Måleguide
+            <span className="hidden sm:inline">Måleguide</span>
           </button>
         </div>
         <button
           onClick={() => setShowMeasureHelp(true)}
-          className="mt-4 mb-6 w-full flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-surface-light px-4 py-3 text-left transition-colors hover:border-primary/60 hover:bg-primary/10"
+          className="mt-3 mb-4 sm:mt-4 sm:mb-6 w-full flex items-center justify-between gap-3 rounded-xl border border-primary/30 bg-surface-light px-3 py-2.5 sm:px-4 sm:py-3 text-left transition-colors hover:border-primary/60 hover:bg-primary/10"
         >
-          <span className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
+          <span className="flex items-center gap-2 sm:gap-3">
+            <span className="flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
               <HelpCircle className="w-4 h-4" />
             </span>
             <span>
               <span className="block text-sm font-semibold text-foreground">Målehjelp</span>
               <span className="block text-xs text-muted-foreground">
-                Se bilder og tips for å måle riktig før du fyller inn.
+                Se bilder og tips for å måle riktig.
               </span>
             </span>
           </span>
           <span className="text-xs font-semibold text-primary">Åpne</span>
         </button>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left: Inputs */}
-          <div className="space-y-6">
-            {/* Finger widths */}
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Fingerbredde (mm)
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Mål ytterst på fingerpaden. Legg til 1 mm på hver side (2 mm totalt) for komfort.
-              </p>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-3">
-                {(["Lille", "Ring", "Lang", "Peke"] as const).map((label, i) => {
-                  const finger = FINGER_NAMES[i];
-                  return (
-                    <div key={finger} className="flex flex-col items-center">
-                      <label className="text-xs font-medium text-muted-foreground mb-2 text-center">{label}</label>
-                      <NumberStepper
-                        value={widths[finger]}
-                        onChange={(val) => setWidths((prev) => ({ ...prev, [finger]: val }))}
-                        min={15}
-                        max={30}
-                        size="sm"
-                        className="w-full"
-                      />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Height differences */}
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Høydeforskjell (mm)
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                Justerer stegene slik at alle fire fingre jobber likt i halvcrimp. Usikker? La standard stå.
-              </p>
-              <div className="space-y-3">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
-                    A
-                  </span>
-                  <span className="text-foreground text-sm flex-1">Lille → ring</span>
-                  <NumberStepper
-                    value={heightDiffs.lilleToRing}
-                    onChange={(val) => handleHeightChange('lilleToRing', val)}
-                    min={-40}
-                    max={40}
-                    size="sm"
-                    className="w-full sm:w-28"
-                  />
-                  <span className="text-muted-foreground text-xs w-full sm:w-14 text-center sm:text-right font-mono">
-                    {calculatedHeights.ringfinger}mm
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
-                    B
-                  </span>
-                  <span className="text-foreground text-sm flex-1">Ring → lang</span>
-                  <NumberStepper
-                    value={heightDiffs.ringToLang}
-                    onChange={(val) => handleHeightChange('ringToLang', val)}
-                    min={-40}
-                    max={40}
-                    size="sm"
-                    className="w-full sm:w-28"
-                  />
-                  <span className="text-muted-foreground text-xs w-full sm:w-14 text-center sm:text-right font-mono">
-                    {calculatedHeights.langfinger}mm
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-                  <span className="w-6 h-6 bg-primary/20 border border-primary/40 rounded text-primary text-xs flex items-center justify-center font-semibold shrink-0">
-                    C
-                  </span>
-                  <span className="text-foreground text-sm flex-1">Lang → peke</span>
-                  <NumberStepper
-                    value={heightDiffs.langToPeke}
-                    onChange={(val) => handleHeightChange('langToPeke', val)}
-                    min={-40}
-                    max={40}
-                    size="sm"
-                    className="w-full sm:w-28"
-                  />
-                  <span className="text-muted-foreground text-xs w-full sm:w-14 text-center sm:text-right font-mono">
-                    {calculatedHeights.pekefinger}mm
-                  </span>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-3 opacity-75">Lillefinger: fast 10mm (utgangspunkt)</p>
-            </div>
-
-            {/* Depth selector */}
-            <div>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Dybde</h3>
-              <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
-                15mm = strengere · 20mm = standard · 25mm = snillere
-              </p>
-              <div className="flex gap-2">
-                {[15, 20, 25].map((d) => (
-                  <button
-                    key={d}
-                    onClick={() => setDepth(d)}
-                    className={`flex-1 py-2.5 rounded-lg font-mono text-sm font-medium transition-all ${
-                      depth === d
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-surface-light border border-border text-foreground hover:border-primary/50"
-                    }`}
-                  >
-                    {d}mm
-                  </button>
-                ))}
-              </div>
+        {/* Inputs */}
+        <div className="space-y-4 sm:space-y-6">
+          {/* Finger widths */}
+          <div>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
+              Fingerbredde (mm)
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+              Mål ytterst på fingerpaden. +2mm for komfort.
+            </p>
+            <div className="grid grid-cols-4 gap-2 sm:gap-3">
+              {(["Lille", "Ring", "Lang", "Peke"] as const).map((label, i) => {
+                const finger = FINGER_NAMES[i];
+                return (
+                  <div key={finger} className="flex flex-col items-center">
+                    <label className="text-xs font-medium text-muted-foreground mb-1.5 text-center">{label}</label>
+                    <NumberStepper
+                      value={widths[finger]}
+                      onChange={(val) => setWidths((prev) => ({ ...prev, [finger]: val }))}
+                      min={15}
+                      max={30}
+                      size="sm"
+                      className="w-full"
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Right: Dynamic 3D Preview */}
+          {/* Height differences */}
           <div>
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-              Forhåndsvisning
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
+              Høydeforskjell (mm)
             </h3>
-            <DynamicBlockPreview widths={widths} heights={calculatedHeights} depth={depth} />
-            <p className="text-xs text-muted-foreground text-center mt-3 opacity-75">
-              Roter med musen for å se fra ulike vinkler
+            <p className="text-xs sm:text-sm text-muted-foreground mb-3 leading-relaxed">
+              Justerer stegene for halvcrimpgrep. Usikker? La standard stå.
+            </p>
+            <div className="space-y-2 sm:space-y-3">
+              {([
+                { key: 'lilleToRing' as const, label: 'Lille → Ring', badge: 'A', resultFinger: 'ringfinger' as const },
+                { key: 'ringToLang' as const, label: 'Ring → Lang', badge: 'B', resultFinger: 'langfinger' as const },
+                { key: 'langToPeke' as const, label: 'Lang → Peke', badge: 'C', resultFinger: 'pekefinger' as const },
+              ]).map(({ key, label, badge, resultFinger }) => (
+                <div key={key} className="flex items-center gap-2 sm:gap-3">
+                  <span className="w-5 h-5 sm:w-6 sm:h-6 bg-primary/20 border border-primary/40 rounded text-primary text-[10px] sm:text-xs flex items-center justify-center font-semibold shrink-0">
+                    {badge}
+                  </span>
+                  <span className="text-foreground text-xs sm:text-sm flex-1 min-w-0 truncate">{label}</span>
+                  <NumberStepper
+                    value={heightDiffs[key]}
+                    onChange={(val) => handleHeightChange(key, val)}
+                    min={-40}
+                    max={40}
+                    size="sm"
+                    className="w-24 sm:w-28 shrink-0"
+                  />
+                  <span className="text-muted-foreground text-xs w-10 sm:w-14 text-right font-mono shrink-0">
+                    {calculatedHeights[resultFinger]}mm
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-2 opacity-75">Lillefinger: fast 10mm</p>
+          </div>
+
+          {/* Depth selector */}
+          <div>
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">Dybde</h3>
+            <div className="flex gap-2">
+              {[15, 20, 25].map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDepth(d)}
+                  className={`flex-1 py-2 sm:py-2.5 rounded-lg font-mono text-sm font-medium transition-all ${
+                    depth === d
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-surface-light border border-border text-foreground hover:border-primary/50"
+                  }`}
+                >
+                  {d}mm
+                </button>
+              ))}
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 opacity-75">
+              15 = strengere · 20 = standard · 25 = snillere
             </p>
           </div>
+        </div>
+
+        {/* Preview - always below inputs on mobile, side-by-side on lg+ */}
+        <div className="mt-4 sm:mt-6">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
+            Forhåndsvisning
+          </h3>
+          <DynamicBlockPreview widths={widths} heights={calculatedHeights} heightDiffs={heightDiffs} depth={depth} />
+          <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-2 opacity-75">
+            Roter for å se fra ulike vinkler
+          </p>
         </div>
       </section>
 
