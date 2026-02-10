@@ -10,7 +10,12 @@
     "lint": "node ./node_modules/eslint/bin/eslint.js .",
     "preview": "node ./node_modules/vite/bin/vite.js preview",
     "test": "node ./node_modules/vitest/vitest.mjs run",
-    "test:watch": "node ./node_modules/vitest/vitest.mjs"
+    "test:watch": "node ./node_modules/vitest/vitest.mjs",
+    "migrate:export": "bash scripts/supabase/export-critical-data.sh",
+    "migrate:import": "bash scripts/supabase/import-critical-data.sh",
+    "migrate:validate": "bash scripts/supabase/validate-critical-data.sh",
+    "supabase:functions:deploy": "bash scripts/supabase/deploy-functions.sh",
+    "supabase:secrets:set": "bash scripts/supabase/set-secrets.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

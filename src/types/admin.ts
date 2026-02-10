@@ -64,11 +64,17 @@ export interface PromoCodeSetting {
   value: number
 }
 
+export interface MaintenanceModeSetting {
+  enabled: boolean
+  message: string
+}
+
 export interface SiteSettings {
   products: ProductSetting[]
   stl_file_price: number
   shipping_cost: number
   promo_codes: Record<string, PromoCodeSetting>
+  maintenance_mode: MaintenanceModeSetting
 }
 
 // Status labels in Norwegian

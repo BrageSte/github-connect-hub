@@ -64,6 +64,22 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
+## Supabase/Stripe cutover
+
+Denne appen bruker direkte Supabase-integrasjon (frontend + edge functions). For migrering mellom Supabase-prosjekter:
+
+- Kjor runbook: `docs/supabase-cutover-runbook.md`
+- Bruk skript i `scripts/supabase/` for eksport/import/validering/deploy
+- Bruk secrets-mal: `scripts/supabase/new-project.secrets.env.example`
+- SQL-hjelpere finnes i `supabase/sql/cutover_helpers.sql`
+
+Viktig ved deploy etter cutover:
+
+- `VITE_SUPABASE_URL` ma peke til nytt Supabase-prosjekt.
+- `VITE_SUPABASE_PUBLISHABLE_KEY` ma bruke ny anon/publishable key.
+
+Vedlikeholdsmodus for kasse styres via admin: `Admin > Settings > Vedlikeholdsmodus (kasse)`.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
