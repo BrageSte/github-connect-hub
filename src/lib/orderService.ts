@@ -15,7 +15,33 @@ export interface CreateOrderParams {
   discountedTotal: number
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+async function assertCheckoutAvailable() {
+  const { data, error } = await supabase
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'maintenance_mode')
+    .maybeSingle()
+
+  if (error || !data) return
+
+  const value = data.value
+  if (!isRecord(value) || value.enabled !== true) return
+
+  const message =
+    typeof value.message === 'string' && value.message.trim()
+      ? value.message.trim().slice(0, 240)
+      : 'Bestilling er midlertidig satt pa pause. Prov igjen om kort tid.'
+
+  throw new Error(message)
+}
+
 export async function createOrder(params: CreateOrderParams): Promise<string> {
+  await assertCheckoutAvailable()
+
   const {
     items,
     customerName,

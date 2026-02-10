@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Save, Plus, Trash2, Loader2, Box, Download, Truck } from 'lucide-react'
+import { Save, Plus, Trash2, Loader2, Box, Download, Truck, AlertTriangle } from 'lucide-react'
 import AdminLayout from '@/components/admin/AdminLayout'
 import { useSettings, useUpdateSetting } from '@/hooks/useSettings'
 import { useToast } from '@/hooks/use-toast'
@@ -15,6 +15,10 @@ export default function AdminProducts() {
   const [stlFilePrice, setStlFilePrice] = useState(199)
   const [shippingCost, setShippingCost] = useState(79)
   const [promoCodes, setPromoCodes] = useState<Record<string, PromoCodeSetting>>({})
+  const [maintenanceMode, setMaintenanceMode] = useState({
+    enabled: false,
+    message: 'Bestilling er midlertidig satt pa pause. Prov igjen om kort tid.'
+  })
   const [newPromoCode, setNewPromoCode] = useState('')
   const [newPromoType, setNewPromoType] = useState<'percent' | 'fixed'>('percent')
   const [newPromoValue, setNewPromoValue] = useState(0)
@@ -23,6 +27,7 @@ export default function AdminProducts() {
   const [dirtyProducts, setDirtyProducts] = useState<Set<string>>(new Set())
   const [dirtyStl, setDirtyStl] = useState(false)
   const [dirtyShipping, setDirtyShipping] = useState(false)
+  const [dirtyMaintenance, setDirtyMaintenance] = useState(false)
 
   useEffect(() => {
     if (settings) {
@@ -30,9 +35,11 @@ export default function AdminProducts() {
       setStlFilePrice(settings.stl_file_price)
       setShippingCost(settings.shipping_cost)
       setPromoCodes(settings.promo_codes)
+      setMaintenanceMode(settings.maintenance_mode)
       setDirtyProducts(new Set())
       setDirtyStl(false)
       setDirtyShipping(false)
+      setDirtyMaintenance(false)
     }
   }, [settings])
 
@@ -58,6 +65,11 @@ export default function AdminProducts() {
   const handleSaveShipping = () => {
     saveSetting('shipping_cost', shippingCost, 'Frakt')
     setDirtyShipping(false)
+  }
+
+  const handleSaveMaintenance = () => {
+    saveSetting('maintenance_mode', maintenanceMode, 'Vedlikeholdsmodus')
+    setDirtyMaintenance(false)
   }
 
   const updateProduct = (idx: number, field: keyof ProductSetting, value: string | number) => {
@@ -222,6 +234,69 @@ export default function AdminProducts() {
           {dirtyShipping && (
             <button
               onClick={handleSaveShipping}
+              disabled={updateSetting.isPending}
+              className="mt-4 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              {updateSetting.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Lagre
+            </button>
+          )}
+        </section>
+
+        {/* Checkout maintenance mode */}
+        <section className="bg-card border border-border rounded-xl p-6">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">Vedlikeholdsmodus (kasse)</h2>
+              <span className="text-xs text-muted-foreground">
+                Midlertidig stopp av nye bestillinger under cutover.
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="flex items-center justify-between gap-4 p-3 border border-border rounded-lg">
+              <div>
+                <div className="font-medium text-foreground">Aktiver checkout-pause</div>
+                <div className="text-xs text-muted-foreground">
+                  Når aktivert blir betaling og gratis-bestilling blokkert i checkout.
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                checked={maintenanceMode.enabled}
+                onChange={(event) => {
+                  setMaintenanceMode((prev) => ({ ...prev, enabled: event.target.checked }))
+                  setDirtyMaintenance(true)
+                }}
+                className="h-4 w-4"
+              />
+            </label>
+
+            <div>
+              <label className="text-sm text-muted-foreground mb-1 block">Melding til kunde</label>
+              <textarea
+                value={maintenanceMode.message}
+                onChange={(event) => {
+                  setMaintenanceMode((prev) => ({ ...prev, message: event.target.value }))
+                  setDirtyMaintenance(true)
+                }}
+                rows={3}
+                maxLength={240}
+                className="w-full bg-surface-light border border-border rounded-lg px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                {maintenanceMode.message.length}/240 tegn
+              </p>
+            </div>
+          </div>
+
+          {dirtyMaintenance && (
+            <button
+              onClick={handleSaveMaintenance}
               disabled={updateSetting.isPending}
               className="mt-4 flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >

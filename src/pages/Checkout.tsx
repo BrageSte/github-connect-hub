@@ -25,6 +25,10 @@ export default function Checkout() {
   const navigate = useNavigate()
   const { data: settings } = useSettings()
   const dynamicShippingCost = settings?.shipping_cost ?? 79
+  const checkoutDisabled = settings?.maintenance_mode?.enabled === true
+  const checkoutDisabledMessage =
+    settings?.maintenance_mode?.message?.trim() ||
+    'Bestilling er midlertidig satt pa pause. Prov igjen om kort tid.'
   const {
     items, 
     itemCount, 
@@ -164,6 +168,15 @@ export default function Checkout() {
   }
 
   const handleCheckout = async () => {
+    if (checkoutDisabled) {
+      toast({
+        title: 'Kasse er midlertidig stengt',
+        description: checkoutDisabledMessage,
+        variant: 'destructive'
+      })
+      return
+    }
+
     if (!validateForm()) return
 
     setIsProcessing(true)
@@ -283,7 +296,9 @@ export default function Checkout() {
 
       if (!data?.success || !data.url) {
         const errorMessage =
-          data?.error?.code === 'PAYMENT_METHOD_UNAVAILABLE'
+          data?.error?.code === 'CHECKOUT_DISABLED'
+            ? data?.error?.message || 'Bestilling er midlertidig satt pa pause. Prov igjen om kort tid.'
+            : data?.error?.code === 'PAYMENT_METHOD_UNAVAILABLE'
             ? 'Valgt betalingsmetode er ikke tilgjengelig akkurat na. Prove kort eller sjekk Stripe-oppsettet.'
             : data?.error?.message || 'Kunne ikke opprette betalingssesjon.'
 
@@ -713,11 +728,19 @@ export default function Checkout() {
                     Jeg samtykker i at levering av digitalt innhold starter umiddelbart og erkjenner at angreretten dermed går tapt.
                   </label>
                 )}
+
+                {checkoutDisabled && (
+                  <div className="mt-4 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3">
+                    <p className="text-sm font-medium text-yellow-300">Kassen er midlertidig stengt</p>
+                    <p className="mt-1 text-xs text-yellow-100/90">{checkoutDisabledMessage}</p>
+                  </div>
+                )}
                 
                 <button
                   onClick={handleCheckout}
                   disabled={
                     isProcessing ||
+                    checkoutDisabled ||
                     !email ||
                     !customerName ||
                     (!isDigitalOnly && !deliveryMethod) ||
@@ -725,7 +748,9 @@ export default function Checkout() {
                   }
                   className="btn-primary w-full justify-center mt-6 disabled:opacity-50"
                 >
-                  {isProcessing ? (
+                  {checkoutDisabled ? (
+                    'Kasse midlertidig stengt'
+                  ) : isProcessing ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Behandler...

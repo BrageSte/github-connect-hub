@@ -19,6 +19,7 @@ const PICKUP_LOCATION_LABELS: Record<string, string> = {
 type ErrorCode =
   | "INVALID_REQUEST"
   | "CONFIG_MISSING"
+  | "CHECKOUT_DISABLED"
   | "PAYMENT_METHOD_UNAVAILABLE"
   | "CHECKOUT_CREATE_FAILED"
   | "SESSION_PERSIST_FAILED"
@@ -162,6 +163,31 @@ function extractConfigSnapshot(item: NormalizedItem) {
     quantity: item.quantity,
     unitPrice: toOre(item.priceNok),
   };
+}
+
+async function getMaintenanceMode(supabaseAdmin: ReturnType<typeof createClient>) {
+  const { data, error } = await supabaseAdmin
+    .from("site_settings")
+    .select("value")
+    .eq("key", "maintenance_mode")
+    .maybeSingle();
+
+  if (error) {
+    console.error("[create-checkout] Failed reading maintenance_mode setting", error);
+    return { enabled: false, message: null as string | null };
+  }
+
+  const value = data?.value;
+  if (!isRecord(value) || value.enabled !== true) {
+    return { enabled: false, message: null as string | null };
+  }
+
+  const message =
+    typeof value.message === "string" && value.message.trim()
+      ? value.message.trim().slice(0, 240)
+      : "Checkout is temporarily unavailable. Please try again shortly.";
+
+  return { enabled: true, message };
 }
 
 function validateRequest(input: unknown): { ok: true; value: NormalizedRequest } | { ok: false; response: Response } {
@@ -315,6 +341,15 @@ serve(async (req) => {
     if (!validation.ok) return validation.response;
 
     const input = validation.value;
+    const maintenanceMode = await getMaintenanceMode(supabaseAdmin);
+    if (maintenanceMode.enabled) {
+      return errorResponse(
+        "CHECKOUT_DISABLED",
+        maintenanceMode.message ?? "Checkout is temporarily unavailable. Please try again shortly.",
+        503
+      );
+    }
+
     checkoutRef = crypto.randomUUID();
 
     const subtotalAmountOre = input.items.reduce((sum, item) => sum + toOre(item.priceNok) * item.quantity, 0);

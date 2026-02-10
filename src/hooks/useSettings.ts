@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ProductSetting, PromoCodeSetting, SiteSettings } from "@/types/admin";
+import {
+  MaintenanceModeSetting,
+  ProductSetting,
+  PromoCodeSetting,
+  SiteSettings,
+} from "@/types/admin";
 
 const DEFAULT_SETTINGS: SiteSettings = {
   products: [
@@ -22,6 +27,10 @@ const DEFAULT_SETTINGS: SiteSettings = {
   stl_file_price: 199,
   shipping_cost: 79,
   promo_codes: { TESTMEG: { type: "percent", value: 100 } },
+  maintenance_mode: {
+    enabled: false,
+    message: "Bestilling er midlertidig satt pa pause. Prov igjen om kort tid.",
+  },
 };
 
 type SettingsRow = {
@@ -124,12 +133,30 @@ function sanitizePromoCodes(value: unknown): Record<string, PromoCodeSetting> {
     : { ...DEFAULT_SETTINGS.promo_codes };
 }
 
+function sanitizeMaintenanceMode(value: unknown): MaintenanceModeSetting {
+  if (!isRecord(value)) {
+    return { ...DEFAULT_SETTINGS.maintenance_mode };
+  }
+
+  const enabled = value.enabled === true;
+  const message =
+    typeof value.message === "string" && value.message.trim()
+      ? value.message.trim().slice(0, 240)
+      : DEFAULT_SETTINGS.maintenance_mode.message;
+
+  return {
+    enabled,
+    message,
+  };
+}
+
 function parseSettings(rows: SettingsRow[]): SiteSettings {
   const settings: SiteSettings = {
     products: DEFAULT_SETTINGS.products.map((product) => ({ ...product })),
     stl_file_price: DEFAULT_SETTINGS.stl_file_price,
     shipping_cost: DEFAULT_SETTINGS.shipping_cost,
     promo_codes: { ...DEFAULT_SETTINGS.promo_codes },
+    maintenance_mode: { ...DEFAULT_SETTINGS.maintenance_mode },
   };
 
   for (const row of rows) {
@@ -154,6 +181,10 @@ function parseSettings(rows: SettingsRow[]): SiteSettings {
       }
       case "promo_codes": {
         settings.promo_codes = sanitizePromoCodes(row.value);
+        break;
+      }
+      case "maintenance_mode": {
+        settings.maintenance_mode = sanitizeMaintenanceMode(row.value);
         break;
       }
       default:

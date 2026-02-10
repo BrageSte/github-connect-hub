@@ -53,11 +53,17 @@ BEGIN
   END IF;
 END $$;
 
--- Keep sequence in sync with existing data
+-- Keep sequence in sync with existing data.
+-- For empty tables we must not set the sequence to 0 (out of bounds for minvalue=1).
+WITH max_val AS (
+  SELECT MAX(production_number) AS v FROM public.orders
+)
 SELECT setval(
   'public.orders_production_number_seq',
-  COALESCE((SELECT MAX(production_number) FROM public.orders), 0)
-);
+  COALESCE(v, 1),
+  v IS NOT NULL
+)
+FROM max_val;
 
 -- Assign production_number and exported_at atomically on export
 CREATE OR REPLACE FUNCTION public.assign_production_number(order_id UUID)
