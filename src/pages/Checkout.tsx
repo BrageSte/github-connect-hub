@@ -5,7 +5,6 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import CartSummary from '@/components/cart/CartSummary'
 import { useCart } from '@/contexts/CartContext'
-import { redirectToMockCheckout } from '@/lib/stripe-mock'
 import { createOrder } from '@/lib/orderService'
 import { useToast } from '@/hooks/use-toast'
 import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress, BlockConfig } from '@/types/shop'
@@ -243,18 +242,49 @@ export default function Checkout() {
         return
       }
 
-      await redirectToMockCheckout({
+      // Create real Stripe Checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          items: items.map(item => ({
+            name: item.product.name,
+            price: item.product.price,
+            quantity: item.quantity,
+            isDigital: item.product.isDigital,
+            config: item.product.config,
+          })),
+          customerName: customerName.trim(),
+          customerEmail: email.trim(),
+          customerPhone: customerPhone.trim() || undefined,
+          deliveryMethod: deliveryMethod || 'shipping',
+          shippingAddress,
+          promoCode: promoCode || undefined,
+          promoDiscount,
+          shippingAmount: isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? dynamicShippingCost : 0),
+          successUrl: `${window.location.origin}/checkout/success`,
+          cancelUrl: `${window.location.origin}/checkout/cancel`,
+        }
+      })
+
+      if (error || !data?.url) {
+        throw new Error(data?.error || 'Kunne ikke opprette betalingssesjon')
+      }
+
+      // Store order info in sessionStorage for success page
+      sessionStorage.setItem('bs-climbing-checkout-meta', JSON.stringify({
         items,
-        email: email.trim(),
         customerName: customerName.trim(),
+        customerEmail: email.trim(),
         customerPhone: customerPhone.trim() || undefined,
+        deliveryMethod: deliveryMethod || 'shipping',
         shippingAddress,
-        deliveryMethod: deliveryMethod || 'shipping', // Default for digital products
         promoCode: promoCode || undefined,
         promoDiscount,
-        successUrl: `${window.location.origin}/checkout/success`,
-        cancelUrl: `${window.location.origin}/checkout/cancel`
-      })
+        subtotal: subtotalAmount,
+        shipping: shippingAmount,
+      }))
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url
     } catch {
       toast({
         title: 'Betalingsfeil',

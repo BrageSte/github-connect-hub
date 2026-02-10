@@ -1,103 +1,191 @@
 import { useEffect, useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
-import { CheckCircle2, ArrowRight, Package, Mail, MapPin } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { CheckCircle2, ArrowRight, Package, Mail, MapPin, Loader2 } from 'lucide-react'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useCart } from '@/contexts/CartContext'
-import { getPendingOrder, clearPendingOrder, getDeliveryMethodLabel } from '@/lib/stripe-mock'
 import { createOrder } from '@/lib/orderService'
 import { supabase } from '@/integrations/supabase/client'
-import { Order, PICKUP_LOCATIONS, isDigitalOnlyCart } from '@/types/shop'
+import { Order, PICKUP_LOCATIONS, isDigitalOnlyCart, CartItem } from '@/types/shop'
+import { getDeliveryMethodLabel } from '@/lib/stripe-mock'
 
 export default function CheckoutSuccess() {
   const { clearCart } = useCart()
+  const [searchParams] = useSearchParams()
   const [order, setOrder] = useState<Order | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Get order data from sessionStorage
-    const pendingOrder = getPendingOrder()
-    if (!pendingOrder) return
-
     let isActive = true
-    setOrder(pendingOrder)
-    clearPendingOrder()
-    clearCart()
+    const sessionId = searchParams.get('session_id')
 
-    const persistOrder = async () => {
-      if (pendingOrder.savedToDatabase) return
-      if (!pendingOrder.customerName || !pendingOrder.email) {
-        console.error('Missing customer data for order persistence', pendingOrder)
-        return
-      }
-
+    const processOrder = async () => {
       try {
-        const resolvedDeliveryMethod = pendingOrder.deliveryMethod ?? 'shipping'
-        const promoDiscount = pendingOrder.promoDiscount ?? 0
-        const orderId = await createOrder({
-          items: pendingOrder.items,
-          customerName: pendingOrder.customerName,
-          customerEmail: pendingOrder.email,
-          customerPhone: pendingOrder.customerPhone,
-          deliveryMethod: resolvedDeliveryMethod,
-          shippingAddress: pendingOrder.shippingAddress,
-          promoCode: pendingOrder.promoCode,
-          promoDiscount,
-          subtotal: pendingOrder.subtotal,
-          shipping: pendingOrder.shipping,
-          discountedTotal: pendingOrder.total
+        // Free order flow (promo 100% off) - order already saved
+        if (sessionId === 'free_order') {
+          const stored = sessionStorage.getItem('bs-climbing-pending-order')
+          if (stored) {
+            const pendingOrder = JSON.parse(stored)
+            sessionStorage.removeItem('bs-climbing-pending-order')
+            if (isActive) {
+              setOrder(pendingOrder)
+              setLoading(false)
+            }
+            clearCart()
+          } else {
+            if (isActive) setLoading(false)
+          }
+          return
+        }
+
+        // Real Stripe session - verify payment
+        if (!sessionId || sessionId.startsWith('mock_')) {
+          // Legacy mock flow fallback
+          const stored = sessionStorage.getItem('bs-climbing-pending-order')
+          if (stored) {
+            const pendingOrder = JSON.parse(stored)
+            sessionStorage.removeItem('bs-climbing-pending-order')
+            
+            // Persist to database
+            if (!pendingOrder.savedToDatabase && pendingOrder.customerName && pendingOrder.email) {
+              const resolvedDeliveryMethod = pendingOrder.deliveryMethod ?? 'shipping'
+              const orderId = await createOrder({
+                items: pendingOrder.items,
+                customerName: pendingOrder.customerName,
+                customerEmail: pendingOrder.email,
+                customerPhone: pendingOrder.customerPhone,
+                deliveryMethod: resolvedDeliveryMethod,
+                shippingAddress: pendingOrder.shippingAddress,
+                promoCode: pendingOrder.promoCode,
+                promoDiscount: pendingOrder.promoDiscount ?? 0,
+                subtotal: pendingOrder.subtotal,
+                shipping: pendingOrder.shipping,
+                discountedTotal: pendingOrder.total,
+              })
+              pendingOrder.orderId = orderId
+              pendingOrder.savedToDatabase = true
+            }
+            
+            if (isActive) {
+              setOrder(pendingOrder)
+              setLoading(false)
+            }
+            clearCart()
+          } else {
+            if (isActive) setLoading(false)
+          }
+          return
+        }
+
+        // Verify Stripe session
+        const { data, error: fnError } = await supabase.functions.invoke('verify-session', {
+          body: { sessionId }
         })
 
-        const updatedOrder = {
-          ...pendingOrder,
+        if (fnError || !data?.success) {
+          throw new Error(data?.error || 'Kunne ikke verifisere betalingen')
+        }
+
+        // Get checkout metadata from sessionStorage
+        const metaStr = sessionStorage.getItem('bs-climbing-checkout-meta')
+        const meta = metaStr ? JSON.parse(metaStr) : null
+        sessionStorage.removeItem('bs-climbing-checkout-meta')
+
+        // Build cart items from metadata
+        const cartItems: CartItem[] = meta?.items || data.items.map((item: any) => ({
+          product: {
+            id: `stripe-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            name: item.name,
+            price: item.price,
+            isDigital: item.isDigital,
+            config: item.config,
+          },
+          quantity: item.quantity,
+        }))
+
+        const deliveryMethod = data.deliveryMethod || meta?.deliveryMethod || 'shipping'
+        const subtotal = meta?.subtotal || cartItems.reduce((sum: number, i: CartItem) => sum + i.product.price * i.quantity, 0)
+        const shipping = data.shippingAmount || meta?.shipping || 0
+
+        // Save order to database
+        const orderId = await createOrder({
+          items: cartItems,
+          customerName: data.customerName,
+          customerEmail: data.customerEmail,
+          customerPhone: data.customerPhone,
+          deliveryMethod,
+          shippingAddress: data.shippingAddress || meta?.shippingAddress,
+          promoCode: data.promoCode,
+          promoDiscount: data.promoDiscount || 0,
+          subtotal,
+          shipping,
+          discountedTotal: data.totalAmount,
+        })
+
+        const newOrder: Order = {
           orderId,
-          deliveryMethod: resolvedDeliveryMethod,
-          savedToDatabase: true
+          items: cartItems,
+          subtotal,
+          shipping,
+          total: data.totalAmount,
+          email: data.customerEmail,
+          customerName: data.customerName,
+          customerPhone: data.customerPhone,
+          shippingAddress: data.shippingAddress || meta?.shippingAddress,
+          promoCode: data.promoCode,
+          promoDiscount: data.promoDiscount,
+          deliveryMethod,
+          createdAt: new Date().toISOString(),
+          status: 'paid',
+          savedToDatabase: true,
         }
 
         if (isActive) {
-          setOrder(updatedOrder)
+          setOrder(newOrder)
+          setLoading(false)
         }
 
-        const pickupLocation = resolvedDeliveryMethod.startsWith('pickup-')
-          ? PICKUP_LOCATIONS.find(loc => loc.id === resolvedDeliveryMethod)?.name
+        clearCart()
+
+        // Send confirmation email (non-blocking)
+        const pickupLocation = deliveryMethod.startsWith('pickup-')
+          ? PICKUP_LOCATIONS.find(loc => loc.id === deliveryMethod)?.name
           : undefined
 
         supabase.functions.invoke('send-order-confirmation', {
           body: {
             orderId,
             siteUrl: window.location.origin,
-            customerEmail: pendingOrder.email,
-            customerName: pendingOrder.customerName,
-            items: pendingOrder.items.map(item => ({
+            customerEmail: data.customerEmail,
+            customerName: data.customerName,
+            items: cartItems.map((item: CartItem) => ({
               name: item.product.name,
               quantity: item.quantity,
-              price: item.product.price
+              price: item.product.price,
             })),
-            deliveryMethod: resolvedDeliveryMethod,
+            deliveryMethod,
             pickupLocation,
-            shippingAddress: pendingOrder.shippingAddress,
-            subtotal: pendingOrder.subtotal,
-            shipping: pendingOrder.shipping,
-            promoDiscount,
-            total: pendingOrder.total
-          }
-        }).catch(() => {
-          // Email sending is non-blocking, errors are logged server-side
-        })
-      } catch (error) {
-        // Only log details in development mode
-        if (import.meta.env.DEV) {
-          console.error('Failed to persist order after checkout', error)
+            shippingAddress: data.shippingAddress || meta?.shippingAddress,
+            subtotal,
+            shipping,
+            promoDiscount: data.promoDiscount || 0,
+            total: data.totalAmount,
+          },
+        }).catch(() => {})
+      } catch (err) {
+        if (import.meta.env.DEV) console.error('Checkout success error:', err)
+        if (isActive) {
+          setError('Noe gikk galt ved verifisering av betalingen. Kontakt oss hvis du ble belastet.')
+          setLoading(false)
         }
       }
     }
 
-    void persistOrder()
+    void processOrder()
 
-    return () => {
-      isActive = false
-    }
-  }, [clearCart])
+    return () => { isActive = false }
+  }, [clearCart, searchParams])
 
   const isDigitalOnly = useMemo(() => {
     if (!order) return false
@@ -108,6 +196,39 @@ export default function CheckoutSuccess() {
     if (!order?.deliveryMethod) return null
     return PICKUP_LOCATIONS.find(l => l.id === order.deliveryMethod) || null
   }, [order])
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background pt-20">
+          <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+            <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Verifiserer betaling...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
+  if (error) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background pt-20">
+          <div className="max-w-2xl mx-auto px-4 py-16 text-center">
+            <h1 className="text-2xl font-bold mb-4">Betalingsfeil</h1>
+            <p className="text-muted-foreground mb-8">{error}</p>
+            <a href="mailto:post@bsclimbing.no" className="text-primary hover:underline">
+              Kontakt oss: post@bsclimbing.no
+            </a>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
 
   return (
     <>
@@ -132,13 +253,13 @@ export default function CheckoutSuccess() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">Ordredetaljer</h2>
                 <span className="text-sm font-mono text-muted-foreground">
-                  #{order.orderId}
+                  #{order.orderId?.slice(0, 8)}
                 </span>
               </div>
 
               {/* Order items */}
               <div className="space-y-3 mb-6">
-                {order.items.map(item => (
+                {order.items.map((item: CartItem) => (
                   <div key={item.product.id} className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-surface-light rounded-lg flex items-center justify-center shrink-0">
                       <span className="text-xl">{item.product.isDigital ? '📄' : '🧗'}</span>
@@ -193,7 +314,7 @@ export default function CheckoutSuccess() {
             </div>
           )}
 
-          {/* What happens next - different for digital vs physical */}
+          {/* What happens next */}
           {isDigitalOnly ? (
             <div className="bg-card border border-border rounded-2xl p-6 mb-8">
               <div className="flex items-start gap-4 text-left">
