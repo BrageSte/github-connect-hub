@@ -1,39 +1,45 @@
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Text } from '@react-three/drei'
-import { useMemo } from 'react'
-import * as THREE from 'three'
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Text } from "@react-three/drei";
+import { useMemo } from "react";
+import * as THREE from "three";
+import AppErrorBoundary from "@/components/AppErrorBoundary";
 
 interface HeightDiffs {
-  lilleToRing: number
-  ringToLang: number
-  langToPeke: number
+  lilleToRing: number;
+  ringToLang: number;
+  langToPeke: number;
 }
 
 interface DynamicBlockPreviewProps {
   widths: {
-    lillefinger: number
-    ringfinger: number
-    langfinger: number
-    pekefinger: number
-  }
+    lillefinger: number;
+    ringfinger: number;
+    langfinger: number;
+    pekefinger: number;
+  };
   heights: {
-    lillefinger: number
-    ringfinger: number
-    langfinger: number
-    pekefinger: number
-  }
-  heightDiffs: HeightDiffs
-  depth: number
+    lillefinger: number;
+    ringfinger: number;
+    langfinger: number;
+    pekefinger: number;
+  };
+  heightDiffs: HeightDiffs;
+  depth: number;
 }
 
 const FINGER_COLORS = {
-  lillefinger: '#ef4444',
-  ringfinger: '#f97316',
-  langfinger: '#eab308',
-  pekefinger: '#22c55e'
-}
+  lillefinger: "#ef4444",
+  ringfinger: "#f97316",
+  langfinger: "#eab308",
+  pekefinger: "#22c55e",
+};
 
-const FINGER_ORDER = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'] as const
+const FINGER_ORDER = ["lillefinger", "ringfinger", "langfinger", "pekefinger"] as const;
+
+function sanitizeDimension(value: number, min: number, max: number, fallback: number): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(max, Math.max(min, value));
+}
 
 function FingerBlock({
   width,
@@ -43,50 +49,47 @@ function FingerBlock({
   color,
   label
 }: {
-  width: number
-  height: number
-  depth: number
-  position: [number, number, number]
-  color: string
-  label: string
+  width: number;
+  height: number;
+  depth: number;
+  position: [number, number, number];
+  color: string;
+  label: string;
 }) {
-  const scale = 0.04
-  const w = width * scale
-  const h = height * scale
-  const d = depth * scale
+  const scale = 0.04;
+  const w = width * scale;
+  const h = height * scale;
+  const d = depth * scale;
 
-  // Custom geometry: fillet only on top-front edge
   const geometry = useMemo(() => {
-    const r = Math.min(h, d) * 0.25
-    const segments = 8
+    const r = Math.min(h, d) * 0.25;
+    const segments = 8;
 
-    const shape = new THREE.Shape()
-    shape.moveTo(-d / 2, 0)
-    shape.lineTo(d / 2, 0)
-    shape.lineTo(d / 2, h - r)
-    shape.quadraticCurveTo(d / 2, h, d / 2 - r, h)
-    shape.lineTo(-d / 2, h)
-    shape.closePath()
+    const shape = new THREE.Shape();
+    shape.moveTo(-d / 2, 0);
+    shape.lineTo(d / 2, 0);
+    shape.lineTo(d / 2, h - r);
+    shape.quadraticCurveTo(d / 2, h, d / 2 - r, h);
+    shape.lineTo(-d / 2, h);
+    shape.closePath();
 
     const geo = new THREE.ExtrudeGeometry(shape, {
       depth: w,
       bevelEnabled: false,
       curveSegments: segments,
-    })
+    });
 
-    geo.rotateY(-Math.PI / 2)
+    geo.rotateY(-Math.PI / 2);
 
-    geo.computeBoundingBox()
-    const bb = geo.boundingBox!
-    geo.translate(
-      -(bb.min.x + bb.max.x) / 2,
-      0,
-      -(bb.min.z + bb.max.z) / 2
-    )
+    geo.computeBoundingBox();
+    const bb = geo.boundingBox;
+    if (bb) {
+      geo.translate(-(bb.min.x + bb.max.x) / 2, 0, -(bb.min.z + bb.max.z) / 2);
+    }
 
-    geo.computeVertexNormals()
-    return geo
-  }, [w, h, d])
+    geo.computeVertexNormals();
+    return geo;
+  }, [w, h, d]);
 
   return (
     <group position={position}>
@@ -105,7 +108,7 @@ function FingerBlock({
         {label}
       </Text>
     </group>
-  )
+  );
 }
 
 function HeightDiffIndicator({
@@ -117,24 +120,23 @@ function HeightDiffIndicator({
   badgeLabel,
   depth,
 }: {
-  posLeft: [number, number, number]
-  posRight: [number, number, number]
-  heightLeft: number
-  heightRight: number
-  diff: number
-  badgeLabel: string
-  depth: number
+  posLeft: [number, number, number];
+  posRight: [number, number, number];
+  heightLeft: number;
+  heightRight: number;
+  diff: number;
+  badgeLabel: string;
+  depth: number;
 }) {
-  const scale = 0.04
-  const hL = heightLeft * scale
-  const hR = heightRight * scale
-  const midX = (posLeft[0] + posRight[0]) / 2
-  const yMin = Math.min(hL, hR)
-  const yMax = Math.max(hL, hR)
-  const lineMidY = (yMin + yMax) / 2
-  const frontZ = (depth * scale) / 2 + 0.08
+  const scale = 0.04;
+  const hL = heightLeft * scale;
+  const hR = heightRight * scale;
+  const midX = (posLeft[0] + posRight[0]) / 2;
+  const yMin = Math.min(hL, hR);
+  const yMax = Math.max(hL, hR);
+  const lineMidY = (yMin + yMax) / 2;
+  const frontZ = (depth * scale) / 2 + 0.08;
 
-  // Don't render if diff is 0
   if (diff === 0) {
     return (
       <group>
@@ -148,10 +150,10 @@ function HeightDiffIndicator({
           {`${badgeLabel}: 0mm`}
         </Text>
       </group>
-    )
+    );
   }
 
-  const lineHeight = yMax - yMin
+  const lineHeight = yMax - yMin;
 
   return (
     <group>
@@ -183,12 +185,12 @@ function HeightDiffIndicator({
         {`${badgeLabel}: ${diff > 0 ? '+' : ''}${diff}mm`}
       </Text>
     </group>
-  )
+  );
 }
 
 function DepthIndicator({ position, depth }: { position: [number, number, number]; depth: number }) {
-  const scale = 0.04
-  const d = depth * scale
+  const scale = 0.04;
+  const d = depth * scale;
 
   return (
     <group position={position}>
@@ -223,46 +225,46 @@ function DepthIndicator({ position, depth }: { position: [number, number, number
         dybde
       </Text>
     </group>
-  )
+  );
 }
 
 function BlockScene({ widths, heights, heightDiffs, depth }: DynamicBlockPreviewProps) {
   const fingerPositions = useMemo(() => {
-    const scale = 0.04
-    const gap = 0.08
-    const positions: [number, number, number][] = []
+    const scale = 0.04;
+    const gap = 0.08;
+    const positions: [number, number, number][] = [];
 
-    let currentX = 0
+    let currentX = 0;
     FINGER_ORDER.forEach((finger, i) => {
-      const w = widths[finger] * scale
+      const w = widths[finger] * scale;
       if (i === 0) {
-        currentX = w / 2
+        currentX = w / 2;
       } else {
-        const prevW = widths[FINGER_ORDER[i - 1]] * scale
-        currentX += prevW / 2 + gap + w / 2
+        const prevW = widths[FINGER_ORDER[i - 1]] * scale;
+        currentX += prevW / 2 + gap + w / 2;
       }
-      positions.push([currentX, 0, 0])
-    })
+      positions.push([currentX, 0, 0]);
+    });
 
-    const totalWidth = currentX + (widths.pekefinger * scale) / 2
-    const offset = totalWidth / 2
-    return positions.map(([x, y, z]) => [x - offset, y, z] as [number, number, number])
-  }, [widths])
+    const totalWidth = currentX + (widths.pekefinger * scale) / 2;
+    const offset = totalWidth / 2;
+    return positions.map(([x, y, z]) => [x - offset, y, z] as [number, number, number]);
+  }, [widths]);
 
   const rightEdge = useMemo(() => {
-    if (fingerPositions.length === 0) return 1
-    const lastPos = fingerPositions[fingerPositions.length - 1][0]
-    const lastHalfWidth = (widths.pekefinger * 0.04) / 2
-    return lastPos + lastHalfWidth + 0.2
-  }, [fingerPositions, widths.pekefinger])
+    if (fingerPositions.length === 0) return 1;
+    const lastPos = fingerPositions[fingerPositions.length - 1][0];
+    const lastHalfWidth = (widths.pekefinger * 0.04) / 2;
+    return lastPos + lastHalfWidth + 0.2;
+  }, [fingerPositions, widths.pekefinger]);
 
-  const fingerLabels = ['Lille', 'Ring', 'Lang', 'Peke']
+  const fingerLabels = ["Lille", "Ring", "Lang", "Peke"];
 
   const diffPairs = [
-    { left: 0, right: 1, diff: heightDiffs.lilleToRing, badge: 'A' },
-    { left: 1, right: 2, diff: heightDiffs.ringToLang, badge: 'B' },
-    { left: 2, right: 3, diff: heightDiffs.langToPeke, badge: 'C' },
-  ]
+    { left: 0, right: 1, diff: heightDiffs.lilleToRing, badge: "A" },
+    { left: 1, right: 2, diff: heightDiffs.ringToLang, badge: "B" },
+    { left: 2, right: 3, diff: heightDiffs.langToPeke, badge: "C" },
+  ];
 
   return (
     <>
@@ -317,20 +319,47 @@ function BlockScene({ widths, heights, heightDiffs, depth }: DynamicBlockPreview
         target={[0, 0.5, 0]}
       />
     </>
-  )
+  );
 }
 
+const CanvasFallback = () => (
+  <div className="flex h-full w-full items-center justify-center px-3 text-center text-xs text-muted-foreground">
+    3D-forhandsvisning er midlertidig utilgjengelig.
+  </div>
+);
+
 export default function DynamicBlockPreview({ widths, heights, heightDiffs, depth }: DynamicBlockPreviewProps) {
+  const safeWidths = {
+    lillefinger: sanitizeDimension(widths.lillefinger, 10, 40, 21),
+    ringfinger: sanitizeDimension(widths.ringfinger, 10, 40, 20),
+    langfinger: sanitizeDimension(widths.langfinger, 10, 40, 20),
+    pekefinger: sanitizeDimension(widths.pekefinger, 10, 40, 22),
+  };
+  const safeHeights = {
+    lillefinger: sanitizeDimension(heights.lillefinger, 1, 40, 10),
+    ringfinger: sanitizeDimension(heights.ringfinger, 1, 40, 15),
+    langfinger: sanitizeDimension(heights.langfinger, 1, 40, 20),
+    pekefinger: sanitizeDimension(heights.pekefinger, 1, 40, 17),
+  };
+  const safeDiffs = {
+    lilleToRing: sanitizeDimension(heightDiffs.lilleToRing, -50, 50, 5),
+    ringToLang: sanitizeDimension(heightDiffs.ringToLang, -50, 50, 5),
+    langToPeke: sanitizeDimension(heightDiffs.langToPeke, -50, 50, 3),
+  };
+  const safeDepth = sanitizeDimension(depth, 10, 40, 20);
+
   return (
-    <div className="w-full h-56 sm:h-64 bg-surface-light rounded-xl overflow-hidden" style={{ touchAction: 'pan-y' }}>
-      <Canvas
-        shadows
-        camera={{ position: [0, 2, 4], fov: 45 }}
-        gl={{ antialias: true }}
-        style={{ touchAction: 'pan-y' }}
-      >
-        <BlockScene widths={widths} heights={heights} heightDiffs={heightDiffs} depth={depth} />
-      </Canvas>
+    <div className="h-56 w-full overflow-hidden rounded-xl bg-surface-light sm:h-64" style={{ touchAction: "pan-y" }}>
+      <AppErrorBoundary boundaryName="dynamic-block-preview" fallback={<CanvasFallback />}>
+        <Canvas
+          shadows
+          camera={{ position: [0, 2, 4], fov: 45 }}
+          gl={{ antialias: true }}
+          style={{ touchAction: "pan-y" }}
+        >
+          <BlockScene widths={safeWidths} heights={safeHeights} heightDiffs={safeDiffs} depth={safeDepth} />
+        </Canvas>
+      </AppErrorBoundary>
     </div>
-  )
+  );
 }

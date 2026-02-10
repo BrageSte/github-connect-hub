@@ -49,6 +49,92 @@ export type Database = {
           },
         ]
       }
+      checkout_sessions: {
+        Row: {
+          config_snapshot: Json
+          confirmation_email_sent_at: string | null
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          delivery_method: string
+          error_message: string | null
+          id: string
+          line_items: Json
+          order_id: string | null
+          pickup_location: string | null
+          promo_code: string | null
+          promo_discount_amount: number
+          shipping_address: Json | null
+          shipping_amount: number
+          status: string
+          stripe_checkout_session_id: string | null
+          stripe_payment_intent_id: string | null
+          subtotal_amount: number
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          config_snapshot: Json
+          confirmation_email_sent_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_name: string
+          customer_phone?: string | null
+          delivery_method: string
+          error_message?: string | null
+          id?: string
+          line_items: Json
+          order_id?: string | null
+          pickup_location?: string | null
+          promo_code?: string | null
+          promo_discount_amount?: number
+          shipping_address?: Json | null
+          shipping_amount?: number
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal_amount: number
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          config_snapshot?: Json
+          confirmation_email_sent_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string | null
+          delivery_method?: string
+          error_message?: string | null
+          id?: string
+          line_items?: Json
+          order_id?: string | null
+          pickup_location?: string | null
+          promo_code?: string | null
+          promo_discount_amount?: number
+          shipping_address?: Json | null
+          shipping_amount?: number
+          status?: string
+          stripe_checkout_session_id?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal_amount?: number
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkout_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_events: {
         Row: {
           created_at: string

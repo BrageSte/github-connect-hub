@@ -81,8 +81,19 @@ export default function CrimpConfigurator() {
     return fingerWidths + 16;
   }, [widths]);
 
-  const blockOptions = settings?.products?.length
-    ? settings.products.map(p => ({ variant: p.variant, name: p.name, price: p.price }))
+  const safeProducts = useMemo(
+    () =>
+      (settings?.products ?? []).filter(
+        (product) =>
+          (product.variant === "shortedge" || product.variant === "longedge") &&
+          typeof product.name === "string" &&
+          Number.isFinite(product.price)
+      ),
+    [settings?.products]
+  );
+
+  const blockOptions = safeProducts.length
+    ? safeProducts.map((p) => ({ variant: p.variant, name: p.name, price: p.price }))
     : DEFAULT_BLOCK_OPTIONS;
   const currentPrice = blockOptions.find((o) => o.variant === blockVariant)?.price ?? 399;
   const filePrice = settings?.stl_file_price ?? 199;
@@ -203,7 +214,7 @@ export default function CrimpConfigurator() {
           {/* Block type selector */}
           <div>
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">Blokktype</h3>
-            <BlockSelector selected={blockVariant} onChange={setBlockVariant} products={settings?.products} />
+            <BlockSelector selected={blockVariant} onChange={setBlockVariant} products={safeProducts} />
           </div>
 
           {/* 3D Preview - STL Model */}

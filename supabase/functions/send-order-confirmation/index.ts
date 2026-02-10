@@ -47,6 +47,17 @@ interface ShippingAddress {
   city: string;
 }
 
+interface HeightConfig {
+  lillefinger?: number;
+  ringfinger?: number;
+  langfinger?: number;
+  pekefinger?: number;
+}
+
+interface ConfigSnapshot {
+  heights?: HeightConfig;
+}
+
 interface OrderConfirmationRequest {
   orderId: string;
   productionNumber?: number;
@@ -61,7 +72,7 @@ interface OrderConfirmationRequest {
   shipping: number;
   promoDiscount?: number;
   total: number;
-  configSnapshot?: any;
+  configSnapshot?: ConfigSnapshot;
 }
 
 function formatPrice(amount: number): string {
@@ -77,17 +88,31 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function normalizeSiteUrl(value?: string): string {
+  const trimmedValue = value?.trim();
+  if (!trimmedValue) return "";
+
+  const withProtocol = /^https?:\/\//i.test(trimmedValue)
+    ? trimmedValue
+    : `https://${trimmedValue}`;
+
+  try {
+    return new URL(withProtocol).toString().replace(/\/$/, "");
+  } catch {
+    return "";
+  }
+}
+
 function formatProductionNumber(value?: number | null, width = 4): string {
   if (value === null || value === undefined) return "";
   return value.toString().padStart(width, "0");
 }
 
-function validateHeightDifferences(configSnapshot: any): { valid: boolean; warnings: string[] } {
+function validateHeightDifferences(configSnapshot?: ConfigSnapshot): { valid: boolean; warnings: string[] } {
   const warnings: string[] = [];
 
   if (configSnapshot?.heights) {
     const heights = configSnapshot.heights;
-    const heightKeys = ['lillefinger', 'ringfinger', 'langfinger', 'pekefinger'];
 
     // Calculate height differences from the actual heights
     const lille = heights.lillefinger || 10;
@@ -124,7 +149,7 @@ function validateHeightDifferences(configSnapshot: any): { valid: boolean; warni
 
 function generateEmailHtml(order: OrderConfirmationRequest): string {
   const productionNumber = formatProductionNumber(order.productionNumber);
-  const baseUrl = (order.siteUrl || Deno.env.get("PUBLIC_SITE_URL") || "").replace(/\/$/, "");
+  const baseUrl = normalizeSiteUrl(order.siteUrl || Deno.env.get("PUBLIC_SITE_URL"));
   const statusUrl = baseUrl
     ? `${baseUrl}/order-status?orderId=${encodeURIComponent(order.orderId)}`
     : "";
@@ -202,6 +227,11 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
         </a>
         <p style="margin: 8px 0 0 0; font-size: 12px; color: #888888;">
           Følg produksjon og printkø direkte via lenken.
+        </p>
+        <p style="margin: 6px 0 0 0; font-size: 12px;">
+          <a href="${safeStatusUrl}" style="color: #ff6b35; word-break: break-all;">
+            ${safeStatusUrl}
+          </a>
         </p>
       </div>
       ` : ''}
@@ -287,6 +317,52 @@ function generateEmailHtml(order: OrderConfirmationRequest): string {
   `;
 }
 
+function generateEmailText(order: OrderConfirmationRequest): string {
+  const productionNumber = formatProductionNumber(order.productionNumber);
+  const baseUrl = normalizeSiteUrl(order.siteUrl || Deno.env.get("PUBLIC_SITE_URL"));
+  const statusUrl = baseUrl
+    ? `${baseUrl}/order-status?orderId=${encodeURIComponent(order.orderId)}`
+    : "";
+
+  const deliveryText = order.deliveryMethod === "shipping" && order.shippingAddress
+    ? [
+        "Leveringsmetode: Hjemlevering",
+        order.shippingAddress.line1,
+        order.shippingAddress.line2,
+        `${order.shippingAddress.postalCode} ${order.shippingAddress.city}`,
+      ].filter(Boolean).join("\n")
+    : order.pickupLocation
+      ? `Leveringsmetode: Henting\n${order.pickupLocation}`
+      : "Leveringsmetode: Digital levering";
+
+  const itemsText = order.items
+    .map((item) => `- ${item.name} x${item.quantity}: ${formatPrice(item.price * item.quantity)}`)
+    .join("\n");
+
+  const lines = [
+    `Hei ${order.customerName},`,
+    "",
+    "Takk for bestillingen hos BS Climbing.",
+    `Ordrenummer: ${order.orderId}`,
+    productionNumber ? `Produksjonsnummer: ${productionNumber}` : "",
+    statusUrl ? `Sjekk ordrestatus: ${statusUrl}` : "",
+    "",
+    "Bestilte varer:",
+    itemsText,
+    "",
+    `Delsum: ${formatPrice(order.subtotal)}`,
+    `Frakt: ${order.shipping > 0 ? formatPrice(order.shipping) : "Gratis"}`,
+    order.promoDiscount && order.promoDiscount > 0 ? `Rabatt: -${formatPrice(order.promoDiscount)}` : "",
+    `Totalt: ${formatPrice(order.total)}`,
+    "",
+    deliveryText,
+    "",
+    "Har du spørsmål? Kontakt oss på post@bsclimbing.no",
+  ].filter(Boolean);
+
+  return lines.join("\n");
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -320,6 +396,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const emailHtml = generateEmailHtml(orderData);
+    const emailText = generateEmailText(orderData);
 
     // Note: The sender domain must be verified in Resend.
     const emailResponse = await resend.emails.send({
@@ -328,6 +405,7 @@ const handler = async (req: Request): Promise<Response> => {
       reply_to: "post@bsclimbing.no",
       subject: `Ordrebekreftelse #${orderData.orderId.slice(0, 8).toUpperCase()}`,
       html: emailHtml,
+      text: emailText,
     });
 
     console.log("Order confirmation email sent successfully:", emailResponse);

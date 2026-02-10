@@ -3,7 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 
 // Keep Index for immediate load
 import Index from "./pages/Index";
@@ -28,6 +28,7 @@ const AdminProducts = lazy(() => import("./pages/admin/AdminSettings"));
 
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import AppErrorBoundary from "./components/AppErrorBoundary";
 
 // Loading fallback component
 const PageLoader = () => (
@@ -39,19 +40,74 @@ const PageLoader = () => (
   </div>
 );
 
+const ConfigureRouteFallback = () => (
+  <div className="min-h-screen bg-background pt-20">
+    <div className="mx-auto max-w-3xl px-4 py-16 text-center">
+      <h1 className="mb-4 text-2xl font-bold">Konfiguratoren feilet</h1>
+      <p className="text-muted-foreground">
+        En feil oppstod ved lasting av konfiguratoren. Oppdater siden og prove igjen.
+      </p>
+    </div>
+  </div>
+);
+
+function RuntimeErrorLogger() {
+  useEffect(() => {
+    const onError = (event: ErrorEvent) => {
+      console.error("[runtime-error]", {
+        message: event.message,
+        filename: event.filename,
+        line: event.lineno,
+        column: event.colno,
+        stack: event.error instanceof Error ? event.error.stack : null,
+      });
+    };
+
+    const onUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason =
+        event.reason instanceof Error
+          ? { message: event.reason.message, stack: event.reason.stack }
+          : event.reason;
+
+      console.error("[unhandled-rejection]", reason);
+    };
+
+    window.addEventListener("error", onError);
+    window.addEventListener("unhandledrejection", onUnhandledRejection);
+
+    return () => {
+      window.removeEventListener("error", onError);
+      window.removeEventListener("unhandledrejection", onUnhandledRejection);
+    };
+  }, []);
+
+  return null;
+}
+
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <CartProvider>
+        <RuntimeErrorLogger />
         <Toaster />
         <BrowserRouter>
           <ScrollToTop />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/configure" element={<Configure />} />
+              <Route
+                path="/configure"
+                element={
+                  <AppErrorBoundary
+                    boundaryName="configure-route"
+                    fallback={<ConfigureRouteFallback />}
+                  >
+                    <Configure />
+                  </AppErrorBoundary>
+                }
+              />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/checkout/success" element={<CheckoutSuccess />} />

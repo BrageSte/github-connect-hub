@@ -4,9 +4,10 @@ import { useSettings } from "@/hooks/useSettings";
 export default function WhatYouGet() {
   const { data: settings } = useSettings();
   const stlPrice = settings?.stl_file_price ?? 199;
-  const printedPrice = settings?.products?.length
-    ? Math.min(...settings.products.map(p => p.price))
-    : 399;
+  const printedPrices = (settings?.products ?? [])
+    .map((product) => (Number.isFinite(product.price) ? product.price : null))
+    .filter((price): price is number => price !== null);
+  const printedPrice = printedPrices.length > 0 ? Math.min(...printedPrices) : 399;
 
   const deliverables = [
     {
