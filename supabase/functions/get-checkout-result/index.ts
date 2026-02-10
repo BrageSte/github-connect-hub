@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -7,8 +6,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-const STRIPE_API_VERSION: Stripe.LatestApiVersion = "2025-08-27.basil";
 
 function jsonResponse(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
@@ -26,11 +23,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY");
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-  if (!stripeSecretKey || !supabaseUrl || !supabaseServiceRoleKey) {
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
     return jsonResponse(
       {
         success: false,
@@ -44,57 +40,103 @@ serve(async (req) => {
     const body = await req.json();
     if (!isRecord(body) || typeof body.sessionId !== "string" || !body.sessionId.trim()) {
       return jsonResponse(
-        { success: false, error: { code: "INVALID_REQUEST", message: "sessionId is required." } },
+        {
+          success: false,
+          error: { code: "INVALID_REQUEST", message: "sessionId is required." },
+        },
         400
       );
     }
 
     const sessionId = body.sessionId.trim();
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: STRIPE_API_VERSION });
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { persistSession: false },
     });
 
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-    const paymentIntentId =
-      typeof session.payment_intent === "string"
-        ? session.payment_intent
-        : session.payment_intent?.id ?? null;
-    const paid = session.payment_status === "paid";
-
-    const { data: checkoutSession } = await supabaseAdmin
+    const { data: checkoutSession, error: checkoutError } = await supabaseAdmin
       .from("checkout_sessions")
-      .select("id,status,order_id,stripe_checkout_session_id,stripe_payment_intent_id")
-      .eq("stripe_checkout_session_id", session.id)
+      .select("*")
+      .eq("stripe_checkout_session_id", sessionId)
       .maybeSingle();
 
-    if (checkoutSession && paid && checkoutSession.status !== "paid") {
-      await supabaseAdmin
-        .from("checkout_sessions")
-        .update({
-          status: "paid",
-          stripe_payment_intent_id: paymentIntentId,
-          error_message: null,
-        })
-        .eq("id", checkoutSession.id);
+    if (checkoutError) {
+      return jsonResponse(
+        {
+          success: false,
+          error: { code: "DB_ERROR", message: checkoutError.message },
+        },
+        500
+      );
+    }
+
+    if (!checkoutSession) {
+      return jsonResponse({
+        success: true,
+        status: "pending",
+        checkout: null,
+      });
+    }
+
+    if (checkoutSession.status === "expired") {
+      return jsonResponse({
+        success: true,
+        status: "expired",
+        checkout: checkoutSession,
+      });
+    }
+
+    if (checkoutSession.status === "failed") {
+      return jsonResponse({
+        success: true,
+        status: "failed",
+        checkout: checkoutSession,
+      });
+    }
+
+    if (!checkoutSession.order_id) {
+      return jsonResponse({
+        success: true,
+        status: "pending",
+        checkout: checkoutSession,
+      });
+    }
+
+    const { data: order, error: orderError } = await supabaseAdmin
+      .from("orders")
+      .select("*")
+      .eq("id", checkoutSession.order_id)
+      .maybeSingle();
+
+    if (orderError) {
+      return jsonResponse(
+        {
+          success: false,
+          error: { code: "DB_ERROR", message: orderError.message },
+        },
+        500
+      );
+    }
+
+    if (!order) {
+      return jsonResponse({
+        success: true,
+        status: "pending",
+        checkout: checkoutSession,
+      });
     }
 
     return jsonResponse({
       success: true,
-      sessionId: session.id,
-      paid,
-      paymentStatus: session.payment_status,
-      checkoutStatus: checkoutSession?.status ?? null,
-      orderId: checkoutSession?.order_id ?? null,
-      stripePaymentIntentId: paymentIntentId,
+      status: "paid",
+      checkout: checkoutSession,
+      order,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    console.error("[verify-session] Error:", message);
     return jsonResponse(
       {
         success: false,
-        error: { code: "VERIFY_FAILED", message },
+        error: { code: "INTERNAL_ERROR", message },
       },
       500
     );

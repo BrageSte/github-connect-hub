@@ -11,6 +11,16 @@ import { PICKUP_LOCATIONS, DeliveryMethod, ShippingAddress, BlockConfig } from '
 import { supabase } from '@/integrations/supabase/client'
 import { useSettings } from '@/hooks/useSettings'
 
+interface CreateCheckoutResponse {
+  success?: boolean
+  url?: string
+  sessionId?: string
+  error?: {
+    code?: string
+    message?: string
+  }
+}
+
 export default function Checkout() {
   const navigate = useNavigate()
   const { data: settings } = useSettings()
@@ -243,10 +253,11 @@ export default function Checkout() {
       }
 
       // Create real Stripe Checkout session
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
+      const { data, error } = await supabase.functions.invoke<CreateCheckoutResponse>('create-checkout', {
         body: {
           items: items.map(item => ({
             name: item.product.name,
+            productId: item.product.id,
             price: item.product.price,
             quantity: item.quantity,
             isDigital: item.product.isDigital,
@@ -260,35 +271,32 @@ export default function Checkout() {
           promoCode: promoCode || undefined,
           promoDiscount,
           shippingAmount: isDigitalOnly ? 0 : (deliveryMethod === 'shipping' ? dynamicShippingCost : 0),
+          paymentMethod,
           successUrl: `${window.location.origin}/checkout/success`,
           cancelUrl: `${window.location.origin}/checkout/cancel`,
         }
       })
 
-      if (error || !data?.url) {
-        throw new Error(data?.error || 'Kunne ikke opprette betalingssesjon')
+      if (error) {
+        throw new Error('Kunne ikke opprette betalingssesjon.')
       }
 
-      // Store order info in sessionStorage for success page
-      sessionStorage.setItem('bs-climbing-checkout-meta', JSON.stringify({
-        items,
-        customerName: customerName.trim(),
-        customerEmail: email.trim(),
-        customerPhone: customerPhone.trim() || undefined,
-        deliveryMethod: deliveryMethod || 'shipping',
-        shippingAddress,
-        promoCode: promoCode || undefined,
-        promoDiscount,
-        subtotal: subtotalAmount,
-        shipping: shippingAmount,
-      }))
+      if (!data?.success || !data.url) {
+        const errorMessage =
+          data?.error?.code === 'PAYMENT_METHOD_UNAVAILABLE'
+            ? 'Valgt betalingsmetode er ikke tilgjengelig akkurat na. Prove kort eller sjekk Stripe-oppsettet.'
+            : data?.error?.message || 'Kunne ikke opprette betalingssesjon.'
+
+        throw new Error(errorMessage)
+      }
 
       // Redirect to Stripe Checkout
       window.location.href = data.url
-    } catch {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Noe gikk galt. Vennligst prov igjen.'
       toast({
         title: 'Betalingsfeil',
-        description: 'Noe gikk galt. Vennligst prøv igjen.',
+        description: message,
         variant: 'destructive'
       })
       setIsProcessing(false)

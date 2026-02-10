@@ -1,78 +1,197 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/integrations/supabase/client'
-import { SiteSettings, ProductSetting, PromoCodeSetting } from '@/types/admin'
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { ProductSetting, PromoCodeSetting, SiteSettings } from "@/types/admin";
 
 const DEFAULT_SETTINGS: SiteSettings = {
   products: [
-    { variant: 'shortedge', name: 'Compact', price: 399, description: 'Ultrakompakt design tilpasset fingrene. Individuelt tilpassede steg for optimal halvkrimpp-trening.' },
-    { variant: 'longedge', name: 'Long Edge', price: 499, description: 'Ekstra lang flate på enden (80mm), så du kan crimpe som på en vanlig 20 mm kant. Komfortabel avrunding. Dette er ultimate-varianten: individuelle steg med custom mål til fingrene + en vanlig 20 mm flatkant for trening.' }
+    {
+      variant: "shortedge",
+      name: "Compact",
+      price: 399,
+      description:
+        "Ultrakompakt design tilpasset fingrene. Individuelt tilpassede steg for optimal halvkrimpp-trening.",
+    },
+    {
+      variant: "longedge",
+      name: "Long Edge",
+      price: 499,
+      description:
+        "Ekstra lang flate pa enden (80mm), sa du kan crimpe som pa en vanlig 20 mm kant. Komfortabel avrunding. Dette er ultimate-varianten: individuelle steg med custom mal til fingrene + en vanlig 20 mm flatkant for trening.",
+    },
   ],
   stl_file_price: 199,
   shipping_cost: 79,
-  promo_codes: { 'TESTMEG': { type: 'percent', value: 100 } }
+  promo_codes: { TESTMEG: { type: "percent", value: 100 } },
+};
+
+type SettingsRow = {
+  key: string;
+  value: unknown;
+};
+
+function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return null;
 }
 
-function parseSettings(rows: { key: string; value: unknown }[]): SiteSettings {
-  const settings = { ...DEFAULT_SETTINGS }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function sanitizeProductSetting(value: unknown): ProductSetting | null {
+  if (!isRecord(value)) return null;
+
+  const variant = value.variant;
+  const name = value.name;
+  const description = value.description;
+  const price = toFiniteNumber(value.price);
+
+  if (variant !== "shortedge" && variant !== "longedge") return null;
+  if (typeof name !== "string" || !name.trim()) return null;
+  if (typeof description !== "string" || !description.trim()) return null;
+  if (price === null || price <= 0) return null;
+
+  return {
+    variant,
+    name: name.trim(),
+    description: description.trim(),
+    price: Math.round(price),
+  };
+}
+
+function sanitizeProducts(value: unknown): ProductSetting[] {
+  const defaultsByVariant = new Map(
+    DEFAULT_SETTINGS.products.map((product) => [product.variant, product])
+  );
+
+  if (!Array.isArray(value)) {
+    return DEFAULT_SETTINGS.products.map((product) => ({ ...product }));
+  }
+
+  for (const candidate of value) {
+    const parsed = sanitizeProductSetting(candidate);
+    if (!parsed) continue;
+    defaultsByVariant.set(parsed.variant, parsed);
+  }
+
+  const shortedge = defaultsByVariant.get("shortedge");
+  const longedge = defaultsByVariant.get("longedge");
+
+  if (!shortedge || !longedge) {
+    return DEFAULT_SETTINGS.products.map((product) => ({ ...product }));
+  }
+
+  return [shortedge, longedge];
+}
+
+function sanitizePromoCodes(value: unknown): Record<string, PromoCodeSetting> {
+  if (!isRecord(value)) {
+    return { ...DEFAULT_SETTINGS.promo_codes };
+  }
+
+  const sanitized: Record<string, PromoCodeSetting> = {};
+
+  for (const [rawCode, promoValue] of Object.entries(value)) {
+    if (!isRecord(promoValue)) continue;
+    const code = rawCode.trim().toUpperCase();
+    if (!code) continue;
+
+    const promoType = promoValue.type;
+    const promoAmount = toFiniteNumber(promoValue.value);
+
+    if ((promoType !== "percent" && promoType !== "fixed") || promoAmount === null) {
+      continue;
+    }
+
+    if (promoType === "percent") {
+      const percent = Math.round(promoAmount);
+      if (percent <= 0 || percent > 100) continue;
+      sanitized[code] = { type: "percent", value: percent };
+      continue;
+    }
+
+    const fixedAmount = Math.round(promoAmount);
+    if (fixedAmount <= 0) continue;
+    sanitized[code] = { type: "fixed", value: fixedAmount };
+  }
+
+  return Object.keys(sanitized).length > 0
+    ? sanitized
+    : { ...DEFAULT_SETTINGS.promo_codes };
+}
+
+function parseSettings(rows: SettingsRow[]): SiteSettings {
+  const settings: SiteSettings = {
+    products: DEFAULT_SETTINGS.products.map((product) => ({ ...product })),
+    stl_file_price: DEFAULT_SETTINGS.stl_file_price,
+    shipping_cost: DEFAULT_SETTINGS.shipping_cost,
+    promo_codes: { ...DEFAULT_SETTINGS.promo_codes },
+  };
 
   for (const row of rows) {
     switch (row.key) {
-      case 'products':
-        if (Array.isArray(row.value)) {
-          settings.products = row.value as ProductSetting[]
+      case "products": {
+        settings.products = sanitizeProducts(row.value);
+        break;
+      }
+      case "stl_file_price": {
+        const value = toFiniteNumber(row.value);
+        if (value !== null && value > 0) {
+          settings.stl_file_price = Math.round(value);
         }
-        break
-      case 'stl_file_price':
-        if (typeof row.value === 'number') {
-          settings.stl_file_price = row.value
+        break;
+      }
+      case "shipping_cost": {
+        const value = toFiniteNumber(row.value);
+        if (value !== null && value >= 0) {
+          settings.shipping_cost = Math.round(value);
         }
-        break
-      case 'shipping_cost':
-        if (typeof row.value === 'number') {
-          settings.shipping_cost = row.value
-        }
-        break
-      case 'promo_codes':
-        if (row.value && typeof row.value === 'object' && !Array.isArray(row.value)) {
-          settings.promo_codes = row.value as Record<string, PromoCodeSetting>
-        }
-        break
+        break;
+      }
+      case "promo_codes": {
+        settings.promo_codes = sanitizePromoCodes(row.value);
+        break;
+      }
+      default:
+        break;
     }
   }
 
-  return settings
+  return settings;
 }
 
 export function useSettings() {
   return useQuery({
-    queryKey: ['site-settings'],
+    queryKey: ["site-settings"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('*')
+      const { data, error } = await supabase.from("site_settings").select("*");
 
-      if (error) throw error
-      return parseSettings(data ?? [])
+      if (error) throw error;
+      return parseSettings((data ?? []) as SettingsRow[]);
     },
-    staleTime: 60_000 // 1 minute
-  })
+    staleTime: 60_000,
+  });
 }
 
 export function useUpdateSetting() {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ key, value }: { key: string; value: unknown }) => {
       const { error } = await supabase
-        .from('site_settings')
-        .upsert({ key, value: value as never, updated_at: new Date().toISOString() })
+        .from("site_settings")
+        .upsert({ key, value: value as never, updated_at: new Date().toISOString() });
 
-      if (error) throw error
+      if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['site-settings'] })
-    }
-  })
+      queryClient.invalidateQueries({ queryKey: ["site-settings"] });
+    },
+  });
 }
 
-export { DEFAULT_SETTINGS }
+export { DEFAULT_SETTINGS };
